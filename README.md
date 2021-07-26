@@ -1,2 +1,3 @@
-# wos_api_usecases
-Various code snippets used with Web of Science APIs.  
+# Various Web of Science APIs use cases
+
+* Fractional counting
