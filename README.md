@@ -1,3 +1,3 @@
 # Various Web of Science APIs use cases
 
-* Fractional counting
+* [Fractional counting ](/tree/main/fractional_counting)
