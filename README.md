@@ -1,3 +1,3 @@
 # Various Web of Science APIs use cases
 
-* [Fractional counting for organizations](/fractional_counting)
+* [Author-level Fractional Counting for Organizations](/author_level_fractional_counting_for_organizations)
