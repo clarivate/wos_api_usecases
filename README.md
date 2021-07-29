@@ -1,9 +1,12 @@
-A simple script to calculate the number of papers for an organization using fractional counting approach retrieving publication data via Web of Science Expanded API
+Author-level fractional counting for organization
 ======
+
+A simple script to calculate the number of papers for an organization using fractional counting approach retrieving publication data via Web of Science Expanded API
+------
 
 The default way of counting papers and citations to them, being currently used in Web of Science, InCites, and other Clarivate resources, is called whole counting, or full counting method. In the case of full counting, a research output is fully attributed to each of the authors and/or each of the affiliated organizations. For example, a publication coauthored by two authors from two different universities counts as a full publication for each of the coauthors and each of the universities. In the fractional counting case, a research output is fractionally distributed between each coauthor and/or each organization. In a similar example, a publication coauthored by two authors from two different universities counts only as a half publication for each of the coauthors and each of the universities.
 
-As already mentioned, the full counting method is the generally accepted one, but it can sometimes give unproportionally high scores to research made in extremely large collaborations, thus favoring the authors and organizations that participate in such projects. For more readin on why this is important, please refer to Institue of Scientific Information's recent [Global Research Report – Multi-authorship and research analytics.](https://clarivate.com/webofsciencegroup/campaigns/global-research-report-multi-authorship-and-research-analysis/)
+As already mentioned, the full counting method is the generally accepted one, but it can sometimes give unproportionally high scores to research made in extremely large collaborations, thus favoring the authors and organizations that participate in such projects. For more reading about multiauthorship and why this is important, please refer to Institue of Scientific Information's recent [Global Research Report – Multi-authorship and research analytics.](https://clarivate.com/webofsciencegroup/campaigns/global-research-report-multi-authorship-and-research-analysis/)
 
 There are several types of fractional counting: author-level, organiation-level, etc. The choice of a fractional counting method often depends on the purpose of the study, for more information on various fractional counting methods and their advantages for certain research tasks please refer to the following paper:
 
