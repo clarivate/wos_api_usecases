@@ -1,7 +1,7 @@
 Author-level fractional counting for organization
 ======
 
-A simple script to calculate the number of papers for an organization using fractional counting approach retrieving publication data via Web of Science Expanded API
+A simple script to calculate the number of papers for an organization using fractional counting approach and retrieving publication data via Web of Science Expanded API
 ------
 
 The default way of counting papers and citations to them, being currently used in Web of Science, InCites, and other Clarivate resources, is called whole counting, or full counting method. In the case of full counting, a research output is fully attributed to each of the authors and/or each of the affiliated organizations. For example, a publication coauthored by two authors from two different universities counts as a full publication for each of the coauthors and each of the universities. In the fractional counting case, a research output is fractionally distributed between each coauthor and/or each organization. In a similar example, a publication coauthored by two authors from two different universities counts only as a half publication for each of the coauthors and each of the universities.
