@@ -1,7 +1,7 @@
 import requests
 import os
 
-apikey = os.environ('WOSEXPANDEDAPIKEY')  # Your API key, it's better to keep it in your environment variables
+apikey = os.environ['WOSEXPANDEDAPIKEY']  # Your API key, it's better to keep it in your environment variables
 our_org = 'HSE University (National Research University Higher School of Economics)'  # Enter your organization profile here
 pub_years = "2016-2020"  # Enter publication years
 
