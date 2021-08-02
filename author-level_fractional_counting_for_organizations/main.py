@@ -1,8 +1,8 @@
 import requests
 import os
 
-apikey = os.environ['WOSEXPANDEDAPIKEY']  # Your API key, it's better to keep it in your environment variables
-our_org = 'HSE University (National Research University Higher School of Economics)'  # Enter your organization profile here
+apikey = os.environ['WOSEXPANDEDAPIKEY']  # Your API key, it's better not to store it in the program
+our_org = 'ITMO University'  # Enter your organization profile here
 pub_years = "2016-2020"  # Enter publication years
 
 headers = {
@@ -20,108 +20,138 @@ def fracount():  # Fractional counting function for every 100 WoS records receiv
         authors = 0  # Total number of authors in the paper, it's going to be the denominator
         our_authors = 0  # The number of authors from your org, it will be saved into the .csv file for every record
         if paper['static_data']['fullrecord_metadata']['addresses']['count'] == 1:
-            fractional_counting_paper, our_authors = singe_address_record_check(paper, authors, our_authors, total_au_input)
+            fractional_counting_paper, our_authors = singe_address_record_check(paper, authors, our_authors)
         else:  # Standard case
-            fractional_counting_paper, our_authors = standard_case_paper_check(paper, authors, our_authors, total_au_input)
+            fractional_counting_paper, our_authors = standard_case_paper_check(paper, authors, total_au_input)
         csv_string = f"{paper['UID']},{our_authors},{fractional_counting_paper}\n"  # Preparing the output for a .csv
         csv_output += csv_string
     return csv_output
 
 
 # When there is only one affiliation in the paper
-def singe_address_record_check(paper, authors, our_authors, total_au_input):
-    authors = single_address_persons_check(paper, authors)
-    fractional_counting_paper, our_authors = single_address_org_check(paper, authors, our_authors, total_au_input)
+def singe_address_record_check(paper, authors, our_authors):
+    authors = single_address_person_check(paper, authors)
+    fractional_counting_paper, our_authors = single_address_org_check(paper, authors, our_authors)
     return fractional_counting_paper, our_authors
 
 
-def single_address_persons_check(paper, authors):
-    for person in paper['static_data']['summary']['names']['name']:  # A person may have a status different from an "author", i.e., "editor". For the purpose of this code, we are only using the "author" type
-        try:
+# A person may have a status different from an "author", i.e.: "editor". For the purpose of this code,
+# we are only using the "author" type
+def single_address_person_check(paper, authors):
+    if paper['static_data']['summary']['names']['count'] == 1:  # A case when there's only one name on the paper
+        if paper['static_data']['summary']['names']['name']['role'] == "author":
+            authors = 1
+    else:
+        for person in paper['static_data']['summary']['names']['name']:
             if person['role'] == "author":
                 authors += 1
-        except TypeError:  # When there is only one name on the paper, it's going to be the author
-            authors = 1
     return authors
 
 
-def single_address_org_check(paper, authors, our_authors, fractional_counting_paper):
+# Checking if the org profile in the paper is our org profile
+def single_address_org_check(paper, authors, our_authors):
+    fractional_counting_paper = 0
     try:
-        if our_org == (paper['static_data']['fullrecord_metadata']['addresses']['address_name']['address_spec']['organizations']['organization'][1]['content']):  # Checking if the org profile in the paper is your org profile
+        if our_org == (paper['static_data']['fullrecord_metadata']['addresses']['address_name']['address_spec']['organizations']['organization'][1]['content']):
             fractional_counting_paper = 1  # And if it is - doesn't matter how many authors, the whole paper is counted
-            our_authors = authors
+            our_authors = authors  # But just for reference, we will store the number of authors from our org in the csv
         else:
-            fractional_counting_paper = 0
-    except KeyError:  # The chances that this paper won't be linked to your org-enhanced are tiny
-        pass  # you can add the following code insted of "pass" for checking: print(f"Record {paper['UID']}: address not linked to an Affiliation: {paper['static_data']['fullrecord_metadata']['addresses']['address_name']['address_spec']['organizations']['organization'][0]['content']}")
-    except IndexError:  # In case the record contains your organization affiliation in the corresponding address
-        print((f"Record {paper['UID']}: the org profile is only in corresponding address: {paper['static_data']['fullrecord_metadata']['reprint_addresses']['address_name']['address_spec']['organizations']['organization'][0]['content']}"))
+            pass
+    except (IndexError, KeyError):  # The chances that this paper won't be linked to your org-enhanced profile are tiny
+        pass
+        """ You can add the following code insted of "pass" for checking:
+        print(f"Record {paper['UID']}: address not linked to an Affiliation:
+        {affiliation['address_spec']['organizations']['organization'][0]['content']}")"""
     return fractional_counting_paper, our_authors
 
 
-def standard_case_paper_check(paper, authors, our_authors, total_au_input):
-    total_au_input, authors, our_authors = standard_case_person_check(paper, authors, our_authors, total_au_input)
+# When there are multiple affiliations in the paper, that's where we really need this code
+def standard_case_paper_check(paper, authors, total_au_input):
+    if paper['static_data']['summary']['names']['count'] == 1:    # Again, checking if the person is actually an author
+        if paper['static_data']['summary']['names']['name']['role'] == "author":
+            authors = 1
+    else:
+        for person in paper['static_data']['summary']['names']['name']:
+            if person['role'] == "author":
+                authors += 1
+    total_au_input, authors, our_authors = standard_case_address_check(paper, authors, total_au_input)
     fractional_counting_paper = total_au_input / authors  # Calculating fractional counting for every paper
     return fractional_counting_paper, our_authors
 
 
-def standard_case_person_check(paper, authors, our_authors, total_au_input):
-    try:
-        for person in paper['static_data']['summary']['names']['name']:  # Again, checking if the person is actually an author
-            if person['role'] == "author":
-                authors += 1
-                au_input = 0
-                au_affils = str(person['addr_no']).split(' ')  # Counting the number of author's affiliations
-                for c1 in au_affils:  # For every affiliation, a check is made whether it's your affiliation
-                    try:
-                        affil = (paper['static_data']['fullrecord_metadata']['addresses']['address_name'][int(c1) - 1]['address_spec']['organizations']['organization'][1]['content'])
-                        if affil == our_org:
-                            au_input += 1 / len(au_affils)
-                    except IndexError:  # In case the address is not linked to an org profile
-                        pass  # you can add the following code insted of "pass" for checking: print(f"Record {paper['UID']}: address not linked to an Affiliation: {paper['static_data']['fullrecord_metadata']['addresses']['address_name']['address_spec']['organizations']['organization'][0]['content']}")
-                total_au_input += au_input  # Calculating the total input of all of our authors
-                if au_input != 0:
-                    our_authors += 1
-    except TypeError:  # When there is only one name on the paper, it's going to be the author, but his record is going to be imported from json as a list not as a dictionary
-        authors = 1
+#  Identifying which authors in the paper are affiliated with our organization
+def standard_case_address_check(paper, authors, total_au_input):
+    our_authors_seq_numbers = set()  # Building a set of sequence numbers of authors from our org
+    for affiliation in paper['static_data']['fullrecord_metadata']['addresses']['address_name']:
+        try:  # Checking every address in the paper
+            for org in affiliation['address_spec']['organizations']['organization']:
+                try:  # Checking evey organization profile to which the address is linked
+                    if org['content'] == our_org:
+                        try:  # Filling in the set with our authors' sequence numbers
+                            if affiliation['names']['count'] == 1:
+                                our_authors_seq_numbers.add(affiliation['names']['name']['seq_no'])
+                            else:
+                                for our_author in affiliation['names']['name']:
+                                    our_authors_seq_numbers.add(our_author['seq_no'])
+                        except (IndexError, KeyError):  # When a specific author record is not linked to an affiliation
+                            pass
+                            """ You can add the following code insted of "pass" for checking:
+                            print(f"Record {paper['UID']}:
+                            organization field {affiliation['address_spec']['organizations']['organization'][1]['content}
+                            is not linked to any author fields")"""
+                except TypeError:  # When the org doesn't have a "content" or "pref" attribute
+                    pass
+        except KeyError:  # In case the address doesn't contain organization component at all, i.e. street address only
+            pass
+            """ You can add the following code insted of "pass" for checking:
+            print(f"Record {paper['UID']}:
+            organization field {affiliation['address_spec']['organizations']['organization'][1]['content}
+            is not linked to any author fields")"""
+    our_authors = len(our_authors_seq_numbers)  # The number of our authors in the paper is the length of our set
+    if paper['static_data']['summary']['names']['count'] == 1:  # The case when the total number of authors is one
         au_input = 0
-        try:
-            au_affils = str(paper['static_data']['summary']['names']['name']['addr_no']).split(' ')  # Counting the number of author's affiliations
-            au_input = standard_case_single_author_org_check(paper, au_affils, au_input)
-        except TypeError:  # In case the address is not linked to an org profile
-            pass  # you can add the following code insted of "pass" for checking: print(f"Record {paper['UID']}: address not linked to an Affiliation: {paper['static_data']['fullrecord_metadata']['addresses']['address_name']['address_spec']['organizations']['organization'][0]['content']}")
-        total_au_input += au_input  # Calculating the total input of each of our authors
-        if au_input != 0:
-            our_authors += 1
-    except KeyError:  # Exception for the cases then the author might not have a link to an org affiliation in a Web of Science record
-        pass  # ou can add the following code insted of "pass" for checking: print(f"Record {paper['UID']}: author {person['full_name']} is not linked to any affiliations")
+        au_affils = str(paper['static_data']['summary']['names']['name']['addr_no']).split(' ')
+        authors = 1
+        au_input = standard_case_affiliation_check(paper, au_affils, au_input)
+        total_au_input = au_input
+    else:  # The case when the total number of authors is more than one - just calling their affiliations differently
+        for author in our_authors_seq_numbers:
+            au_input = 0
+            au_affils = str(paper['static_data']['summary']['names']['name'][int(author) - 1]['addr_no']).split(' ')
+            au_input = standard_case_affiliation_check(paper, au_affils, au_input)
+            total_au_input += au_input  # The total input of our authors is the sum of individual author inputs
     return total_au_input, authors, our_authors
 
 
-def standard_case_single_author_org_check(paper, au_affils, au_input):
-    for c1 in au_affils:  # For every affiliation, a check is made whether it's your affiliation
+# For every affiliation, a check is made whether it's our organization's affiliation
+def standard_case_affiliation_check(paper, au_affils, au_input):
+    for c1 in au_affils:
         try:
             affil = (paper['static_data']['fullrecord_metadata']['addresses']['address_name'][int(c1) - 1]['address_spec']['organizations']['organization'][1]['content'])
-            if affil == our_org:
+            if affil == our_org:  # And if it is, the individual author's input increases
                 au_input += 1 / len(au_affils)
-        except IndexError:  # In case the address is not linked to an org profile
-            pass  # you can add the following code insted of "pass" for checking: print(f"Record {paper['UID']}: address not linked to an Affiliation: {paper['static_data']['fullrecord_metadata']['addresses']['address_name']['address_spec']['organizations']['organization'][0]['content']}")
-        except KeyError:  # In case the address doesn't contain organization component at all, i.e. "129 Bralyev Kashirinykh Str, Chelyabinsk 454001, Russia"
-            pass  # you can add the following code insted of "pass" for checking: print(f"Record {paper['UID']}: address not linked to an Affiliation: {paper['static_data']['fullrecord_metadata']['addresses']['address_name']['address_spec']['organizations']['organization'][0]['content']}")
+        except (IndexError, KeyError):  # In case the address is not linked to an org profile
+            pass
+            """You can add the following code instead of "pass" for checking:
+            print(f"Record {paper['UID']}: address not linked to an Affiliation:
+            {paper['static_data']['fullrecord_metadata']['addresses']['address_name']['address_spec']['organizations']['organization'][0]['content']}")
+            """
     return au_input
 
 
-initial_response = requests.get(f'{endpoint}?databaseId=WOS&usrQuery=OG=({our_org}) and PY={pub_years}&count=100&firstRecord=1', headers = headers)  # This is the initial API request
-
+# Initial request to the API is made to figure out the total amount of requests required
+initial_response = requests.get(f'{endpoint}?databaseId=WOS&usrQuery=OG=({our_org}) and PY={pub_years}&count=100&firstRecord=1', headers=headers)  # This is the initial API request
 data = initial_response.json()  # First 100 records received
 output = fracount()
 with open('papers.csv', 'w') as writing:
     writing.write(csv_header + output)
 
-for i in range(((data['QueryResult']['RecordsFound']) - 1) // 100):  # from the first response, extractng the total number of records found and calculating the number of requests required.
-    subsequent_response = requests.get(f'{endpoint}?databaseId=WOS&usrQuery=OG=({our_org}) and PY={pub_years}&count=100&firstRecord={((100*(i+1)+1))}', headers = headers)
+# From the first response, extractng the total number of records found and calculating the number of requests required.
+# The program can take up to a few dozen minutes, depending on the number of records being analyzed
+for i in range(((data['QueryResult']['RecordsFound']) - 1) // 100):
+    subsequent_response = requests.get(f'{endpoint}?databaseId=WOS&usrQuery=OG=({our_org}) and PY={pub_years}&count=100&firstRecord={(100*(i+1)+1)}', headers=headers)
     data = subsequent_response.json()
     output = fracount()
     with open('papers.csv', 'a') as writing:
         writing.write(output)
-    print(f"{((i+2)*100) // ((data['QueryResult']['RecordsFound']) // 100)}% complete")  # the process can take up to 10 minutes depending on the number of the papers being analyzed
+    print(f"{((i+1)*100) // ((data['QueryResult']['RecordsFound']) // 100)}% complete")
