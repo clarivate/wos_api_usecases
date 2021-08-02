@@ -2,7 +2,7 @@ import requests
 import os
 
 apikey = os.environ['WOSEXPANDEDAPIKEY']  # Your API key, it's better not to store it in the program
-our_org = 'ITMO University'  # Enter your organization profile here
+our_org = 'Moscow Aviation Institute'  # Enter your organization profile here
 pub_years = "2016-2020"  # Enter publication years
 
 headers = {
@@ -85,23 +85,13 @@ def standard_case_address_check(paper, authors, total_au_input):
     for affiliation in paper['static_data']['fullrecord_metadata']['addresses']['address_name']:
         try:  # Checking every address in the paper
             for org in affiliation['address_spec']['organizations']['organization']:
-                try:  # Checking evey organization profile to which the address is linked
-                    if org['content'] == our_org:
-                        try:  # Filling in the set with our authors' sequence numbers
-                            if affiliation['names']['count'] == 1:
-                                our_authors_seq_numbers.add(affiliation['names']['name']['seq_no'])
-                            else:
-                                for our_author in affiliation['names']['name']:
-                                    our_authors_seq_numbers.add(our_author['seq_no'])
-                        except (IndexError, KeyError):  # When a specific author record is not linked to an affiliation
-                            pass
-                            """ You can add the following code insted of "pass" for checking:
-                            print(f"Record {paper['UID']}:
-                            organization field {affiliation['address_spec']['organizations']['organization'][1]['content}
-                            is not linked to any author fields")"""
-                except TypeError:  # When the org doesn't have a "content" or "pref" attribute
-                    pass
-        except KeyError:  # In case the address doesn't contain organization component at all, i.e. street address only
+                if org['content'] == our_org:  # Checking evey organization profile to which the address is linked
+                    if affiliation['names']['count'] == 1:  # Filling in the set with our authors' sequence numbers
+                        our_authors_seq_numbers.add(affiliation['names']['name']['seq_no'])
+                    else:
+                        for our_author in affiliation['names']['name']:
+                            our_authors_seq_numbers.add(our_author['seq_no'])
+        except (IndexError, KeyError, TypeError):  # In case the address doesn't contain organization component at all, i.e. street address only
             pass
             """ You can add the following code insted of "pass" for checking:
             print(f"Record {paper['UID']}:
