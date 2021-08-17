@@ -2,15 +2,16 @@ import requests
 import os
 
 apikey = os.environ['WOSEXPANDEDAPIKEY']  # Your API key, it's better not to store it in the program
-our_org = 'Moscow Aviation Institute'  # Enter your organization profile here
+our_org = 'Sechenov First Moscow State Medical University'  # Enter your organization profile here
 pub_years = "2016-2020"  # Enter publication years
+
 
 headers = {
     'X-APIKey': apikey
 }
 
 endpoint = "https://api.clarivate.com/api/wos"
-csv_header = "UT,Author_count,Fractional_count\n"  # Final output will be placed in a .csv file
+csv_header = "UT,Publication_year,Author_count,Fractional_count\n"  # Final output will be placed in a .csv file
 
 
 def fracount():  # Fractional counting function for every 100 WoS records received via WoS Expanded API
@@ -19,11 +20,12 @@ def fracount():  # Fractional counting function for every 100 WoS records receiv
         total_au_input = 0  # Total input of the authors from your org into this paper, it's going to be the numerator
         authors = 0  # Total number of authors in the paper, it's going to be the denominator
         our_authors = 0  # The number of authors from your org, it will be saved into the .csv file for every record
+        pub_year = paper['static_data']['summary']['pub_info']['pubyear']
         if paper['static_data']['fullrecord_metadata']['addresses']['count'] == 1:
             fractional_counting_paper, our_authors = singe_address_record_check(paper, authors, our_authors)
         else:  # Standard case
             fractional_counting_paper, our_authors = standard_case_paper_check(paper, authors, total_au_input)
-        csv_string = f"{paper['UID']},{our_authors},{fractional_counting_paper}\n"  # Preparing the output for a .csv
+        csv_string = f"{paper['UID']},{pub_year},{our_authors},{fractional_counting_paper}\n"  # Preparing the output for a .csv
         csv_output += csv_string
     return csv_output
 
@@ -52,14 +54,15 @@ def single_address_person_check(paper, authors):
 def single_address_org_check(paper, authors, our_authors):
     fractional_counting_paper = 0
     try:
-        if our_org == (paper['static_data']['fullrecord_metadata']['addresses']['address_name']['address_spec']['organizations']['organization'][1]['content']):
-            fractional_counting_paper = 1  # And if it is - doesn't matter how many authors, the whole paper is counted
-            our_authors = authors  # But just for reference, we will store the number of authors from our org in the csv
-        else:
-            pass
+        for org in (paper['static_data']['fullrecord_metadata']['addresses']['address_name']['address_spec']['organizations']['organization']):
+            if org['content'] == our_org:
+                fractional_counting_paper = 1  # And if it is - doesn't matter how many authors, the whole paper is counted
+                our_authors = authors  # But just for reference, we will store the number of authors from our org in the csv
+            else:
+                pass
     except (IndexError, KeyError):  # The chances that this paper won't be linked to your org-enhanced profile are tiny
         pass
-        """ You can add the following code insted of "pass" for checking:
+        """ You can add the following code instead of "pass" for checking:
         print(f"Record {paper['UID']}: address not linked to an Affiliation:
         {affiliation['address_spec']['organizations']['organization'][0]['content']}")"""
     return fractional_counting_paper, our_authors
@@ -93,7 +96,7 @@ def standard_case_address_check(paper, authors, total_au_input):
                             our_authors_seq_numbers.add(our_author['seq_no'])
         except (IndexError, KeyError, TypeError):  # In case the address doesn't contain organization component at all, i.e. street address only
             pass
-            """ You can add the following code insted of "pass" for checking:
+            """ You can add the following code instead of "pass" for checking:
             print(f"Record {paper['UID']}:
             organization field {affiliation['address_spec']['organizations']['organization'][1]['content}
             is not linked to any author fields")"""
@@ -117,10 +120,11 @@ def standard_case_address_check(paper, authors, total_au_input):
 def standard_case_affiliation_check(paper, au_affils, au_input):
     for c1 in au_affils:
         try:
-            affil = (paper['static_data']['fullrecord_metadata']['addresses']['address_name'][int(c1) - 1]['address_spec']['organizations']['organization'][1]['content'])
-            if affil == our_org:  # And if it is, the individual author's input increases
-                au_input += 1 / len(au_affils)
-        except (IndexError, KeyError):  # In case the address is not linked to an org profile
+            affiliation = (paper['static_data']['fullrecord_metadata']['addresses']['address_name'][int(c1) - 1])
+            for org in affiliation['address_spec']['organizations']['organization']:
+                if org['content'] == our_org:
+                    au_input += 1 / len(au_affils)
+        except (KeyError, IndexError, TypeError):  # In case the address is not linked to an org profile
             pass
             """You can add the following code instead of "pass" for checking:
             print(f"Record {paper['UID']}: address not linked to an Affiliation:
@@ -136,7 +140,7 @@ output = fracount()
 with open('papers.csv', 'w') as writing:
     writing.write(csv_header + output)
 
-# From the first response, extractng the total number of records found and calculating the number of requests required.
+# From the first response, extracting the total number of records found and calculating the number of requests required.
 # The program can take up to a few dozen minutes, depending on the number of records being analyzed
 for i in range(((data['QueryResult']['RecordsFound']) - 1) // 100):
     subsequent_response = requests.get(f'{endpoint}?databaseId=WOS&usrQuery=OG=({our_org}) and PY={pub_years}&count=100&firstRecord={(100*(i+1)+1)}', headers=headers)
@@ -144,4 +148,4 @@ for i in range(((data['QueryResult']['RecordsFound']) - 1) // 100):
     output = fracount()
     with open('papers.csv', 'a') as writing:
         writing.write(output)
-    print(f"{((i+1)*100) // ((data['QueryResult']['RecordsFound']) // 100)}% complete")
+    print(f"{((i+1)*100) // (((data['QueryResult']['RecordsFound']) - 1) // 100)}% complete")
