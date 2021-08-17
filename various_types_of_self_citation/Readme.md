@@ -17,7 +17,7 @@ This is how it works:
 
 And launch the code.
 
-The program will create lists of sets for the author, organization, and journal names for every cited and citing record, and apply sets.intersection() method to each of them to check if self-citation occured at any of the described levels. The self-citation is calculated as follows:
+The program will create lists of sets for the author, organization, and journal names for every cited and citing record, and apply sets.intersection() method to each of them to check if self-citation occured at any of the described levels, and print the results. The self-citation is calculated as follows:
 
 Self-citation of a paper = (number of self-citations of this type found in the records which cite the paper) / (times cited count for that paper)
 
