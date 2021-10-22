@@ -1,11 +1,11 @@
 # Various types of Self-citation
 
 
-## A simple script to evaluate the self-citation percentage for the paper at the level of user's preference. The script relies on retrieving the publication data via Web of Science Expanded API
+## A simple script to evaluate the self-citation percentage for a set of Web of Science documents at the level of user's preference. The script relies on retrieving the publication data via Web of Science Expanded API
 
 
-This script allows to evaluate the following types of self-citation to a given paper:
-1. Coauthor-level self-citation (when there are the same author records appearing in both cited and citing papers)
+This script allows to evaluate the following types of self-citation to a given Web of Science document or a set of documents:
+1. Coauthor-level self-citation (when there are the same author records appearing in both cited and citing paper)
 2. Organization-level self-citation (when the authors in cited and citing papers might be different, but represent the same organization)
 3. Journal self-citation (when the authors and/or organization in cited and citing papers might be different, but both records were published in the same title)
 
@@ -17,9 +17,9 @@ This is how it works:
 
 And launch the code.
 
-The program will query Web of Science Expanded API to create objects of class CitedPaper and CitingPaper. Every CitedPaper object would have a list of papers that cite it, which would be treated as citation links between cited and citing papers. After that, the program will create lists of sets for the author, organization, and journal names for every cited and citing record, and apply sets.intersection() method to each of them to check if self-citation occured at any of the described levels, and for every case where a self-citation even would occur, the program will additionally query Web of Science Expanded API for the cited references of the citing paper to check the number of cited reference in it that lead to the cited document. The total self-citation is calculated as follows:
+The program will query Web of Science Expanded API to create objects of class CitedPaper and CitingPaper. Every CitingPaper class object would be a list item for of papers a CitedPaper class object which is a way the program tracks citation links between cited and citing papers. After that, the program will create lists of sets for the author, organization, and journal names for every cited and citing record, and apply sets.intersection() method to each of them to check if self-citation occured at any of the described levels, and for every case where a self-citation even would occur, the program will additionally query Web of Science Expanded API for the cited references of the citing paper to check the number of cited reference in it that lead to the cited document. The total self-citation is calculated as follows:
 
-Self-citation of a paper = (number of self-citations of this type found in the records which cite the cited paper) / (total times cited count for that set of cited papers)
+Self-citation of a set of documents = (number of self-citations of this type found in the citing documents) / (total times cited count for that set of cited papers)
 
 Although this is a good step towards increasing the precision of self-citation calculation, we would like to address a few limitations of this approach:
 

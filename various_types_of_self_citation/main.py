@@ -1,13 +1,17 @@
 import requests
 from apikey import apikey   # Your API key, it's better not to store it in the program
 
-search_query = '(TS=("self citation*" or selfcitation*)) AND (TP==("HIGHLY CITED PAPERS"))'  # Enter the WoS search query to evaluate its self-citation percentage
+# Enter the WoS search query to evaluate its self-citation percentage:
+search_query = '(TS=("self citation*" or selfcitation*)) AND (TP==("HIGHLY CITED PAPERS"))'
 
 headers = {
     'X-APIKey': apikey
 }
 
 endpoint = "https://api.clarivate.com/api/wos"
+
+# This will save several API queries/records received by storing the already checked citing papers locally
+checked_citing_papers = [('ut', 'cited_paper')]
 
 
 class CitedPaper:
@@ -103,8 +107,8 @@ def citing_request(paper):  # This function  gets the citing paper data via API
 
 
 def get_author_list(paper):  # This function gets lists of authors (and coauthors) for every paper
-    author_names = set()  # This set uses the author name field, which can be spelled differently for the same researcher in different records
-    author_dais = set()  # This set uses the Web of Science record sets created Clarivate proprietary author name disambiguation algorithm
+    author_names = set()  # This set uses the author name field, which can be spelled differently for the same person
+    author_dais = set()  # This uses Web of Science record sets made by Clarivate author name disambiguation algorithm
     author_rids = set()  # This set relies on author ResearcherID
     author_orcids = set()  # This set relies on author ORCID
     if paper['static_data']['summary']['names']['count'] == 1:
@@ -164,53 +168,6 @@ def get_times_cited(paper):  # This function gets the times cited count for ever
     return times_cited
 
 
-def self_citations(cited_papers_list):  # Self-citation calculations occur here
-    total_citations = 0
-    author_name_self_citation = 0
-    author_dais_self_citation = 0
-    author_rids_self_citation = 0
-    author_orcids_self_citation = 0
-    org_self_citation = 0
-    source_self_citation = 0
-    for cited_paper in cited_papers_list:  # For every cited paper we run a check
-        for citing_paper in cited_paper.citing_papers_list:  # Every paper that was citing it is checked for matches
-            author_name_self_citation += calculation(cited_paper.author_names, citing_paper.author_names, cited_paper,
-                                                     cited_papers_list, citing_paper)  # In the author/coauthor names
-            author_dais_self_citation += calculation(cited_paper.author_dais, citing_paper.author_dais, cited_paper,
-                                                     cited_papers_list, citing_paper)  # In the author/coauthor distinct paper sets
-            author_rids_self_citation += calculation(cited_paper.author_rids, citing_paper.author_rids, cited_paper,
-                                                     cited_papers_list, citing_paper)  # In the author/coauthor RIDs
-            author_orcids_self_citation += calculation(cited_paper.author_orcids, citing_paper.author_orcids,
-                                                       cited_paper, cited_papers_list, citing_paper)  # and ORCIDS
-            org_self_citation += calculation(cited_paper.org_names, citing_paper.org_names, cited_paper,
-                                             cited_papers_list, citing_paper)  # Then for the affiliated organizations
-            source_self_citation += calculation(cited_paper.source_names, citing_paper.source_names, cited_paper,
-                                                cited_papers_list, citing_paper)  # And finally for the source
-        total_citations += cited_paper.times_cited  # The total citations is going to be the common denominator
-    print(f'Coauthor self-citation:\n    Name-level: {(author_name_self_citation/total_citations * 100):.2f}% ({author_name_self_citation} self-citations, {total_citations - author_name_self_citation} external, {total_citations} total)')
-    print(f'    DAIS-level: {(author_dais_self_citation/total_citations * 100):.2f}% ({author_dais_self_citation} self-citations, {total_citations - author_dais_self_citation} external, {total_citations} total)')
-    print(f'    ResearcherID-level: {(author_rids_self_citation/total_citations * 100):.2f}% ({author_rids_self_citation} self-citations, {total_citations - author_rids_self_citation} external, {total_citations} total)')
-    print(f'    ORCID-level: {(author_orcids_self_citation/total_citations * 100):.2f}% ({author_orcids_self_citation} self-citations, {total_citations - author_orcids_self_citation} external, {total_citations} total)')
-    print(f'Organization-level self citation: {(org_self_citation/total_citations * 100):.2f}% ({org_self_citation} self-citations, {total_citations - org_self_citation} external, {total_citations} total)')
-    print(f'Publication Source-level self citation: {(source_self_citation/total_citations * 100):.2f}% ({source_self_citation} self-citations, {total_citations - source_self_citation} external, {total_citations} total)')
-
-
-# This is how exactly the self-citation event is defined: if there is a match in any similar fields (name, ResearcherID,
-# Affiliation, etc.) for a cited and citing paper
-def calculation(cited, citing, cited_paper, cited_papers_list, citing_paper):
-    self_citations_count = 0
-    # If a match has been found and no existing self-citations have been identified for this paper yet, then we
-    # conduct the calculation of the self-citations based on the cited reference list of the citing document
-    if len(cited.intersection(citing)) > 0:
-        self_citation_crs_calc(cited_paper, citing_paper)
-        print(f"Oops, seems like a self-citation here: paper {cited_papers_list.index(cited_paper) + 1} of {len(cited_papers_list)}")
-        self_citations_count += citing_paper.self_citation_crs  # Summarizing self-citation counts for every paper
-    return self_citations_count
-
-
-# This will save several API queries/records received by storing the already checked citing papers locally
-checked_citing_papers = [('ut', 'cited_paper')]
-
 # This is the function that performs the self-citation calculation for every cited reference. If the self-citation event
 # has been identified by the above calculation() function, then the citing document is analyzed for the number of
 # references to that particular cited document. This is required because the number of citations and the number of
@@ -218,7 +175,6 @@ checked_citing_papers = [('ut', 'cited_paper')]
 # one, so the total amount of citations to a paper can sometimes be significantly higher than the number of citing
 # records.
 def self_citation_crs_calc(cited_paper, citing_paper):
-    global checked_citing_papers
     citing_paper.self_citation_crs = 0  # The self-citation cited references count for every citing paper
     for checked_citing_paper in checked_citing_papers:  # Checking if the paper has already been extracted via API
         if checked_citing_paper[0] == citing_paper.ut:
@@ -237,7 +193,50 @@ def self_citation_crs_calc(cited_paper, citing_paper):
     for cr in cr_data['Data']:  # Checking if the ID of a paper in cited reference matches the ID of a cited paper
         if cr['UID'] == cited_paper.ut:
             citing_paper.self_citation_crs += 1  # If it does, this citing paper self-citation count is increased by 1
-    return citing_paper
+    return citing_paper, checked_citing_papers
+
+
+def self_citations(cited_papers_list):  # Self-citation calculations occur here
+    total_citations = 0
+    author_name_self_citation = 0
+    author_dais_self_citation = 0
+    author_rids_self_citation = 0
+    author_orcids_self_citation = 0
+    org_self_citation = 0
+    source_self_citation = 0
+    for cited_paper in cited_papers_list:  # For every cited paper we run a check
+        for citing_paper in cited_paper.citing_papers_list:  # Every paper that was citing it is checked for matches
+            if len(cited_paper.author_names.intersection(citing_paper.author_names)) > 0:  # For (co)author names
+                self_citation_crs_calc(cited_paper, citing_paper)  # If at least 1 match is found, a calculaton of references from citing to cited document is counted
+                print(f'Oops, seems like a self-citation found: paper {cited_papers_list.index(cited_paper) + 1} of {len(cited_papers_list)}')
+                author_name_self_citation += citing_paper.self_citation_crs
+            if len(cited_paper.author_dais.intersection(citing_paper.author_dais)) > 0:  # For (co)author paper sets
+                if citing_paper.self_citation_crs == 0:
+                    self_citation_crs_calc(cited_paper, citing_paper)
+                author_dais_self_citation += citing_paper.self_citation_crs
+            if len(cited_paper.author_rids.intersection(citing_paper.author_rids)) > 0:  # For their ResearcherIDs
+                if citing_paper.self_citation_crs == 0:
+                    self_citation_crs_calc(cited_paper, citing_paper)
+                author_rids_self_citation += citing_paper.self_citation_crs
+            if len(cited_paper.author_orcids.intersection(citing_paper.author_orcids)) > 0:  # For their ORCIDs
+                if citing_paper.self_citation_crs == 0:
+                    self_citation_crs_calc(cited_paper, citing_paper)
+                author_orcids_self_citation += citing_paper.self_citation_crs
+            if len(cited_paper.org_names.intersection(citing_paper.org_names)) > 0:  # For their org affiliations
+                if citing_paper.self_citation_crs == 0:
+                    self_citation_crs_calc(cited_paper, citing_paper)
+                org_self_citation += citing_paper.self_citation_crs
+            if len(cited_paper.source_names.intersection(citing_paper.source_names)) > 0:  # For the titles those papers were published in
+                if citing_paper.self_citation_crs == 0:
+                    self_citation_crs_calc(cited_paper, citing_paper)
+                source_self_citation += citing_paper.self_citation_crs
+        total_citations += cited_paper.times_cited  # The total citations is going to be the common denominator
+    print(f'Coauthor self-citation:\n    Name-level: {(author_name_self_citation/total_citations * 100):.2f}% ({author_name_self_citation} self-citations, {total_citations - author_name_self_citation} external, {total_citations} total)')
+    print(f'    DAIS-level: {(author_dais_self_citation/total_citations * 100):.2f}% ({author_dais_self_citation} self-citations, {total_citations - author_dais_self_citation} external, {total_citations} total)')
+    print(f'    ResearcherID-level: {(author_rids_self_citation/total_citations * 100):.2f}% ({author_rids_self_citation} self-citations, {total_citations - author_rids_self_citation} external, {total_citations} total)')
+    print(f'    ORCID-level: {(author_orcids_self_citation/total_citations * 100):.2f}% ({author_orcids_self_citation} self-citations, {total_citations - author_orcids_self_citation} external, {total_citations} total)')
+    print(f'Organization-level self citation: {(org_self_citation/total_citations * 100):.2f}% ({org_self_citation} self-citations, {total_citations - org_self_citation} external, {total_citations} total)')
+    print(f'Publication Source-level self citation: {(source_self_citation/total_citations * 100):.2f}% ({source_self_citation} self-citations, {total_citations - source_self_citation} external, {total_citations} total)')
 
 
 a = cited_papers()
