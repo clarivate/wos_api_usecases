@@ -1,10 +1,9 @@
 import requests
-import os
+from apikey import apikey  # Your API key, it's better not to store it in the program; Here, we created a python file
+                           # named 'apikey.py' in the same folder, where a variable 'apikey' stores our API key.
 
-apikey = os.environ['WOSEXPANDEDAPIKEY']  # Your API key, it's better not to store it in the program
-our_org = 'Sechenov First Moscow State Medical University'  # Enter your organization profile here
-pub_years = "2016-2020"  # Enter publication years
-
+our_org = "Clarivate"  # Enter your organization profile name here
+pub_years = '2011-2020'  # Enter publication years
 
 headers = {
     'X-APIKey': apikey
@@ -25,7 +24,7 @@ def fracount():  # Fractional counting function for every 100 WoS records receiv
             fractional_counting_paper, our_authors = singe_address_record_check(paper, authors, our_authors)
         else:  # Standard case
             fractional_counting_paper, our_authors = standard_case_paper_check(paper, authors, total_au_input)
-        csv_string = f"{paper['UID']},{pub_year},{our_authors},{fractional_counting_paper}\n"  # Preparing the output for a .csv
+        csv_string = f"{paper['UID']},{pub_year},{our_authors},{fractional_counting_paper}\n"
         csv_output += csv_string
     return csv_output
 
@@ -56,8 +55,8 @@ def single_address_org_check(paper, authors, our_authors):
     try:
         for org in (paper['static_data']['fullrecord_metadata']['addresses']['address_name']['address_spec']['organizations']['organization']):
             if org['content'] == our_org:
-                fractional_counting_paper = 1  # And if it is - doesn't matter how many authors, the whole paper is counted
-                our_authors = authors  # But just for reference, we will store the number of authors from our org in the csv
+                fractional_counting_paper = 1  # If it is - doesn't matter how many authors, the whole paper is counted
+                our_authors = authors  # Just for reference, we'll store the number of authors from our org in the csv
             else:
                 pass
     except (IndexError, KeyError):  # The chances that this paper won't be linked to your org-enhanced profile are tiny
@@ -68,45 +67,55 @@ def single_address_org_check(paper, authors, our_authors):
     return fractional_counting_paper, our_authors
 
 
-# When there are multiple affiliations in the paper, that's where we really need this code
+# When there are multiple affiliations in the paper (that's where we really need this whole algorithm)
 def standard_case_paper_check(paper, authors, total_au_input):
-    if paper['static_data']['summary']['names']['count'] == 1:    # Again, checking if the person is actually an author
+    if paper['static_data']['summary']['names']['count'] == 1:  # Again, checking if the person is actually an author
         if paper['static_data']['summary']['names']['name']['role'] == "author":
             authors = 1
     else:
         for person in paper['static_data']['summary']['names']['name']:
             if person['role'] == "author":
                 authors += 1
-    total_au_input, authors, our_authors = standard_case_address_check(paper, authors, total_au_input)
-    fractional_counting_paper = total_au_input / authors  # Calculating fractional counting for every paper
+    if authors == 0:  # A very rare case when there are no authors in the paper (i.e., only the "group author")
+        fractional_counting_paper = 0
+        our_authors = 0
+    else:
+        total_au_input, authors, our_authors = standard_case_address_check(paper, authors, total_au_input)
+        fractional_counting_paper = total_au_input / authors  # Calculating fractional counting for every paper
     return fractional_counting_paper, our_authors
 
 
 #  Identifying which authors in the paper are affiliated with our organization
 def standard_case_address_check(paper, authors, total_au_input):
     our_authors_seq_numbers = set()  # Building a set of sequence numbers of authors from our org
-    for affiliation in paper['static_data']['fullrecord_metadata']['addresses']['address_name']:
-        try:  # Checking every address in the paper
+    try:  # Checking every address in the paper
+        for affiliation in paper['static_data']['fullrecord_metadata']['addresses']['address_name']:
             for org in affiliation['address_spec']['organizations']['organization']:
-                if org['content'] == our_org:  # Checking evey organization profile to which the address is linked
+                if org['pref'] == 'Y' and org['content'] == our_org:  # Checking every organization profile to which the address is linked
                     if affiliation['names']['count'] == 1:  # Filling in the set with our authors' sequence numbers
-                        our_authors_seq_numbers.add(affiliation['names']['name']['seq_no'])
+                        if affiliation['names']['name']['role'] == 'author':
+                            our_authors_seq_numbers.add(affiliation['names']['name']['seq_no'])
                     else:
                         for our_author in affiliation['names']['name']:
-                            our_authors_seq_numbers.add(our_author['seq_no'])
-        except (IndexError, KeyError, TypeError):  # In case the address doesn't contain organization component at all, i.e. street address only
-            pass
-            """ You can add the following code instead of "pass" for checking:
-            print(f"Record {paper['UID']}:
-            organization field {affiliation['address_spec']['organizations']['organization'][1]['content}
-            is not linked to any author fields")"""
+                            if our_author['role'] == 'author':
+                                our_authors_seq_numbers.add(our_author['seq_no'])
+    except (IndexError, KeyError,
+            TypeError):  # In case the address doesn't contain organization component at all, i.e. street address only
+        pass
+        """ You can add the following code instead of "pass" for checking:
+        print(f"Record {paper['UID']}:
+        organization field {affiliation['address_spec']['organizations']['organization'][1]['content']}
+        is not linked to any author fields")"""
     our_authors = len(our_authors_seq_numbers)  # The number of our authors in the paper is the length of our set
     if paper['static_data']['summary']['names']['count'] == 1:  # The case when the total number of authors is one
         au_input = 0
-        au_affils = str(paper['static_data']['summary']['names']['name']['addr_no']).split(' ')
-        authors = 1
-        au_input = standard_case_affiliation_check(paper, au_affils, au_input)
-        total_au_input = au_input
+        try:
+            au_affils = str(paper['static_data']['summary']['names']['name']['addr_no']).split(' ')
+            authors = 1
+            au_input = standard_case_affiliation_check(paper, au_affils, au_input)
+            total_au_input = au_input
+        except KeyError:
+            pass  # Very rare cases when there is no link between author and affiliation record
     else:  # The case when the total number of authors is more than one - just calling their affiliations differently
         for author in our_authors_seq_numbers:
             au_input = 0
@@ -122,7 +131,7 @@ def standard_case_affiliation_check(paper, au_affils, au_input):
         try:
             affiliation = (paper['static_data']['fullrecord_metadata']['addresses']['address_name'][int(c1) - 1])
             for org in affiliation['address_spec']['organizations']['organization']:
-                if org['content'] == our_org:
+                if org['pref'] == 'Y' and org['content'] == our_org:
                     au_input += 1 / len(au_affils)
         except (KeyError, IndexError, TypeError):  # In case the address is not linked to an org profile
             pass
@@ -134,7 +143,9 @@ def standard_case_affiliation_check(paper, au_affils, au_input):
 
 
 # Initial request to the API is made to figure out the total amount of requests required
-initial_response = requests.get(f'{endpoint}?databaseId=WOS&usrQuery=OG=({our_org}) and PY={pub_years}&count=100&firstRecord=1', headers=headers)  # This is the initial API request
+initial_response = requests.get(
+    f'{endpoint}?databaseId=WOS&usrQuery=OG=({our_org}) and PY={pub_years}&count=100&firstRecord=1',
+    headers=headers)  # This is the initial API request
 data = initial_response.json()  # First 100 records received
 output = fracount()
 with open('papers.csv', 'w') as writing:
@@ -143,9 +154,12 @@ with open('papers.csv', 'w') as writing:
 # From the first response, extracting the total number of records found and calculating the number of requests required.
 # The program can take up to a few dozen minutes, depending on the number of records being analyzed
 for i in range(((data['QueryResult']['RecordsFound']) - 1) // 100):
-    subsequent_response = requests.get(f'{endpoint}?databaseId=WOS&usrQuery=OG=({our_org}) and PY={pub_years}&count=100&firstRecord={(100*(i+1)+1)}', headers=headers)
+    subsequent_response = requests.get(
+        f'{endpoint}?databaseId=WOS&usrQuery=OG=({our_org}) and PY={pub_years}&count=100&firstRecord='
+        f'{(100 * (i + 1) + 1)}',
+        headers=headers)
     data = subsequent_response.json()
     output = fracount()
     with open('papers.csv', 'a') as writing:
         writing.write(output)
-    print(f"{((i+1)*100) // (((data['QueryResult']['RecordsFound']) - 1) // 100)}% complete")
+    print(f"{((i + 1) * 100) // (((data['QueryResult']['RecordsFound']) - 1) // 100)}% complete")
