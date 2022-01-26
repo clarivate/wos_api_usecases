@@ -26,7 +26,7 @@ Volume 56, No. 2,
 Pages 235-246,
 https://doi.org/10.1023/A:1021919228368.](https://link.springer.com/article/10.1023%2FA%3A1021919228368)
 
-[Wolfgang Glänzel, Bart Thijs
+[Wolfgang Glänzel, Bart Thijs,
 Does co-authorship inflate the share of self-citations?,
 Scientometrics,
 Volume 61, No. 3,
