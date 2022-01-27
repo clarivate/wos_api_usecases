@@ -44,15 +44,13 @@ def tc(papers):
     return papers['times_cited']
 
 
-# Next thing is calculation of the standard H-index (which includes the self-citations).
+# Next thing is the calculation of standard H-index (which includes the self-citations).
 papers.sort(reverse=True, key=tc)
-h_index_including_sc = 0
+h_index_including_sc = len(papers)
 for paper in papers:
     if papers.index(paper) + 1 > paper['times_cited']:
         h_index_including_sc = papers.index(paper)
         break
-    else:
-        h_index_including_sc = len(papers)
 print(f'\nThe H-index including self-citations is: {h_index_including_sc}. '
       f'Now finding self-citations and excluding them.\n')
 
@@ -87,13 +85,12 @@ def tcm(papers):
 
 
 papers.sort(reverse=True, key=tcm)
-h_index_excluding_sc = 0
+h_index_excluding_sc = len(papers)
 for paper in papers:
     if papers.index(paper) + 1 > paper['tc_minus_sc']:
         h_index_excluding_sc = papers.index(paper)
         break
-    else:
-        h_index_excluding_sc = len(papers)
+
 print(f"\nThe H-index is:\n"
       f"    Including self-citations: {h_index_including_sc}\n"
       f"    Excluding self-citations: {h_index_excluding_sc}\n"
