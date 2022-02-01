@@ -1,15 +1,14 @@
 import requests
+import urllib.parse
 from apikey import apikey  # Your API key, it's better not to store it in the program; Here, we created a python file
                            # named 'apikey.py' in the same folder, where a variable 'apikey' stores our API key.
 
 our_org = "Clarivate"  # Enter your organization profile name here
 pub_years = '2011-2020'  # Enter publication years
 
-headers = {
-    'X-APIKey': apikey
-}
+headers = {'X-APIKey': apikey}
 
-endpoint = "https://api.clarivate.com/api/wos"
+baseurl = "https://api.clarivate.com/api/wos"
 csv_header = "UT,Publication_year,Author_count,Fractional_count\n"  # Final output will be placed in a .csv file
 
 
@@ -144,7 +143,7 @@ def standard_case_affiliation_check(paper, au_affils, au_input):
 
 # Initial request to the API is made to figure out the total amount of requests required
 initial_response = requests.get(
-    f'{endpoint}?databaseId=WOS&usrQuery=OG=({our_org}) and PY={pub_years}&count=100&firstRecord=1',
+    f'{baseurl}?databaseId=WOS&usrQuery=OG=({urllib.parse.quote(our_org)}) and PY={pub_years}&count=100&firstRecord=1',
     headers=headers)  # This is the initial API request
 data = initial_response.json()  # First 100 records received
 output = fracount()
@@ -155,8 +154,8 @@ with open('papers.csv', 'w') as writing:
 # The program can take up to a few dozen minutes, depending on the number of records being analyzed
 for i in range(((data['QueryResult']['RecordsFound']) - 1) // 100):
     subsequent_response = requests.get(
-        f'{endpoint}?databaseId=WOS&usrQuery=OG=({our_org}) and PY={pub_years}&count=100&firstRecord='
-        f'{(100 * (i + 1) + 1)}',
+        f'{baseurl}?databaseId=WOS&usrQuery=OG=({urllib.parse.quote(our_org)}) and PY={pub_years}&count=100&'
+        f'firstRecord={i+1}01',
         headers=headers)
     data = subsequent_response.json()
     output = fracount()
