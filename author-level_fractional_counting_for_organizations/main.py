@@ -1,7 +1,8 @@
 import requests
 import urllib.parse
-from apikey import apikey  # Your API key, it's better not to store it in the program; Here, we created a python file
-                           # named 'apikey.py' in the same folder, where a variable 'apikey' stores our API key.
+# Your API key, it's better not to store it in the program; Here, we created a python file named 'apikey.py' in the same
+# folder, where a variable 'apikey' stores our API key.
+from apikey import apikey
 
 our_org = "Clarivate"  # Enter your organization profile name here
 pub_years = '2011-2020'  # Enter publication years
@@ -52,7 +53,10 @@ def single_address_person_check(paper, authors):
 def single_address_org_check(paper, authors, our_authors):
     fractional_counting_paper = 0
     try:
-        for org in (paper['static_data']['fullrecord_metadata']['addresses']['address_name']['address_spec']['organizations']['organization']):
+        for org in (
+                paper['static_data']['fullrecord_metadata']['addresses']['address_name']['address_spec'][
+                    'organizations']['organization']
+        ):
             if org['content'] == our_org:
                 fractional_counting_paper = 1  # If it is - doesn't matter how many authors, the whole paper is counted
                 our_authors = authors  # Just for reference, we'll store the number of authors from our org in the csv
@@ -90,7 +94,7 @@ def standard_case_address_check(paper, authors, total_au_input):
     try:  # Checking every address in the paper
         for affiliation in paper['static_data']['fullrecord_metadata']['addresses']['address_name']:
             for org in affiliation['address_spec']['organizations']['organization']:
-                if org['pref'] == 'Y' and org['content'] == our_org:  # Checking every organization profile to which the address is linked
+                if org['pref'] == 'Y' and org['content'] == our_org:  # Checking every org the address is linked to
                     if affiliation['names']['count'] == 1:  # Filling in the set with our authors' sequence numbers
                         if affiliation['names']['name']['role'] == 'author':
                             our_authors_seq_numbers.add(affiliation['names']['name']['seq_no'])
@@ -136,7 +140,8 @@ def standard_case_affiliation_check(paper, au_affils, au_input):
             pass
             """You can add the following code instead of "pass" for checking:
             print(f"Record {paper['UID']}: address not linked to an Affiliation:
-            {paper['static_data']['fullrecord_metadata']['addresses']['address_name']['address_spec']['organizations']['organization'][0]['content']}")
+            {paper['static_data']['fullrecord_metadata']['addresses']['address_name']['address_spec']['organizations']
+            ['organization'][0]['content']}")
             """
     return au_input
 
@@ -152,13 +157,12 @@ with open('papers.csv', 'w') as writing:
 
 # From the first response, extracting the total number of records found and calculating the number of requests required.
 # The program can take up to a few dozen minutes, depending on the number of records being analyzed
-for i in range(((data['QueryResult']['RecordsFound']) - 1) // 100):
+for i in range(((data['QueryResult']['RecordsFound'] - 1) // 100) + 1):
     subsequent_response = requests.get(
-        f'{baseurl}?databaseId=WOS&usrQuery=OG=({urllib.parse.quote(our_org)}) and PY={pub_years}&count=100&'
-        f'firstRecord={i+1}01',
-        headers=headers)
+        f'{baseurl}?databaseId=WOS&usrQuery=OG=({urllib.parse.quote(our_org)}) and PY={pub_years}&count=100&firstRecord'
+        f'={i}01', headers=headers)
     data = subsequent_response.json()
     output = fracount()
     with open('papers.csv', 'a') as writing:
         writing.write(output)
-    print(f"{((i + 1) * 100) // (((data['QueryResult']['RecordsFound']) - 1) // 100)}% complete")
+    print(f"{((i + 1) * 100) // (((data['QueryResult']['RecordsFound'] - 1) // 100) + 1)}% complete")
