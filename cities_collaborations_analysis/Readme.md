@@ -12,6 +12,6 @@ This is how the code works
 
 And launch the code.
 
-The program will query Web of Science Expanded API for the document data, extract the "City" fields from each of them, process this data and print out the top 10 cities associated (or collaborating with) this set of papers. The full list of cities will be saved into a .csv-file in the same project folder.
+The program will query Web of Science Expanded API for the document data, extract the "City" fields from each of them, process this data and print out the top 10 cities associated this set of papers (or collaborating with the organizaition provided). The full list of cities will be saved into a .csv-file in the same project folder.
 
 As always, we welcome any feedback to further improve this algorithm.

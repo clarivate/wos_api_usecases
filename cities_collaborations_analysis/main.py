@@ -1,4 +1,5 @@
 import requests
+import urllib.parse
 from datetime import date
 from apikey import apikey   # Your API key, it's better not to store it in the program
 
@@ -21,6 +22,7 @@ our_org_cities = []
 if our_org == '':
     org_analysis_flag = False
     if search_query.count('OG=') == 1:
+        org_analysis_flag = True
         if search_query.count('=') == 1:
             our_org = search_query[search_query.find('OG=') + 3:]
         else:
@@ -106,7 +108,7 @@ def analyze_cities(data):
 
 # Initial request to the API is made to figure out the total amount of requests required
 initial_response = requests.get(
-    f'{baseurl}?databaseId=WOS&usrQuery={search_query}&count=100&firstRecord=1', headers=headers
+    f'{baseurl}?databaseId=WOS&usrQuery={urllib.parse.quote(search_query)}&count=100&firstRecord=1', headers=headers
 )
 data = initial_response.json()  # First 100 records received
 analyze_cities(data)
@@ -116,7 +118,7 @@ total_records = data['QueryResult']['RecordsFound']
 # The program can take up to a few dozen minutes, depending on the number of records being analyzed
 for i in range((total_records - 1) // 100):
     subsequent_response = requests.get(
-        f'{baseurl}?databaseId=WOS&usrQuery={search_query}&count=100&firstRecord={(100 * (i + 1) + 1)}',
+        f'{baseurl}?databaseId=WOS&usrQuery={urllib.parse.quote(search_query)}&count=100&firstRecord={i}01',
         headers=headers
     )
     data = subsequent_response.json()
