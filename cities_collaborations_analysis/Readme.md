@@ -49,6 +49,8 @@ As of March, 3rd, 2022, the program prints out the following:
 > 
 > Top 10 collaborating cities shown. All cities are saved to cities.csv file.*
 
+Indeed, we can see the full city list in the cities.csv file in the project folder
+
 
 2. Understand which cities does a specific organization collaborate with
 
@@ -83,6 +85,8 @@ As of March, 3rd, 2022, the program prints out the following:
 > The Hague: 424
 >
 > Top 10 collaborating cities shown. All cities are saved to cities.csv file.*
+
+Indeed, we can see the full city list in the cities.csv file in the project folder
 
 
 3. Figure out in which cities a specific organization is conducting its research
