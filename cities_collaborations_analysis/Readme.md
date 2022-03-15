@@ -25,29 +25,20 @@ our_org = ''
 
 As of March, 3rd, 2022, the program prints out the following:
 
-*This research is concentrated in the following cities:
-
-Beijing: 278
-
-Lanzhou: 97
-
-Xian: 42
-
-Tel Aviv: 33
-
-Chengdu: 32
-
-Argonne: 26
-
-Shenzhen: 25
-
-Ecully: 24
-
-Nanjing: 21
-
-Shanghai: 19
-
-Top 10 collaborating cities shown. All cities are saved to cities.csv file.*
+> This research is concentrated in the following cities:
+> 
+> Beijing: 278
+> Lanzhou: 97
+> Xian: 42
+> Tel Aviv: 33
+> Chengdu: 32
+> Argonne: 26
+> Shenzhen: 25
+> Ecully: 24
+> Nanjing: 21
+> Shanghai: 19
+> 
+> Top 10 collaborating cities shown. All cities are saved to cities.csv file.*
 
 
 2. Understand which cities does a specific organization collaborate with
@@ -60,29 +51,20 @@ our_org = 'Leiden University'
 
 As of March, 3rd, 2022, the program prints out the following:
 
-*Leiden University located in Leiden collaborates with:
-
-Leiden: 2128
-
-Amsterdam: 1754
-
-Utrecht: 988
-
-Rotterdam: 980
-
-London: 691
-
-Nijmegen: 673
-
-Groningen: 637
-
-Cambridge: 464
-
-Paris: 432
-
-The Hague: 424
-
-Top 10 collaborating cities shown. All cities are saved to cities.csv file.*
+> Leiden University located in Leiden collaborates with:
+>
+> Leiden: 2128
+> Amsterdam: 1754
+> Utrecht: 988
+> Rotterdam: 980
+> London: 691
+> Nijmegen: 673
+> Groningen: 637
+> Cambridge: 464
+> Paris: 432
+> The Hague: 424
+>
+> Top 10 collaborating cities shown. All cities are saved to cities.csv file.*
 
 
 3. Figure out in which cities a specific organization is conducting its research
@@ -95,35 +77,21 @@ our_org = 'Pfizer'
 
 As of March, 3rd, 2022, the .csv file produced by the program will contain the following:
 
-*Search Query:	OG=Pfizer and PY=2020
-
-Results Found:	1606
-
-Organisation:	Pfizer
-
-Located in:
-
-City		Occurrences
-
-New York	572
-
-Groton		466
-
-Collegeville	289
-
-Cambridge	259
-
-San Diego	125
-
-La Jolla	75
-
-Andover		73
-
-Tadworth	55
-
-Pearl River	53
-
-San Francisco	50*
+> Search Query:	OG=Pfizer and PY=2020
+> Results Found:1606
+> Organisation:	Pfizer
+> Located in:
+> City		Occurrences
+> New York	572
+> Groton	466
+> Collegeville	289
+> Cambridge	259
+> San Diego	125
+> La Jolla	75
+> Andover	73
+> Tadworth	55
+> Pearl River	53
+> San Francisco	50
 
 ...and 72 more cities, as well as a separate list of the cities in which the organizations which collaborate with Pfizer are located.
 
