@@ -15,7 +15,7 @@ And launch the code.
 The program will query Web of Science Expanded API for the document data, extract the "City" fields from each of them, process this data and print out the top 10 cities associated this set of papers (or collaborating with the organizaition provided). The full list of cities will be saved into a .csv-file in the same project folder.
 
 Three main use cases of this code are:
-1. Checking which cities is research on a specific topic concentrated in.
+1. Checking in which cities is a research on a specific topic concentrated.
 
 Example: we want to figure out which cities of the world are the leading centers in research of superlubricity. This is what we change in the code:
 
@@ -91,7 +91,7 @@ Indeed, we can see the full city list in the cities.csv file in the project fold
 
 3. Figure out in which cities a specific organization is conducting its research
 
-Example: we want to analyze where Pfiser was concentrating its research in 2020
+Example: we want to analyze where Pfizer was concentrating its research in 2020
 
 search_query = 'OG=Pfizer and PY=2020'
 
