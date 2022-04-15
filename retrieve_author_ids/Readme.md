@@ -20,9 +20,9 @@ The program will query Web of Science Expanded API for the document data, extrac
 - whether the author's record has been claimed by the author or not (True/False)
 - the list of author's document IDs in Web of Science (also known as Ascession Numbers, or UTs)
 
-The main use case of this code is checking which author profiles exist for your organization and how up to date each of them is.
+The main use case of this code is checking which author identifiers exist for your organization and how up to date each of them is.
 
-Although this code makes it much simpler to work on a set of author IDs associated with your organizations, there are some important considerations to keep in mind this code:
+Although this code makes it much simpler to work on a set of author IDs associated with your organizations, there are some important considerations to keep in mind while using this code:
 1. The code only relies on the links between "author" and "organization" fields in the Web of Science Core Collection record metadata. As there was no generally accepted practice to have these links in every published paper before mid-2007, this code might not return a lot of results for the documents published earlier than year 2008.
 2. This also means that if your employee doesn't have any documents affiliated with your organization, they won't appear in the results.
 3. This code does not rely on the current organization that the authors provide manually on their Web of Science author profiles or Publons profiles.
