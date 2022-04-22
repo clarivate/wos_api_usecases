@@ -14,7 +14,7 @@ import requests
 from apikey import APIKEY  # Create a separate apikey.py file in the project folder to store your API key there
 
 OUR_ORG = 'Clarivate'  # Enter the organization that you would like to analyze for existing author profiles
-ADDTL_PARAMS = 'PY=2010-2022'  # Enter additional search parameters, such as publication year
+ADDTL_PARAMS = 'PY=2008-2022'  # Enter additional search parameters, such as publication year
 
 HEADERS = {'X-APIKey': APIKEY}
 BASEURL = "https://api.clarivate.com/api/wos"
@@ -154,7 +154,7 @@ for wos_record in data:
                                     author_firstname = address['names']['name']['suffix']
                                 except KeyError:
                                     author_firstname = '_blank_'
-                            author_lastname = address['names']['names']['name']['last_name']
+                            author_lastname = address['names']['name']['last_name']
                             try:
                                 for rid_record in address['names']['name']['data-item-ids']['data-item-id']:
                                     if rid_record['id-type'] == 'PreferredRID':
@@ -175,7 +175,7 @@ for wos_record in data:
                                             author_orcid = summary_author['orcid_id']
                                 except KeyError:
                                     author_orcid = '_blank_'
-                            author_dais = address['names']['names']['name']['daisng_id']
+                            author_dais = address['names']['name']['daisng_id']
                             try:
                                 claim_status = str(address['names']['name']['claim_status']).upper()
                             except KeyError:
@@ -191,8 +191,7 @@ for wos_record in data:
                             })
                         # And finally, the case when there are multiple authors
                         else:
-                            for author in wos_record['static_data']['fullrecord_metadata']['addresses']['names']\
-                                    ['name']:
+                            for author in address['names']['name']:
                                 try:
                                     author_firstname = author['first_name']
                                 except KeyError:
@@ -215,7 +214,7 @@ for wos_record in data:
                                     author_orcid = '_blank_'
                                 author_dais = author['daisng_id']
                                 try:
-                                    claim_status = (author['claim_status']).upper()
+                                    claim_status = str(author['claim_status']).upper()
                                 except KeyError:
                                     claim_status = 'FALSE'
                                 authors_list.append({
@@ -236,7 +235,7 @@ with open('authors.csv', 'w') as writing:
                   f'\nUT,Firstname,Lastname,ResearcherID,ORCID,Author profile link,Claimed\n')
     for author in authors_list:
         writing.writelines(
-        f'{author["ut"]},{author["author_firstname"]},{author["author_lastname"]},{author["author_rid"]},'
-        f'{author["author_orcid"]},https://www.webofscience.com/wos/author/record/{author["author_dais"]},'
+        f'{author["ut"]},{author["author_firstname"]},{author["author_lastname"]},{author["author_rid"]} ,'
+        f'{author["author_orcid"]} ,https://www.webofscience.com/wos/author/record/{author["author_dais"]},'
         f'{author["claim_status"]}\n'
         )
