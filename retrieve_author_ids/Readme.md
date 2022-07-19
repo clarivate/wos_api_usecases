@@ -14,7 +14,7 @@ And launch the code.
 
 The program will query Web of Science Expanded API for the document data, extract the necessary author-related fields from each of them, and create a .csv-file in the same project folder that will contain:
 - the author's First and Last names
-- the author's ResearcherID (if it exists)
+- the author's ResearcherID
 - the author's ORCID (if it exists)
 - the link to the author's record in Web of Science
 - whether the author's record has been claimed by the author or not (True/False)
@@ -28,5 +28,6 @@ Although this code makes it much easier to work on a set of author IDs associate
 3. This code does not rely on the current organization that the authors provide manually on their Web of Science author profiles or Publons profiles.
 4. The document is not likely to appear in the .csv file if it is not linked to your organization profile.
 5. The above can also happen even when the Web of Science record is linked to an organization profile, and the paper was published after the year 2007, but a single author name field which belongs to an author from your organization is not linked to your organization field. Most likely this would mean that there has been an issue between the publisher submitting publication metadata into Web of Science Core Collection and indexing this data by us, and the link between the author name and the organization name in this record can be restored by providing a "Suggest a correction" feedback right in the Web of Science interface.
-4. Organization affiliation can sometimes be missing in the regular Address list but appear in Reprint, or Corresponding, address list of certain papers. Although this is quite a rear event, it is technically possible to add a function for counting the corresponding addresses.
-5. We do not encourage using this code right away for preparing the official research output reporting. Before submitting the external report based on this algorithm, we suggest double checking the author IDs and corresponding numbers, and welcome any feedback to further improve this algorithm.
+6. The ORCID value can be stored in the Web of Science Core Collection record in two ways: either in the author summary record, or in the "contributors" section of the record. In the latter case, it's much harder to relate a specific contributor and their ORCID to a specific author of the document. The algorithm relies on a exact match in the author and contributor last names, but this approach might work incorrectly in case the author has several ways of writing their last name, or in case there are authors with the same last name on one document. So far this is the best approximation that could be used in such a simple code without involving fuzzy logic algorithms, but as always we encourage any feedback on how the author and contributor matching can be improved. 
+7. Organization affiliation can sometimes be missing in the regular Address list but appear in Reprint, or Corresponding, address list of certain papers. Although this is quite a rear event, it is technically possible to add a function for counting the corresponding addresses.
+8. We do not encourage using this code right away for preparing the official research output reporting. Before submitting the external report based on this algorithm, we suggest double checking the author IDs and corresponding numbers, and welcome any feedback to further improve this algorithm.

@@ -6,7 +6,7 @@ To use the program, enter the organization profile name into the OUR_ORG constan
 Web of Science Core Collection Advanced Search parameters, like publication year, source title, subject area, etc. -
 and run the code.
 
-The program generates a .csv file containing evey document and every author affiliated with this organization
+The program generates a .csv file containing every document and every author affiliated with this organization
 """
 
 import urllib.parse
@@ -36,15 +36,16 @@ for i in range(requests_required):
 authors_list = []
 for wos_record in data:
     ut = wos_record['UID']
-    # A rare case of 0 org affiliations in a particular WoS record - this can sometimes happen, and then there's no
-    # author data that will be linked to our organizational profile
+    # When there are 0 org affiliations in a particular WoS record - this can sometimes happen, and then there's no
+    # author data that is linked to our organizational profile
     if wos_record['static_data']['fullrecord_metadata']['addresses']['count'] == 0:
         pass
-    # A case of only 1 org affiliation in the WoS record
+    # When there is only 1 org affiliation in the WoS record
     elif wos_record['static_data']['fullrecord_metadata']['addresses']['count'] == 1:
-        # A case of only 1 author in this affiliation
+        # 1 org affiliation - a case of only 1 author in this affiliation
         try:
             if wos_record['static_data']['fullrecord_metadata']['addresses']['address_name']['names']['count'] == 1:
+                # Retrieving author first name
                 try:
                     author_firstname = wos_record['static_data']['fullrecord_metadata']['addresses']['address_name']\
                         ['names']['name']['first_name']
@@ -54,8 +55,10 @@ for wos_record in data:
                                 ['address_name']['names']['name']['suffix']
                     except KeyError:
                         author_firstname = '_blank_'
+                # Retrieving author last name
                 author_lastname = wos_record['static_data']['fullrecord_metadata']['addresses']['address_name']\
                     ['names']['name']['last_name']
+                # Retrieving author ResearcherID
                 try:
                     for rid_record in wos_record['static_data']['fullrecord_metadata']['addresses']['address_name']\
                             ['names']['name']['data-item-ids']['data-item-id']:
@@ -63,26 +66,58 @@ for wos_record in data:
                             author_rid = rid_record['content']
                             break
                 except (KeyError, TypeError):
-                    author_rid = '_blank_'
-                # ORCID ID is stored in the summary author record. Again, first we try the case when there's only one
-                # author in the summary field (meaning, there is only 1 author in the whole document)
+                    try:
+                        author_rid = wos_record['static_data']['fullrecord_metadata']['addresses']['address_name']\
+                            ['names']['name']['data-item-ids']['data-item-id']['content']
+                    except KeyError:
+                        author_rid = '_blank_'
+                # Retrieving author ORCID. It can be stored in the summary author record or in the "contributors"
+                # section.
                 if wos_record['static_data']['summary']['names']['count'] == 1:
                     try:
                         author_orcid = wos_record['static_data']['summary']['names']['name']['orcid_id']
                     except KeyError:
-                        author_orcid = '_blank_'
+                        try:
+                            if wos_record['static_data']['contributors']['count'] == 1:
+                                if wos_record['static_data']['contributors']['contributor']['name']['last_name'] == \
+                                        wos_record['static_data']['summary']['names']['name']['last_name']:
+                                    author_orcid = wos_record['static_data']['contributors']['contributor']['name']\
+                                        ['orcid_id']
+                            elif wos_record['static_data']['contributors']['count'] > 1:
+                                for contributor in wos_record['static_data']['contributors']['contributor']:
+                                    if contributor['name']['last_name'] == wos_record['static_data']['summary']\
+                                            ['names']['name']['last_name']:
+                                        author_orcid = contributor['name']['orcid_id']
+                                        break
+                            else:
+                                author_orcid = '_blank_'
+                        except KeyError:
+                            author_orcid = '_blank_'
                 # And the case when there are multiple authors in the document, and we have to iterate over them
                 else:
-                    try:
-                        for summary_author in wos_record['static_data']['summary']['names']['name']:
-                            if summary_author['seq_no'] == wos_record['static_data']['fullrecord_metadata']\
-                                    ['addresses']['address_name']['names']['name']['seq_no']:
+                    for summary_author in wos_record['static_data']['summary']['names']['name']:
+                        if summary_author['seq_no'] == wos_record['static_data']['fullrecord_metadata']\
+                                ['addresses']['address_name']['names']['name']['seq_no']:
+                            try:
                                 author_orcid = summary_author['orcid_id']
                                 break
-                    except KeyError:
-                        author_orcid = '_blank_'
+                            except KeyError:
+                                if wos_record['static_data']['contributors']['count'] == 1:
+                                    if wos_record['static_data']['contributors']['contributor']['name']['last_name'] \
+                                            == summary_author['last_name']:
+                                        author_orcid = wos_record['static_data']['contributors']['contributor']['name']\
+                                            ['orcid_id']
+                                elif wos_record['static_data']['contributors']['count'] > 1:
+                                    for contributor in wos_record['static_data']['contributors']['contributor']:
+                                        if contributor['name']['last_name'] == summary_author['last_name']:
+                                            author_orcid = contributor['name']['orcid_id']
+                                            break
+                                else:
+                                    author_orcid = '_blank_'
+                # Retrieving author DAIS ID
                 author_dais = wos_record['static_data']['fullrecord_metadata']['addresses']['address_name']['names']\
                     ['name']['daisng_id']
+                # Checking is this record is claimed by the author
                 try:
                     claim_status = str(wos_record['static_data']['fullrecord_metadata']['addresses']['address_name']\
                                            ['names']['name']['claim_status']).upper()
@@ -97,10 +132,11 @@ for wos_record in data:
                     'author_dais': author_dais,
                     'claim_status': claim_status
                 })
-            # A case where there are multiple author records in a single affiliation
+            # 1 org affiliation - a case where there are multiple author records in it
             else:
                 for author in wos_record['static_data']['fullrecord_metadata']['addresses']['address_name']['names']\
                         ['name']:
+                    # Retrieving author first name
                     try:
                         author_firstname = author['first_name']
                     except (KeyError, TypeError):
@@ -108,6 +144,7 @@ for wos_record in data:
                             author_firstname = author['suffix']
                         except (KeyError, TypeError):
                             author_firstname = '_blank_'
+                    # Retrieving author last name
                     author_lastname = author['last_name']
                     # When there are multiple author records in one affiliation, there will only be a case of multiple
                     # authors in the whole document
@@ -115,15 +152,40 @@ for wos_record in data:
                         for rid_record in author['data-item-ids']['data-item-id']:
                             if rid_record['id-type'] == 'PreferredRID':
                                 author_rid = rid_record['content']
+                                break
                     except (KeyError, TypeError):
-                        author_rid = '_blank_'
+                        try:
+                            author_rid = author['data-item-ids']['data-item-id']['content']
+                        except KeyError:
+                            author_rid = '_blank_'
+                    # Retrieving author ORCID
                     try:
                         for summary_author in wos_record['static_data']['summary']['names']['name']:
                             if summary_author['seq_no'] == author['seq_no']:
                                 author_orcid = summary_author['orcid_id']
                     except KeyError:
-                        author_orcid = '_blank_'
+                        try:
+                            if wos_record['static_data']['contributors']['count'] == 1:
+                                if wos_record['static_data']['contributors']['contributor']['name']['last_name'] == \
+                                        author['last_name']:
+                                    author_orcid = wos_record['static_data']['contributors']['contributor']['name']\
+                                        ['orcid_id']
+                                else:
+                                    author_orcid = '_blank_'
+                            elif wos_record['static_data']['contributors']['count'] > 1:
+                                for contributor in wos_record['static_data']['contributors']['contributor']:
+                                    if contributor['name']['last_name'] == author['last_name']:
+                                        author_orcid = contributor['name']['orcid_id']
+                                        break
+                                else:
+                                    author_orcid = '_blank_'
+                            else:
+                                author_orcid = '_blank_'
+                        except KeyError:
+                            author_orcid = '_blank_'
+                    # Retrieving author DAIS ID
                     author_dais = author['daisng_id']
+                    # Checking if the record has been claimed by the author
                     try:
                         claim_status = str(author['claim_status']).upper()
                     except KeyError:
@@ -140,13 +202,16 @@ for wos_record in data:
         except KeyError:
             pass
     else:
-        # A case of multiple affiliations in the WoS record
+        # When there are multiple affiliations in the WoS record
         for address in wos_record['static_data']['fullrecord_metadata']['addresses']['address_name']:
             try:
                 for org in address['address_spec']['organizations']['organization']:
                     if org['pref'] == "Y" and org['content'] == OUR_ORG:
-                        # A case of only one author record among multiple affiliations
+                        # Multiple affiliations - a case of only one author record in our affiliation (but there might
+                        # be other author records associated with other affiliations in the record, which we don't need
+                        # for the purpose of this code)
                         if address['names']['count'] == 1:
+                            # retrieving author first name
                             try:
                                 author_firstname = address['names']['name']['first_name']
                             except KeyError:
@@ -154,28 +219,71 @@ for wos_record in data:
                                     author_firstname = address['names']['name']['suffix']
                                 except KeyError:
                                     author_firstname = '_blank_'
+                            # retrieving author last name
                             author_lastname = address['names']['name']['last_name']
+                            # retrieving author ResearcherID
                             try:
                                 for rid_record in address['names']['name']['data-item-ids']['data-item-id']:
                                     if rid_record['id-type'] == 'PreferredRID':
                                         author_rid = rid_record['content']
                             except (KeyError, TypeError):
-                                author_rid = '_blank_'
-                            # Again, this gives us two options: when there is only one author in the whole document...
+                                try:
+                                    author_rid = address['names']['name']['data-item-ids']['data-item-id']['content']
+                                except KeyError:
+                                    author_rid = '_blank_'
+                            # Retrieving author ORCID. Again, this gives us two options: when there is only one author
+                            # in the whole document...
                             if wos_record['static_data']['summary']['names']['count'] == 1:
                                 try:
                                     author_orcid = wos_record['static_data']['summary']['names']['name']['orcid_id']
                                 except KeyError:
-                                    author_orcid = '_blank_'
+                                    try:
+                                        if wos_record['static_data']['contributors']['count'] == 1:
+                                            if wos_record['static_data']['contributors']['contributor']['name']\
+                                                ['last_name'] == wos_record['static_data']['summary']['names']['name']\
+                                                    ['last_name']:
+                                                author_orcid = wos_record['static_data']['contributors']['contributor']\
+                                                    ['name']['orcid_id']
+                                                break
+                                        elif wos_record['static_data']['contributors']['count'] > 1:
+                                            for contributor in wos_record['static_data']['contributors']['contributor']:
+                                                if contributor['name']['last_name'] == wos_record['static_data']\
+                                                        ['summary']['names']['name']['last_name']:
+                                                    author_orcid = contributor['name']['orcid_id']
+                                        else:
+                                            author_orcid = '_blank_'
+                                    except KeyError:
+                                        author_orcid = '_blank_'
                             # ...And the case when there are multiple authors
                             else:
-                                try:
-                                    for summary_author in wos_record['static_data']['summary']['names']['name']:
-                                        if summary_author['seq_no'] == address['names']['name']['seq_no']:
+                                for summary_author in wos_record['static_data']['summary']['names']['name']:
+                                    if summary_author['seq_no'] == address['names']['name']['seq_no']:
+                                        try:
                                             author_orcid = summary_author['orcid_id']
-                                except KeyError:
-                                    author_orcid = '_blank_'
+                                        except KeyError:
+                                            try:
+                                                if wos_record['static_data']['contributors']['count'] == 1:
+                                                    if wos_record['static_data']['contributors']['contributor']['name']\
+                                                            ['last_name'] == summary_author['last_name']:
+                                                        author_orcid = wos_record['static_data']['contributors']\
+                                                            ['contributor']['name']['orcid_id']
+                                                        break
+                                                elif wos_record['static_data']['contributors']['count'] > 1:
+                                                    for contributor in wos_record['static_data']['contributors']\
+                                                            ['contributor']:
+                                                        if contributor['name']['last_name'] == \
+                                                                summary_author['last_name']:
+                                                            author_orcid = contributor['name']['orcid_id']
+                                                            break
+                                                    else:
+                                                        author_orcid = '_blank_'
+                                                else:
+                                                    author_orcid = '_blank_'
+                                            except KeyError:
+                                                author_orcid = '_blank_'
+                            # retrieving author DAIS ID
                             author_dais = address['names']['name']['daisng_id']
+                            # checking if the author record has been claimed
                             try:
                                 claim_status = str(address['names']['name']['claim_status']).upper()
                             except KeyError:
@@ -189,9 +297,11 @@ for wos_record in data:
                                 'author_dais': author_dais,
                                 'claim_status': claim_status
                             })
-                        # And finally, the case when there are multiple authors
+                        # And finally, the case when there are multiple authors in our affiliation (again, there might
+                        # be other affiliations in the record, which we don't need for the purpose of this code)
                         else:
                             for author in address['names']['name']:
+                                # retrieving author first name
                                 try:
                                     author_firstname = author['first_name']
                                 except KeyError:
@@ -199,20 +309,49 @@ for wos_record in data:
                                         author_firstname = author['suffix']
                                     except KeyError:
                                         author_firstname = '_blank_'
+                                # retrieving author last name
                                 author_lastname = author['last_name']
+                                # retrieving author ResearcherID
                                 try:
                                     for rid_record in author['data-item-ids']['data-item-id']:
                                         if rid_record['id-type'] == 'PreferredRID':
                                             author_rid = rid_record['content']
                                 except (KeyError, TypeError):
-                                    author_rid = '_blank_'
-                                try:
-                                    for summary_author in wos_record['static_data']['summary']['names']['name']:
-                                        if summary_author['seq_no'] == author['seq_no']:
+                                    try:
+                                        author_rid = author['data-item-ids']['data-item-id']['content']
+                                    except KeyError:
+                                        author_rid = '_blank_'
+                                # retrieving author ORCID
+                                for summary_author in wos_record['static_data']['summary']['names']['name']:
+                                    if summary_author['seq_no'] == author['seq_no']:
+                                        try:
                                             author_orcid = summary_author['orcid_id']
-                                except KeyError:
-                                    author_orcid = '_blank_'
+                                        except KeyError:
+                                            try:
+                                                if wos_record['static_data']['contributors']['count'] == 1:
+                                                    if wos_record['static_data']['contributors']['contributor']['name']\
+                                                            ['last_name'] == \
+                                                            summary_author['last_name']:
+                                                        author_orcid = wos_record['static_data']['contributors']\
+                                                            ['contributor']['name'][
+                                                                'orcid_id']
+                                                        break
+                                                elif wos_record['static_data']['contributors']['count'] > 1:
+                                                    for contributor in wos_record['static_data']['contributors']\
+                                                            ['contributor']:
+                                                        if contributor['name']['last_name'] == \
+                                                                summary_author['last_name']:
+                                                            author_orcid = contributor['name']['orcid_id']
+                                                            break
+                                                        else:
+                                                            author_orcid = '_blank_'
+                                                    else:
+                                                        author_orcid = '_blank_'
+                                            except KeyError:
+                                                author_orcid = '_blank_'
+                                # retrieving author DAIS ID
                                 author_dais = author['daisng_id']
+                                # checking if the author profile has been claimed
                                 try:
                                     claim_status = str(author['claim_status']).upper()
                                 except KeyError:
@@ -229,6 +368,7 @@ for wos_record in data:
             except KeyError:
                 pass
 
+# saving the data into a .csv file
 with open('authors.csv', 'w') as writing:
     writing.write(f'Organization:,{OUR_ORG}\n'
                   f'Additional Search Parameters:,{ADDTL_PARAMS}\n'
