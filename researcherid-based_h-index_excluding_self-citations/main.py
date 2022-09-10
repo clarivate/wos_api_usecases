@@ -1,11 +1,23 @@
+"""
+This code allows calculating an H-index for any set of Web of Science documents, both including and excluding
+self-citations.
+
+To use the program, enter the advanced search query - i.e., an author (AU=) or author identifier (AI=) search - into
+the SEARCH_QUERY constant value, and run the code.
+
+The program prints the general results but also generates a .csv file containing every document and its citation counts
+- both including and excluding self-citations, making it possible to figure out which specific documents
+fall out of the H-index calculation if self-citations are excluded.
+"""
+
 import requests
-from apikey import apikey   # Your API key, it's better not to store it in the program
+from apikey import APIKEY   # Your API key, it's better not to store it in the program
 
-search_query = 'AI=V-2282-2019'  # Enter the WoS search query here
+SEARCH_QUERY = 'AI=AAD-5677-2022'  # Enter the WoS search query here
 
-headers = {'X-APIKey': apikey}
+HEADERS = {'X-APIKey': APIKEY}
+BASEURL = "https://api.clarivate.com/api/wos"
 
-baseurl = "https://api.clarivate.com/api/wos"
 papers = []  # All the relevant article data required for calculations inside this code will be stored in this list
 
 
@@ -22,7 +34,7 @@ def analyze_core_papers(data):
 # we want to calculate the H-index) based on the search query stored in the search_query variable above.
 # Initial request to the API is made to figure out the total amount of requests required
 initial_response = requests.get(
-    f'{baseurl}?databaseId=WOS&usrQuery={search_query}&count=0&firstRecord=1', headers=headers)
+    f'{BASEURL}?databaseId=WOS&usrQuery={SEARCH_QUERY}&count=0&firstRecord=1', headers=HEADERS)
 data = initial_response.json()
 total_records = data['QueryResult']['RecordsFound']
 # From the first response, extracting the total number of records found and calculating the number of requests required.
@@ -32,20 +44,13 @@ if requests_required > 1:
     print(f'API requests required to get all the author papers data: {requests_required}')
 for i in range(requests_required):
     subsequent_response = requests.get(
-        f'{baseurl}?databaseId=WOS&usrQuery={search_query}&count=100&firstRecord={i}01',
-        headers=headers
-    )
+        f'{BASEURL}?databaseId=WOS&usrQuery={SEARCH_QUERY}&count=100&firstRecord={i}01', headers=HEADERS)
     data = subsequent_response.json()
     analyze_core_papers(data)  # Every batch of data received via API is sent to analyze_core_papers function
 
 
-# This function is just required for the papers.sort below to work
-def tc(papers):
-    return papers['times_cited']
-
-
 # Next thing is the calculation of standard H-index (which includes the self-citations).
-papers.sort(reverse=True, key=tc)
+papers.sort(reverse=True, key=lambda papers: papers['times_cited'])
 h_index_including_sc = len(papers)
 for paper in papers:
     if papers.index(paper) + 1 > paper['times_cited']:
@@ -62,16 +67,14 @@ for paper in papers:
     self_citation_references = 0
     print(f'Checking self-references in paper {papers.index(paper) + 1} of {len(papers)}')
     initial_response = requests.get(
-        f"{baseurl}/references?databaseId=WOS&uniqueId={paper['UT']}&count=0&firstRecord=1",
-        headers=headers
-    )
+        f"{BASEURL}/references?databaseId=WOS&uniqueId={paper['UT']}&count=0&firstRecord=1", headers=HEADERS)
     initial_data = initial_response.json()
     total_records = initial_data['QueryResult']['RecordsFound']
     requests_required = ((total_records - 1) // 100) + 1
     for i in range(requests_required):
         subsequent_response = requests.get(
-            f"{baseurl}/references?databaseId=WOS&uniqueId={paper['UT']}&count=100&firstRecord={(i)}01",
-            headers=headers)
+            f"{BASEURL}/references?databaseId=WOS&uniqueId={paper['UT']}&count=100&firstRecord={(i)}01",
+            headers=HEADERS)
         data = subsequent_response.json()
         for cited_reference in data['Data']:
             for cited_paper in papers:
@@ -79,12 +82,8 @@ for paper in papers:
                     cited_paper['tc_minus_sc'] -= 1
 
 
-# Finally, we've got enough data to calculate the H-index without self-citation
-def tcm(papers):
-    return papers['tc_minus_sc']
-
-
-papers.sort(reverse=True, key=tcm)
+# Finally, we've got enough data to calculate the H-index without self-citations
+papers.sort(reverse=True, key=lambda papers: papers['tc_minus_sc'])
 h_index_excluding_sc = len(papers)
 for paper in papers:
     if papers.index(paper) + 1 > paper['tc_minus_sc']:
