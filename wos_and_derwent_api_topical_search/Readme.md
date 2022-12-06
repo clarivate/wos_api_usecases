@@ -20,17 +20,17 @@ We considered it important to distinguish the earliest priority years and punlic
 
 The main use case of this code is comparing the trends in research and innovation for a given topic. In certain cases, like, for instance, topics of fullerenes, cubesats, or exosomes, there would be an obvious exponential growth in research output, followed by a similar exponential growth in the number of registered inventions. The gaps between these trends can sometimes reach several years. While, in other cases, like in blokchain research or convolutional neural networks research, the exponential growth trends would more or less go hand in hand, with an obvious domination of patent documents in the earlier years. Here are some examples of the graphs that the code produces:
 
-![Exosomes](/../../tree/main/wos_and_derwent_api_topical_search/screenshots/Exosomes.png)
+![Exosomes](/../../tree/main/wos_and_derwent_api_topical_search/screenshots/Exosomes.png?raw=true)
 
-![Metasurfaces](/../../../tree/main/wos_and_derwent_api_topical_search/screenshots/Metasurfaces.png)
+![Metasurfaces](/../../tree/main/wos_and_derwent_api_topical_search/screenshots/Metasurfaces.png?raw=true)
 
-![Microplastics](/screenshots/Microplastics.png)
+![Microplastics](/../../tree/main/wos_and_derwent_api_topical_search/screenshots/Microplastics.png?raw=true)
 
-![MXene](/screenshots/Mxene.png)
+![MXene](/../../tree/main/wos_and_derwent_api_topical_search/screenshots/Mxene.png?raw=true)
 
-![Nanorobots](/screenshots/Nanorobots.png)
+![Nanorobots](/../../tree/main/wos_and_derwent_api_topical_search/screenshots/Nanorobots.png?raw=true)
 
-![Selective serotonin reuptake inhibitors](/screenshots/Selective Serotonin Reuptake Inhibitors.png)
+![Selective serotonin reuptake inhibitors](/../../tree/main/wos_and_derwent_api_topical_search/screenshots/Selective Serotonin Reuptake Inhibitors.png?raw=true)
 
 A few important considerations regarding this alrorithm:
 1. Although it is possible to send similar topical search queries to both Web of Science and Derwent Innovation, the code currently only sends simple one-word queries, like "exosomes", or multi-word ones, like "selective serotonin reuptake inibitor", using common truncation symbols like asterisk is also possible, like in "cubesat*". Currently the code doesn't support the boolean search operators, like AND, OR, NOT, SAME, or proximity operators, some of which work differently for each of the databases. However, it is possible to improve the algorithm to also accept the more complex queries.
