@@ -20,12 +20,17 @@ The program will query Web of Science Lite API for the scholarly document data, 
 - A number of patent families that contain the topical search keyword and received their earliest priority that year
 - A number of patent families that contain the topical search keyword and were published that year
 
-We considered it important to distinguish the earliest priority years and punlication years for the patent families as there is normally a 18 months gap between the patent application submission and its publication by the patent office. We have to stress that in scholarly publishing, there is also normally a significant gap between the mauscript submission and its publication, but there is no standard timeframes for the manuscipt processing from submission to publication, and their range varies greatly from a few weeks to a few years in certain cases.
-
-The main use case of this code is comparing the trends in research and innovation for a given topic. In certain cases, like, for instance, topics of fullerenes, cubesats, or exosomes, there would be an obvious exponential growth in research output, followed by a similar exponential growth in the number of registered inventions. The gaps between these trends can sometimes reach several years. While, in other cases, like in blokchain research or convolutional neural networks research, the exponential growth trends would more or less go hand in hand, with an obvious domination of patent documents in the earlier years. Here is another example of the graphs that the code produces:
-
+Here is another example of the graphs that the code produces:
 
 ![Nanorobots](/wos_and_derwent_api_topical_search/screenshots/Nanorobots.png?raw=true)
+
+And a screenshot of a typical .csv file:
+
+![csv_screenshot](/wos_and_derwent_api_topical_search/screenshots/csv_screenshot.png?raw=true)
+
+We considered it important to distinguish the earliest priority years and punlication years for the patent families as there is normally a 18 months gap between the patent application submission and its publication by the patent office. We have to stress that in scholarly publishing, there is also normally a significant gap between the mauscript submission and its publication, but there is no standard timeframes for the manuscipt processing from submission to publication, and their range varies greatly from a few weeks to a few years in certain cases.
+
+The main use case of this code is comparing the trends in research and innovation for a given topic. In certain cases, like, for instance, topics of fullerenes, cubesats, or exosomes, there would be an obvious exponential growth in research output, followed by a similar exponential growth in the number of registered inventions. The gaps between these trends can sometimes reach several years. While, in other cases, like in blokchain research or convolutional neural networks research, the exponential growth trends would more or less go hand in hand, with an obvious domination of patent documents in the earlier years.
 
 
 A few important considerations regarding this alrorithm:
