@@ -20,12 +20,17 @@ We considered it important to distinguish the earliest priority years and punlic
 
 The main use case of this code is comparing the trends in research and innovation for a given topic. In certain cases, like, for instance, topics of fullerenes, cubesats, or exosomes, there would be an obvious exponential growth in research output, followed by a similar exponential growth in the number of registered inventions. The gaps between these trends can sometimes reach several years. While, in other cases, like in blokchain research or convolutional neural networks research, the exponential growth trends would more or less go hand in hand, with an obvious domination of patent documents in the earlier years. Here are some examples of the graphs that the code produces:
 
-![Exosomes](/screenshots/Exosomes.png)
-![Metasurfaces](/screenshots/Metasurface - by families - 6 Dec 2022.png)
-![Microplastics](/screenshots/Microplastic - by families - 6 Dec 2022.png)
-![MXene](/screenshots/Mxene - by families - 6 Dec 2022.png)
-![Nanorobots](/screenshots/Nanorobots - by families - 5 Dec 2022.png)
-![Selective serotonin reuptake inhibitors](/screenshots/Selective Serotonin Reuptake Inhibitors - by families - 4 Dec 2022.png)
+![Exosomes](../blob/main/screenshots/Exosomes.png)
+
+![Metasurfaces](/screenshots/Metasurfaces.png)
+
+![Microplastics](/screenshots/Microplastics.png)
+
+![MXene](/screenshots/Mxene.png)
+
+![Nanorobots](/screenshots/Nanorobots.png)
+
+![Selective serotonin reuptake inhibitors](/screenshots/Selective Serotonin Reuptake Inhibitors.png)
 
 A few important considerations regarding this alrorithm:
 1. Although it is possible to send similar topical search queries to both Web of Science and Derwent Innovation, the code currently only sends simple one-word queries, like "exosomes", or multi-word ones, like "selective serotonin reuptake inibitor", using common truncation symbols like asterisk is also possible, like in "cubesat*". Currently the code doesn't support the boolean search operators, like AND, OR, NOT, SAME, or proximity operators, some of which work differently for each of the databases. However, it is possible to improve the algorithm to also accept the more complex queries.
