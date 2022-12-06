@@ -9,7 +9,9 @@ This is how the code works:
 
 #### The user needs to enter in the code:
 1. Their Web of Science Lite API key, as well as Derwent API login and password;
-2. A topical search query.
+2. A topical search query:
+
+![screenshot](/wos_and_derwent_api_topical_search/screenshots/keys_passwords_search_query.png?raw=true)
 
 And launch the code.
 
