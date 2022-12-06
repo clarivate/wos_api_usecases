@@ -1,5 +1,7 @@
 # Compare research and innovation trends
 
+![Exosomes](/wos_and_derwent_api_topical_search/screenshots/Exosomes.png)
+
 
 ## A script that demonstrates the power of unifying the research data from Web of Science and patents data from Derwent Innovation. It queries both databases with the same topical search, analyses the annual research and innovation dynamics for it, visualises them as a bar chart using Plotly, and also saves the trend data as a .csv file for further analysis. The code uses Web of Science Lite API and Derwent API.
 
@@ -18,19 +20,11 @@ The program will query Web of Science Lite API for the scholarly document data, 
 
 We considered it important to distinguish the earliest priority years and punlication years for the patent families as there is normally a 18 months gap between the patent application submission and its publication by the patent office. We have to stress that in scholarly publishing, there is also normally a significant gap between the mauscript submission and its publication, but there is no standard timeframes for the manuscipt processing from submission to publication, and their range varies greatly from a few weeks to a few years in certain cases.
 
-The main use case of this code is comparing the trends in research and innovation for a given topic. In certain cases, like, for instance, topics of fullerenes, cubesats, or exosomes, there would be an obvious exponential growth in research output, followed by a similar exponential growth in the number of registered inventions. The gaps between these trends can sometimes reach several years. While, in other cases, like in blokchain research or convolutional neural networks research, the exponential growth trends would more or less go hand in hand, with an obvious domination of patent documents in the earlier years. Here are some examples of the graphs that the code produces:
+The main use case of this code is comparing the trends in research and innovation for a given topic. In certain cases, like, for instance, topics of fullerenes, cubesats, or exosomes, there would be an obvious exponential growth in research output, followed by a similar exponential growth in the number of registered inventions. The gaps between these trends can sometimes reach several years. While, in other cases, like in blokchain research or convolutional neural networks research, the exponential growth trends would more or less go hand in hand, with an obvious domination of patent documents in the earlier years. Here is another example of the graphs that the code produces:
 
-![Exosomes](/wos_and_derwent_api_topical_search/screenshots/Exosomes.png)
-
-![Metasurfaces](/wos_and_derwent_api_topical_search/screenshots/Metasurfaces.png)
-
-![Microplastics](/wos_and_derwent_api_topical_search/screenshots/Microplastics.png?raw=true)
-
-![MXene](/wos_and_derwent_api_topical_search/screenshots/Mxene.png?raw=true)
 
 ![Nanorobots](/wos_and_derwent_api_topical_search/screenshots/Nanorobots.png?raw=true)
 
-![Selective serotonin reuptake inhibitors](/../../tree/main/wos_and_derwent_api_topical_search/screenshots/selective_serotonin_reuptake_inhibitors.png?raw=true)
 
 A few important considerations regarding this alrorithm:
 1. Although it is possible to send similar topical search queries to both Web of Science and Derwent Innovation, the code currently only sends simple one-word queries, like "exosomes", or multi-word ones, like "selective serotonin reuptake inibitor", using common truncation symbols like asterisk is also possible, like in "cubesat*". Currently the code doesn't support the boolean search operators, like AND, OR, NOT, SAME, or proximity operators, some of which work differently for each of the databases. However, it is possible to improve the algorithm to also accept the more complex queries.
