@@ -20,9 +20,9 @@ We considered it important to distinguish the earliest priority years and punlic
 
 The main use case of this code is comparing the trends in research and innovation for a given topic. In certain cases, like, for instance, topics of fullerenes, cubesats, or exosomes, there would be an obvious exponential growth in research output, followed by a similar exponential growth in the number of registered inventions. The gaps between these trends can sometimes reach several years. While, in other cases, like in blokchain research or convolutional neural networks research, the exponential growth trends would more or less go hand in hand, with an obvious domination of patent documents in the earlier years. Here are some examples of the graphs that the code produces:
 
-![Exosomes](/../../screenshots/Exosomes.png)
+![Exosomes](/../../tree/main/wos_and_derwent_api_topical_search/screenshots/Exosomes.png)
 
-![Metasurfaces](/../../../screenshots/Metasurfaces.png)
+![Metasurfaces](/../../../tree/main/wos_and_derwent_api_topical_search/screenshots/Metasurfaces.png)
 
 ![Microplastics](/screenshots/Microplastics.png)
 
