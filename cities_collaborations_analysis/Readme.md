@@ -1,7 +1,7 @@
 # Cities Collaborations Analysis
 
 
-## A simple script to evaluate a set of Web of Science docuents for the cities in which this research has been made - or to evaluate a specific organization for which cities it mostly collaborates with. The code relies on Web of Science article data obtained using Web of Sciencce Expanded API.
+## A simple script to evaluate a set of Web of Science docuents for the cities in which this research has been made - or to evaluate a specific organization for which cities it mostly collaborates with. The code relies on Web of Science article data obtained using Web of Science Expanded API.
 
 This is how the code works
 
