@@ -32,13 +32,13 @@ For the purposes of this algorithm, we apply the author-level fractional countin
 
 And launch the code.
 
-The program will create an excel file in the same project folder, where each Web of Science Core Collection record will have its Web of Science Core Collection accession number (a unique record identifier in the Web of Science Core Collection), the number of coauthors of this paper from the organization, and the fraction of an organization's input into this specific paper in the rightmost column. The sum of the values in the rightmost column is the author-level fractional value for the research output of this organization for the specified period of time.
+The program will create an excel file in the same project folder, where each Web of Science Core Collection record will have its Accession Number (a unique record identifier in the Web of Science Core Collection), the number of coauthors of this paper from the organization, and the fraction of an organization's input into this specific paper in the rightmost column. The sum of the values in the rightmost column is the author-level fractional value for the research output of this organization for the specified period of time.
 
 ![Screenshot](/author-level_fractional_counting_for_organizations/screenshots/annual_dynamics_sheet.png)
 
 ![Screenshot](/author-level_fractional_counting_for_organizations/screenshots/document_level_data_sheet.png)
 
-Using Plotly library, the program also visualises the annual research output of the organization using both whole and fractional counting methods.
+Using Plotly library, the program also visualises the annual research output of the organization using both whole and fractional counting methods. Please note that the number of university's authors per paper is not visualized, but it's available for each document in the excel file on the document level data sheet.
 
 Although this is a good step in automating the routine work of calculating the research output using fractional counting method, we would like to address a few limitations:
 
