@@ -1,7 +1,9 @@
 # Author-level fractional counting for organizations
 
+![Example](/author-level_fractional_counting_for_organizations/screenshots/clarivate.png)
 
-## A simple script to calculate the number of papers for an organization using fractional counting approach and retrieving the publication data via Web of Science Expanded API
+
+## A simple script to calculate and visualize the number of papers of an organization using fractional counting approach and retrieving the publication data via Web of Science Expanded API
 
 
 The default way of counting papers and citations to them, being currently used in Web of Science, InCites, and other Clarivate resources, is called whole counting, or full counting method. In the case of full counting, a research output is fully attributed to each of the authors and/or each of the affiliated organizations. For example, a publication coauthored by two authors from two different universities counts as a full publication for each of the coauthors and each of the universities. In the fractional counting case, a research output is fractionally distributed between each coauthor and/or each organization. In a similar example, a publication coauthored by two authors from two different universities counts only as a half publication for each of the coauthors and each of the universities.
@@ -26,9 +28,17 @@ For the purposes of this algorithm, we apply the author-level fractional countin
 2. Their Web of Science Core Collection organization profile name;
 3. The desired time period for analysis,
 
+![Screenshot](/author-level_fractional_counting_for_organizations/screenshots/search_query.png)
+
 And launch the code.
 
-The program will create a .csv-file in the same project folder, where each Web of Science Core Collection record will have its Web of Science Core Collection accession number (a unique record identifier in the Web of Science Core Collection), the number of coauthors of this paper from the organization, and the fraction of an organization's input into this specific paper in the rightmost column. The sum of the values in the rightmost column is the author-level fractional value for the research output of this organization for the specified period of time.
+The program will create an excel file in the same project folder, where each Web of Science Core Collection record will have its Web of Science Core Collection accession number (a unique record identifier in the Web of Science Core Collection), the number of coauthors of this paper from the organization, and the fraction of an organization's input into this specific paper in the rightmost column. The sum of the values in the rightmost column is the author-level fractional value for the research output of this organization for the specified period of time.
+
+![Screenshot](/author-level_fractional_counting_for_organizations/screenshots/annual_dynamics_sheet.png)
+
+![Screenshot](/author-level_fractional_counting_for_organizations/screenshots/document_level_data_sheet.png)
+
+Using Plotly library, the program also visualises the annual research output of the organization using both whole and fractional counting methods.
 
 Although this is a good step in automating the routine work of calculating the research output using fractional counting method, we would like to address a few limitations:
 
