@@ -15,7 +15,6 @@ from apikeys import LITE_KEY, USERNAME, PASSWORD  # Create a separate apikey.py 
 
 TOPICAL_SEARCH = 'metasurface*'
 ```
-![screenshot](/wos_and_derwent_api_topical_search/screenshots/keys_passwords_search_query.png?raw=true)
 
 And launch the code.
 
