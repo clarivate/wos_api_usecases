@@ -13,7 +13,7 @@ This is how the code works:
 ```Python
 from apikeys import LITE_KEY, USERNAME, PASSWORD  # Create a separate apikey.py file in the project folder
 
-TOPICAL_SEARCH = 'metasurface*'
+TOPICAL_SEARCH = 'metasurface*'  # Enter the search query here
 ```
 
 And launch the code.
