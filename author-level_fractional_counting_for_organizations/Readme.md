@@ -27,8 +27,12 @@ For the purposes of this algorithm, we apply the author-level fractional countin
 1. Their Web of Science Expanded API key;
 2. Their Web of Science Core Collection organization profile name;
 3. The desired time period for analysis,
+```Python
+from apikey import APIKEY  # Your API key, it's better not to store it in the program;
 
-![Screenshot](/author-level_fractional_counting_for_organizations/screenshots/search_query.png)
+OUR_ORG = "Clarivate"  # Enter the organization profile name here
+PUB_YEARS = '2008-2022'  # Enter publication years
+```
 
 And launch the code.
 
