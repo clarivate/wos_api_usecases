@@ -30,7 +30,7 @@ For the purposes of this algorithm, we apply the author-level fractional countin
 ```Python
 from apikey import APIKEY  # Your API key, it's better not to store it in the program;
 
-OUR_ORG = "Clarivate"  # Enter the organization profile name here
+OUR_ORG = 'Clarivate'  # Enter the organization profile name here
 PUB_YEARS = '2008-2022'  # Enter publication years
 ```
 
