@@ -1,12 +1,9 @@
 """
-This program is designed to demonstrate the capabilities of the Web of Science Expanded API for fractional counting
-analysis. It offers simple graphical user interface. On the RETRIEVE THROUGH API tab, enter your Web of Science
-Expanded API key. Then, enter your search query using Web of Science Advanced Search syntax. Finally, specify which
-specific affiliation you want the program to calculate the fractional output for.
-The program will query retrieve the documents according to the search query you provided, perform the affiliation-level
-fractional counting output calculation, visualize the annual dynamics for both Whole/Full and Fractional counting
-output using Plotly package, and save the document-level fractional counting statistics into an Excel file.
-You can then reuse the already saved Excel files using the LOAD EXCEL FILE tab.
+This code is accepting the Affiliation name and publication years and returns a table of the Web of Science Core
+Collection documents affiliated with this organization for the specified period counted both using Whole Counting and
+Fractional Counting approach. This data, along with a number of organization's authors per each document is saved
+into an Excel table, and the comparison of the organization's output by years using Whole and Fractional counting
+methods is also visualized using Plotly.
 """
 import requests
 import urllib.parse
@@ -21,8 +18,7 @@ from tkinter.filedialog import askopenfilename
 from datetime import date
 
 
-# This function extracts the publication year from the document, checks if there is one or multiple affiliations in it,
-# and launches one of two address analysis functions based on that, then appends the results to the frac_count list
+# This function  aggregates the document-level values
 def fracount(records, our_org):
     for record in records:
         total_au_input = 0  # Total input of the authors from your org into this paper, it's going to be the numerator
@@ -40,15 +36,15 @@ def fracount(records, our_org):
                             'Our_authors': our_authors, 'Fractional_value': fractional_counting_paper})
 
 
-# When there is only one affiliation in the paper. Just launches the functions for calculating the author numbers and
-# our organization's fractional output for a given document
+# When there is only one affiliation in the paper
 def singe_address_record_check(paper, authors, our_authors, our_org):
     authors = single_address_person_check(paper, authors)
     fractional_counting_paper, our_authors = single_address_org_check(paper, authors, our_authors, our_org)
     return fractional_counting_paper, our_authors
 
 
-# Calculates and returns the value of the author count in the document
+# A person may have a status different from an "author", i.e.: "editor". For the purpose of this code,
+# we are only using the "author" type
 def single_address_person_check(paper, authors):
     if paper['static_data']['summary']['names']['count'] == 1:  # A case when there's only one name on the paper
         if paper['static_data']['summary']['names']['name']['role'] == "author":
@@ -60,8 +56,7 @@ def single_address_person_check(paper, authors):
     return authors
 
 
-# Calculates and returns the number of our organization's authors as well as our ouranization's fractional output
-# for this particular document
+# Checking if the organization profile in the paper belongs to our organization
 def single_address_org_check(paper, authors, our_authors, our_org):
     fractional_counting_paper = 0
     try:
@@ -82,9 +77,7 @@ def single_address_org_check(paper, authors, our_authors, our_org):
     return fractional_counting_paper, our_authors
 
 
-# Checks for a rare case when the number of authors in the document is 0, launches the standard_case_address_check
-# function, calculates the fractional counting value for the document from the total_au_input and authors values
-# returned by that function
+# When there are multiple affiliations in the paper (that's where we really need this whole algorithm)
 def standard_case_paper_check(paper, authors, total_au_input, our_org):
     if paper['static_data']['summary']['names']['count'] == 1:  # Again, checking if the person is actually an author
         if paper['static_data']['summary']['names']['name']['role'] == "author":
@@ -102,8 +95,7 @@ def standard_case_paper_check(paper, authors, total_au_input, our_org):
     return fractional_counting_paper, our_authors
 
 
-# Figures out who of the authors are affiliated with our organization, launches the standard_case_affiliation_check
-# function, calculates the total author input value from individual author input values returned by it
+#  Identifying which authors in the paper are affiliated with our organization
 def standard_case_address_check(paper, authors, total_au_input, our_org):
     our_authors_seq_numbers = set()  # Building a set of sequence numbers of authors from our org
     try:  # Checking every address in the paper
@@ -143,8 +135,7 @@ def standard_case_address_check(paper, authors, total_au_input, our_org):
     return total_au_input, authors, our_authors
 
 
-# For every affiliation, checks if it's our organization's affiliation, and calculates the individual author's inputs
-# (or, in other words, their fractional values of the document)
+# For every affiliation, a check is made whether it's our organization's affiliation
 def standard_case_affiliation_check(paper, au_affils, au_input, our_org):
     for c1 in au_affils:
         try:
@@ -187,7 +178,7 @@ def validate_api_key():
         return False
 
 
-# A function to check how many results the search query returns
+# Function to check how many results the search query returns
 def validate_search():
     if validate_api_key():
         user_apikey = app.apikey_window.get()
@@ -195,10 +186,8 @@ def validate_search():
         validation_request = requests.get(
             f'https://api.clarivate.com/api/wos?databaseId=WOS&usrQuery={urllib.parse.quote(search_query)}&'
             f'count=0&firstRecord=1', headers={'X-APIKey': user_apikey})
-        validation_data = validation_request.json()
         if validation_request.status_code == 200:
-            docs_left = validation_request.headers['X-REC-AmtPerYear-Remaining']
-            app.apikey_bottom_label['text'] = f"API Authentication succeeded; Records left to retrieve: {docs_left}"
+            validation_data = validation_request.json()
             records_amount = validation_data['QueryResult']['RecordsFound']
             app.search_query_bottom_label['text'] = f'Records found: {records_amount} \n '
             if records_amount == 0:
@@ -210,19 +199,18 @@ def validate_search():
             else:
                 return True
         else:
+            validation_data = validation_request.json()
             error_message = validation_data['message']
-            if error_message == 'Invalid authentication credentials':
-                app.apikey_bottom_label['text'] = "Wrong API Key"
-            else:
-                app.search_query_bottom_label['text'] = (f'Request failed with status code '
-                                                         f'{validation_request.status_code}\n'
-                                                         f'{error_message[error_message.find(": ") + 2:]}')
+            app.search_query_bottom_label['text'] = (f'Request failed with status code '
+                                                     f'{validation_request.status_code}\n'
+                                                     f'{error_message[error_message.find(": ") + 2:]}')
             return False
     else:
+        print('Wrong API Key')
         return False
 
 
-# A function to make sure the affiliation name provided by the user is a valid one
+# A function to make sure the affiliation name provided bythe user is a valid one
 def validate_affiliation():
     if validate_api_key():
         user_apikey = app.apikey_window.get()
@@ -242,10 +230,11 @@ def validate_affiliation():
             app.our_org_bottom_label['text'] = f'Please check your Affiliation name'
             return False
     else:
+        print('Wrong API Key')
         return False
 
 
-# This function sends the API requests to retrieve the data
+# This function sends the main API requests to retrieve the data
 def wos_api_request(i, search_query, records, requests_required):
     subsequent_response = requests.get(
         f'https://api.clarivate.com/api/wos?databaseId=WOS&usrQuery={urllib.parse.quote(search_query)}&'
@@ -268,16 +257,16 @@ def wos_api_request(i, search_query, records, requests_required):
 # This function starts when the "Run" button is clicked and launches all the others
 def main_function():
     app.search_button.config(state='disabled', text='Retrieving...')
-    app.progress_label['text'] = ''
-    if validate_search() is False:
+    if validate_api_key() is False:
+        app.apikey_bottom_label['text'] = "Wrong API Key"
+        app.search_button.config(state='active', text='Run')
+    elif validate_search() is False:
         app.progress_label['text'] = 'Please check your search query'
         app.search_button.config(state='active', text='Run')
     elif validate_affiliation() is False:
         app.search_button.config(state='active', text='Run')
     else:
         our_org = app.our_org_window.get()
-        if app.progress_label['text'] == 'Please check your search query':
-            app.progress_label['text'] = ''
         search_query = app.search_query_window.get("1.0", "end-1c")
 
         # This is the initial API request
@@ -297,14 +286,14 @@ def main_function():
         output(our_org, search_query)
         app.search_button.config(state='active', text='Run')
         complete_message = f"Calculation complete. Please check the {our_org} - {date.today()}.xlsx file for results"
-        if len(complete_message) > 94:
-            if complete_message[:94] == ' ':
-                safe_complete_message = f'{complete_message[:94]}\n{complete_message[94:]}'
+        if len(complete_message) > 90:
+            if complete_message[:90] == ' ':
+                safe_complete_message = f'{complete_message[:90]}\n{complete_message[90:]}'
             else:
-                safe_complete_message = f'{complete_message[:94]}-\n{complete_message[94:]}'
+                safe_complete_message = f'{complete_message[:90]}-\n{complete_message[90:]}'
         else:
             safe_complete_message = complete_message
-        app.progress_label['text'] = safe_complete_message
+        app.progress_label.config(text=safe_complete_message)
 
 
 # Defining a class through threading so that the interface doesn't freeze when the data is being retrieved through API
@@ -316,18 +305,16 @@ class App(threading.Thread):
 
     def run(self):
         self.root = tk.Tk()
-
-        # Setting up style and geometry
         self.root.iconbitmap('./assets/clarivate.ico')
         self.root.title("Fractional Counting Calculator")
         self.root.geometry("540x500")
         self.root.resizable(False, False)
         self.style = ttk.Style(self.root)
         self.style.theme_use('clam')
+        # Modifying certain style elements
         self.style.configure('TNotebook', background='#F0F0EB')
-        self.style.configure('TNotebook.Tab', font=('Calibri bold', 12))
         self.style.map('TNotebook.Tab',
-                       foreground=[('active', '#5E33BF'), ('!active', '#000000')],
+                       foreground=[('focus', '#000000'), ('!focus', '#000000')],
                        background=[('selected', '#FFFFFF'), ('!selected', '#F0F0EB')],
                        focuscolor=[('selected', '#FFFFFF')])
         self.style.configure('Bold.TLabel', font=('Calibri bold', 12), borderwidth=0, bordercolor='#000000',
@@ -363,7 +350,6 @@ class App(threading.Thread):
                              troughcolor='#F0F0EB', background='#16AB03', foreground='#16AB03',
                              relief="flat", text='value', troughrelief='flat')
 
-        # Setting up widgets
         self.tabs = ttk.Notebook(self.root)
         self.tab1 = ttk.Frame(self.tabs, style='White.TFrame')
         self.tab2 = ttk.Frame(self.tabs, style='White.TFrame')
@@ -421,15 +407,15 @@ class App(threading.Thread):
                                            command=self.file_menu,
                                            default='normal')
         self.draw_graph_button = ttk.Button(self.offline_frame,
-                                            text='Draw Graph',
-                                            style='Large.TButton',
-                                            command=self.draw_graph)
-        # Placing widgets
+                                        text='Draw Graph',
+                                        style='Large.TButton',
+                                        command=self.draw_graph)
+
         self.tabs.place(x=0, y=0, width=540, height=500)
         self.tab1.place(x=0, y=0, width=0, height=0)
         self.tab2.place(x=0, y=0, width=0, height=0)
-        self.tabs.add(self.tab1, text='             RETRIEVE THROUGH API             ')
-        self.tabs.add(self.tab2, text='               LOAD EXCEL FILE                 ')
+        self.tabs.add(self.tab1, text='Retrieve via API')
+        self.tabs.add(self.tab2, text='Load Excel file')
         self.api_frame.place(x=0, y=0, width=540, height=480)
         self.apikey_top_label.place(x=5, y=5, width=535, height=24)
         self.apikey_window.place(x=5, y=29, width=400, height=30)
@@ -476,7 +462,7 @@ app = App()
 frac_counts = []
 
 
-# A function for saving the retrieved data in an Excel file and for visualizing it with Plotly
+# A function for saving the data in an Excel file and for visualizing it with Plotly
 def output(our_org, search_query):
     # Saving the collected data to a dataframe
     df = pd.DataFrame(frac_counts)
@@ -551,8 +537,9 @@ def output(our_org, search_query):
 
 # This function plots the graphs from the files stored locally and doesn't use the API retrieval
 def offline_plotting():
-    # Loading the excel file into a dataframe
-    df = pd.read_excel(app.filename_entry.get(), sheet_name='Annual Dynamics')
+    # Saving the collected data to a dataframe
+    df = pd.read_excel(app.filename_entry.get(),
+                       sheet_name='Annual Dynamics')
 
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(go.Bar(x=df['Publication_year'], y=df['Whole Counting'], offset=0.0005,
