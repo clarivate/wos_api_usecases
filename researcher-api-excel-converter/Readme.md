@@ -18,7 +18,7 @@ And click the Run button.
 
 The program will create an Excel file in the same project folder, where each Researcher record will have their ResearcherID, their full name, their primary affiliation, their H-index, documents found, and times cited, as well as a link to their researcher profile on Web of Science platform user interface, resolved through the ResearcherID.
 
-![Screenshot](/researcher-api-excel-converter/screenshots/GUI2/results.png)
+![Screenshot](/researcher-api-excel-converter/screenshots/results.png)
 
 It is important that the data available through the /researchers{rid} endpoint contains additional data fields, such as Published Names, research output by years, times cited without self-citations, and more. It is possible to develop a functionality to retrieve this extended researcher metadata (as well basic document-level and peer reviews data), as the relevant links to the correct endpoints are also returned by a get-request to the default /researchers endpoint, but each of these requests will take additional time.
 
