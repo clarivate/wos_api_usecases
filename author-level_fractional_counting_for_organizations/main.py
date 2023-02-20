@@ -8,22 +8,22 @@ fractional counting output calculation, visualize the annual dynamics for both W
 output using Plotly package, and save the document-level fractional counting statistics into an Excel file.
 You can then reuse the already saved Excel files using the LOAD EXCEL FILE tab.
 """
-import requests
 import urllib.parse
 import threading
 import time
-import pandas as pd
-import plotly.graph_objects as go
 import tkinter as tk
-from plotly.subplots import make_subplots
 from tkinter import ttk, StringVar
 from tkinter.filedialog import askopenfilename
 from datetime import date
+import plotly.graph_objects as go
+from pandas import DataFrame, ExcelWriter, read_excel
+from plotly.subplots import make_subplots
+import requests
 
 
 # This function extracts the publication year from the document, checks if there is one or multiple affiliations in it,
 # and launches one of two address analysis functions based on that, then appends the results to the frac_count list
-def fracount(records, our_org):
+def fracount(records, our_org, frac_counts):
     for record in records:
         total_au_input = 0  # Total input of the authors from your org into this paper, it's going to be the numerator
         authors = 0  # Total number of authors in the paper, it's going to be the denominator
@@ -69,16 +69,18 @@ def single_address_org_check(paper, authors, our_authors, our_org):
                 paper['static_data']['fullrecord_metadata']['addresses']['address_name']['address_spec'][
                     'organizations']['organization']
         ):
-            if org['content'] == our_org:
+            if org['content'].lower() == our_org.lower():
                 fractional_counting_paper = 1  # If it is - doesn't matter how many authors, the whole paper is counted
                 our_authors = authors  # Just for reference, we'll store the number of authors from our org in the csv
             else:
                 pass
     except (IndexError, KeyError):  # The chances that this paper won't be linked to your org-enhanced profile are tiny
         pass
-        """ You can add the following code instead of "pass" for checking:
+        """
+        You can add the following code instead of "pass" for checking:
         print(f"Record {paper['UID']}: address not linked to an Affiliation:
-        {affiliation['address_spec']['organizations']['organization'][0]['content']}")"""
+        {affiliation['address_spec']['organizations']['organization'][0]['content']}")
+        """
     return fractional_counting_paper, our_authors
 
 
@@ -109,7 +111,7 @@ def standard_case_address_check(paper, authors, total_au_input, our_org):
     try:  # Checking every address in the paper
         for affiliation in paper['static_data']['fullrecord_metadata']['addresses']['address_name']:
             for org in affiliation['address_spec']['organizations']['organization']:
-                if org['pref'] == 'Y' and org['content'] == our_org:  # Checking every org the address is linked to
+                if org['pref'] == 'Y' and org['content'].lower() == our_org.lower():  # Checking each org in the address
                     if affiliation['names']['count'] == 1:  # Filling in the set with our authors' sequence numbers
                         if affiliation['names']['name']['role'] == 'author':
                             our_authors_seq_numbers.add(affiliation['names']['name']['seq_no'])
@@ -120,10 +122,12 @@ def standard_case_address_check(paper, authors, total_au_input, our_org):
     except (IndexError, KeyError,
             TypeError):  # In case the address doesn't contain organization component at all, i.e. street address only
         pass
-        """ You can add the following code instead of "pass" for checking:
+        """
+        You can add the following code instead of "pass" for checking:
         print(f"Record {paper['UID']}:
         organization field {affiliation['address_spec']['organizations']['organization'][1]['content']}
-        is not linked to any author fields")"""
+        is not linked to any author fields")
+        """
     our_authors = len(our_authors_seq_numbers)  # The number of our authors in the paper is the length of our set
     if paper['static_data']['summary']['names']['count'] == 1:  # The case when the total number of authors is one
         au_input = 0
@@ -150,7 +154,7 @@ def standard_case_affiliation_check(paper, au_affils, au_input, our_org):
         try:
             affiliation = (paper['static_data']['fullrecord_metadata']['addresses']['address_name'][int(c1) - 1])
             for org in affiliation['address_spec']['organizations']['organization']:
-                if org['pref'] == 'Y' and org['content'] == our_org:
+                if org['pref'] == 'Y' and org['content'].lower() == our_org.lower():
                     au_input += 1 / len(au_affils)
         except (KeyError, IndexError, TypeError):  # In case the address is not linked to an org profile
             pass
@@ -174,7 +178,7 @@ def unhide_symbols():
 def validate_api_key():
     user_apikey = app.apikey_window.get()
     validation_request = requests.get(
-        f'https://api.clarivate.com/api/wos?databaseId=WOS&usrQuery=AU=Garfield&count=0&firstRecord=1',
+        'https://api.clarivate.com/api/wos?databaseId=WOS&usrQuery=AU=Garfield&count=0&firstRecord=1',
         headers={'X-APIKey': user_apikey}
     )
     if validation_request.status_code == 200:
@@ -182,9 +186,8 @@ def validate_api_key():
         docs_left = validation_request.headers['X-REC-AmtPerYear-Remaining']
         app.apikey_bottom_label['text'] = f"API Authentication succeeded; Records left to retrieve: {docs_left}"
         return True
-    else:
-        app.apikey_bottom_label['text'] = "Wrong API Key"
-        return False
+    app.apikey_bottom_label['text'] = "Wrong API Key"
+    return False
 
 
 # A function to check how many results the search query returns
@@ -203,7 +206,7 @@ def validate_search():
             app.search_query_bottom_label['text'] = f'Records found: {records_amount} \n '
             if records_amount == 0:
                 return False
-            elif records_amount > 100000:
+            if records_amount > 100000:
                 app.search_query_bottom_label['text'] = (f'Records found: {records_amount}. You can export '
                                                          f'a maximum of 100k records through Expanded API\n')
                 return True
@@ -235,11 +238,10 @@ def validate_affiliation():
             records_amount = validation_data['QueryResult']['RecordsFound']
             if records_amount > 0:
                 return True
-            else:
-                app.our_org_bottom_label['text'] = f'Please check your Affiliation name'
-                return False
+            app.our_org_bottom_label['text'] = 'Please check your Affiliation name'
+            return False
         else:
-            app.our_org_bottom_label['text'] = f'Please check your Affiliation name'
+            app.our_org_bottom_label['text'] = 'Please check your Affiliation name'
             return False
     else:
         return False
@@ -261,7 +263,9 @@ def wos_api_request(i, search_query, records, requests_required):
         time.sleep(100)
         wos_api_request(i, search_query, records, requests_required)
     print(f"{((i + 1) * 100) / requests_required:.1f}% complete")
-    app.progress_bar.config(value=((i + 1) / requests_required) * 100)
+    progress = ((i + 1) / requests_required) * 100
+    app.progress_bar.config(value=progress)
+    app.style.configure('Clarivate.Horizontal.TProgressbar', text=f'{progress:.1f}%')
     app.root.update_idletasks()
 
 
@@ -275,6 +279,7 @@ def main_function():
     elif validate_affiliation() is False:
         app.search_button.config(state='active', text='Run')
     else:
+        frac_counts = []
         our_org = app.our_org_window.get()
         if app.progress_label['text'] == 'Please check your search query':
             app.progress_label['text'] = ''
@@ -293,8 +298,8 @@ def main_function():
         # required. The program can take up to a few dozen minutes, depending on the number of records being analyzed
         for i in range(requests_required):
             wos_api_request(i, search_query, records, requests_required)
-        fracount(records, our_org)
-        output(our_org, search_query)
+        fracount(records, our_org, frac_counts)
+        output(our_org, search_query, frac_counts)
         app.search_button.config(state='active', text='Run')
         complete_message = f"Calculation complete. Please check the {our_org} - {date.today()}.xlsx file for results"
         if len(complete_message) > 94:
@@ -312,6 +317,37 @@ class App(threading.Thread):
 
     def __init__(self,):
         threading.Thread.__init__(self)
+        self.root = None
+        self.style = None
+        self.tabs = None
+        self.tab1 = None
+        self.tab2 = None
+        self.api_frame = None
+        self.apikey_top_label = None
+        self.apikey_window = None
+        self.apikey_button = None
+        self.unhide_image = None
+        self.apikey_unhide_button = None
+        self.apikey_validate_button = None
+        self.apikey_bottom_label = None
+        self.search_query_label = None
+        self.search_query_window = None
+        self.search_validate_button = None
+        self.search_query_bottom_label = None
+        self.search_button = None
+        self.our_org_label = None
+        self.our_org_window = None
+        self.our_org_bottom_label = None
+        self.progress_bar = None
+        self.progress_label = None
+        self.offline_frame = None
+        self.offline_label = None
+        self.filename_label = None
+        self.file_name = None
+        self.filename_entry = None
+        self.browse_image = None
+        self.open_file_button = None
+        self.draw_graph_button = None
         self.start()
 
     def run(self):
@@ -359,9 +395,36 @@ class App(threading.Thread):
                        background=[('disabled', '#DADADA'), ('!disabled', '#5E33BF')],
                        focuscolor=[('disabled', '#DADADA'), ('!disabled', '#5E33BF')]
                        )
-        self.style.configure('Horizontal.TProgressbar', font=('Calibri bold', 12), borderwidth=0,
-                             troughcolor='#F0F0EB', background='#16AB03', foreground='#16AB03',
-                             relief="flat", text='value', troughrelief='flat')
+        # We had to borrow the horizontal progressbar from the Default scheme in order to remove one extra frame
+        # around the progress bar
+        self.style.element_create('color.pbar', 'from', 'default')
+        self.style.layout(
+            'Clarivate.Horizontal.TProgressbar',
+            [
+                (
+                    'Horizontal.Progressbar.trough',
+                    {
+                        'sticky': 'nswe',
+                        'children':
+                            [
+                                (
+                                    'Horizontal.Progressbar.color.pbar',
+                                    {
+                                        'side': 'left',
+                                        'sticky': 'ns'
+                                    }
+                                )
+                            ],
+                    }
+                ),
+                (
+                    'Horizontal.Progressbar.label', {'sticky': 'nswe'}
+                )
+            ]
+        )
+        self.style.configure('Clarivate.Horizontal.TProgressbar', font=('Calibri bold', 12), borderwidth=0,
+                             troughcolor='#F0F0EB', background='#16AB03', foreground='#000000', text='',
+                             anchor='center')
 
         # Setting up widgets
         self.tabs = ttk.Notebook(self.root)
@@ -396,14 +459,15 @@ class App(threading.Thread):
         self.our_org_window = ttk.Entry(self.api_frame, font=('Calibri', 11))
         self.our_org_window.insert(0, 'Clarivate')
         self.our_org_bottom_label = ttk.Label(self.api_frame,
-                                              text='This is the name of the organization that you\'d like to ' \
+                                              text='This is the name of the organization that you\'d like to '
                                                    'analyze for its fractional output',
                                               style='Regular.TLabel')
         self.search_button = ttk.Button(self.api_frame,
                                         text='Run',
                                         style='Large.TButton',
                                         command=self.run_button)
-        self.progress_bar = ttk.Progressbar(self.api_frame, mode="determinate")
+        self.progress_bar = ttk.Progressbar(self.api_frame, style='Clarivate.Horizontal.TProgressbar',
+                            mode="determinate")
         self.progress_label = ttk.Label(self.api_frame, style='Regular.TLabel')
         self.offline_frame = ttk.Frame(self.tab2, style='White.TFrame')
         self.offline_label = ttk.Label(self.offline_frame,
@@ -473,13 +537,11 @@ class App(threading.Thread):
 
 app = App()
 
-frac_counts = []
-
 
 # A function for saving the retrieved data in an Excel file and for visualizing it with Plotly
-def output(our_org, search_query):
+def output(our_org, search_query, frac_counts):
     # Saving the collected data to a dataframe
-    df = pd.DataFrame(frac_counts)
+    df = DataFrame(frac_counts)
 
     # Gathering document counts by years
     df2 = (df[['UT', 'Publication_year']].groupby('Publication_year').count())
@@ -494,9 +556,21 @@ def output(our_org, search_query):
         safe_filename = filename[:218]
     else:
         safe_filename = filename
-    with pd.ExcelWriter(f'{safe_filename}.xlsx') as writer:
-        df2.to_excel(writer, sheet_name='Annual Dynamics', index=False)
-        df.to_excel(writer, sheet_name='Document-level Data', index=False)
+    # Safe saving - as openpyxl module won't allow to open the file if it's already open
+    try:
+        with ExcelWriter(f'{safe_filename}.xlsx') as writer:
+            df2.to_excel(writer, sheet_name='Annual Dynamics', index=False)
+            df.to_excel(writer, sheet_name='Document-level Data', index=False)
+    except PermissionError:
+        i = 2
+        while i < 10:
+            try:
+                with ExcelWriter(f'{safe_filename} ({i}).xlsx') as writer:
+                    df2.to_excel(writer, sheet_name='Annual Dynamics', index=False)
+                    df.to_excel(writer, sheet_name='Document-level Data', index=False)
+                    break
+            except PermissionError:
+                i += 1
 
     # Plotting the data on a bar plot
     fig = make_subplots(specs=[[{"secondary_y": True}]])
@@ -552,7 +626,7 @@ def output(our_org, search_query):
 # This function plots the graphs from the files stored locally and doesn't use the API retrieval
 def offline_plotting():
     # Loading the excel file into a dataframe
-    df = pd.read_excel(app.filename_entry.get(), sheet_name='Annual Dynamics')
+    df = read_excel(app.filename_entry.get(), sheet_name='Annual Dynamics')
 
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(go.Bar(x=df['Publication_year'], y=df['Whole Counting'], offset=0.0005,
