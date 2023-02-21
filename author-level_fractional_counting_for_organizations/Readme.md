@@ -23,7 +23,7 @@ https://doi.org/10.1016/j.joi.2015.08.001.](https://www.sciencedirect.com/scienc
 
 For the purposes of this algorithm, we apply the author-level fractional counting method for the papers of an organization. The algorithm retrieves the publication data via Web of Science Expanded API and uses the organization affiliation, or verified organization profile a.k.a. "Organization-Enhanced" field in Web of Science Core Collection to count the fractional number of research output for a given time period. This is how it works:
 
-#### The user launches the main.py file and, on the RETRIEVE THROUGH API tab:
+#### The user needs to launch the main.py file and, on the RETRIEVE THROUGH API tab, enter:
 1. Their Web of Science Expanded API key;
 2. The Web of Science Core Collection advanced search query that they would like to run;
 3. The name of the Affiliaiton that they would like to analyze for its fractional output
