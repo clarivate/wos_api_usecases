@@ -240,6 +240,30 @@ def process_data(wos_data, di_data, wos_api_type):
     return years
 
 
+# Formatting the text lines for the function below
+def format_line(text, line_start, symbol_limit, safe_text):
+    if line_start + symbol_limit > len(text):
+        safe_text += f'{text[line_start:len(text)]}\n'
+        return safe_text, line_start
+    for i in range(symbol_limit):
+        if text[(line_start + symbol_limit) - i] == ' ':
+            line_end = line_start + symbol_limit - i + 1
+            safe_text += f'{text[line_start:line_end]}\n'
+            return safe_text, line_end
+
+
+# A function for word wrapping in longer messages
+def format_label_text(text, symbol_limit):
+    safe_text = ''
+    line_start = 0
+    if len(text) > symbol_limit:
+        lines_amount = (len(text) // symbol_limit) + 1
+        for line_number in range(lines_amount):
+            safe_text, line_start = format_line(text, line_start, symbol_limit, safe_text)
+        return safe_text
+    return text
+
+
 # A function for checking the validity of the Web of Science API key and which Web of Science API type to use
 def validate_api_key():
     user_apikey = app.apikey_window.get()
@@ -423,20 +447,22 @@ def validate_search():
     if wos_records_found == 0 and derwent_records_found == 0:
         return False
     if wos_records_found > wos_api_limit and derwent_records_found <= 1000000:
-        app.search_query_bottom_label['text'] = (f'Web of Science records found: {wos_records_found}. You can export '
-                                                 f'a maximum of {wos_api_limit} records through {wos_api_type}\n'
-                                                 f'Derwent records found: {derwent_records_found}')
+        text = (f'Web of Science records found: {wos_records_found}. You can export a maximum of {wos_api_limit}'
+                f' records through {wos_api_type}. Derwent records found: {derwent_records_found}')
+        app.search_query_bottom_label['text'] = format_label_text(text, 94)
         return True
     if wos_records_found <= wos_api_limit and derwent_records_found > 1000000:
+        text = (f'Derwent records found: {derwent_records_found}. You can export a maximum of 1M records through '
+                f'Derwent API')
         app.search_query_bottom_label['text'] = (f'Web of Science records found: {wos_records_found}\n'
-                                                 f'Derwent records found: {derwent_records_found}. You can export '
-                                                 f'a maximum of 1M records through Derwent API')
+                                                 f'{format_label_text(text, 94)}')
         return True
     if wos_records_found > wos_api_limit and derwent_records_found > 1000000:
-        app.search_query_bottom_label['text'] = (f'Web of Science records found: {wos_records_found}. You can export '
-                                                 f'a maximum of {wos_api_limit} records through {wos_api_type}\n'
-                                                 f'Derwent records found: {derwent_records_found}. You can export '
-                                                 f'a maximum of 1M records through Derwent API')
+        text_1 = (f'Web of Science records found: {wos_records_found}. You can export a maximum of {wos_api_limit} '
+                  f'records through {wos_api_type}')
+        text_2 = (f'Derwent records found: {derwent_records_found}. You can export a maximum of 1M records through '
+                  f'Derwent API')
+        app.search_query_bottom_label['text'] = f'{format_label_text(text_1, 94)}\n{format_label_text(text_2, 94)}'
         return True
     return True
 
@@ -451,11 +477,11 @@ def main_function():
         app.apikey_bottom_label['text'] = "Wrong API Key"
         app.search_button.config(state='active', text='Run')
         return False
-    elif validate_search() is False:
+    if validate_search() is False:
         app.progress_label['text'] = 'Please check your search query'
         app.search_button.config(state='active', text='Run')
         return False
-    elif wos_api_type == 'lite':
+    if wos_api_type == 'lite':
         if app.progress_label['text'] == 'Please check your search query':
             app.progress_label['text'] = ''
         user_apikey = app.apikey_window.get()
@@ -481,7 +507,6 @@ def main_function():
             progress = ((i + 1) / (wos_requests_required + derwent_requests_required)) * 100
             app.progress_bar.config(value=progress)
             app.style.configure('Clarivate.Horizontal.TProgressbar', text=f'{progress:.1f}%')
-
     elif wos_api_type == 'expanded':
         if app.progress_label['text'] == 'Please check your search query':
             app.progress_label['text'] = ''
@@ -556,14 +581,7 @@ def main_function():
     app.search_button.config(state='active', text='Run')
     complete_message = f"Calculation complete. Please check the {search_query} - {date.today()}.xlsx file " \
                        f"for results"
-    if len(complete_message) > 95:
-        if complete_message[:95] == ' ':
-            safe_complete_message = f'{complete_message[:95]}\n{complete_message[95:]}'
-        else:
-            safe_complete_message = f'{complete_message[:95]}-\n{complete_message[95:]}'
-    else:
-        safe_complete_message = complete_message
-    app.progress_label['text'] = safe_complete_message
+    app.progress_label['text'] = format_label_text(complete_message, 94)
 
 
 # Defining a class through threading so that the interface doesn't freeze when the data is being retrieved through API
@@ -742,7 +760,7 @@ class App(threading.Thread):
                                         style='Large.TButton',
                                         command=self.run_button)
         self.progress_bar = ttk.Progressbar(self.api_frame, style='Clarivate.Horizontal.TProgressbar',
-                            mode="determinate")
+                                            mode="determinate")
         self.progress_label = ttk.Label(self.api_frame, style='Regular.TLabel')
         self.offline_frame = ttk.Frame(self.tab2, style='White.TFrame')
         self.offline_label = ttk.Label(self.offline_frame,

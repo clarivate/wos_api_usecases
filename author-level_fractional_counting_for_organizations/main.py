@@ -76,11 +76,9 @@ def single_address_org_check(paper, authors, our_authors, our_org):
                 pass
     except (IndexError, KeyError):  # The chances that this paper won't be linked to your org-enhanced profile are tiny
         pass
-        """
-        You can add the following code instead of "pass" for checking:
+        """You can add the following code instead of "pass" for checking:
         print(f"Record {paper['UID']}: address not linked to an Affiliation:
-        {affiliation['address_spec']['organizations']['organization'][0]['content']}")
-        """
+        {affiliation['address_spec']['organizations']['organization'][0]['content']}")"""
     return fractional_counting_paper, our_authors
 
 
@@ -110,17 +108,18 @@ def standard_case_address_check(paper, authors, total_au_input, our_org):
     our_authors_seq_numbers = set()  # Building a set of sequence numbers of authors from our org
     try:  # Checking every address in the paper
         for affiliation in paper['static_data']['fullrecord_metadata']['addresses']['address_name']:
-            for org in affiliation['address_spec']['organizations']['organization']:
-                if org['pref'] == 'Y' and org['content'].lower() == our_org.lower():  # Checking each org in the address
-                    if affiliation['names']['count'] == 1:  # Filling in the set with our authors' sequence numbers
-                        if affiliation['names']['name']['role'] == 'author':
-                            our_authors_seq_numbers.add(affiliation['names']['name']['seq_no'])
-                    else:
-                        for our_author in affiliation['names']['name']:
-                            if our_author['role'] == 'author':
-                                our_authors_seq_numbers.add(our_author['seq_no'])
-    except (IndexError, KeyError,
-            TypeError):  # In case the address doesn't contain organization component at all, i.e. street address only
+            for org in affiliation['address_spec']['organizations']['organization']:  # Checking each org in the address
+                if org['pref'] == 'Y' and org['content'].lower() == our_org.lower() and \
+                        affiliation['names']['count'] == 1 and affiliation['names']['name']['role'] == 'author':
+                    # Filling in the set with our authors' sequence numbers
+                    our_authors_seq_numbers.add(affiliation['names']['name']['seq_no'])
+                elif org['pref'] == 'Y' and org['content'].lower() == our_org.lower() and \
+                                    affiliation['names']['count'] > 1:
+                    for our_author in affiliation['names']['name']:
+                        if our_author['role'] == 'author':
+                            our_authors_seq_numbers.add(our_author['seq_no'])
+    except (IndexError, KeyError, TypeError):
+        # In case the address doesn't contain organization component at all, i.e. street address only
         pass
         """
         You can add the following code instead of "pass" for checking:
@@ -150,9 +149,9 @@ def standard_case_address_check(paper, authors, total_au_input, our_org):
 # For every affiliation, checks if it's our organization's affiliation, and calculates the individual author's inputs
 # (or, in other words, their fractional values of the document)
 def standard_case_affiliation_check(paper, au_affils, au_input, our_org):
-    for c1 in au_affils:
+    for c_1 in au_affils:
         try:
-            affiliation = (paper['static_data']['fullrecord_metadata']['addresses']['address_name'][int(c1) - 1])
+            affiliation = (paper['static_data']['fullrecord_metadata']['addresses']['address_name'][int(c_1) - 1])
             for org in affiliation['address_spec']['organizations']['organization']:
                 if org['pref'] == 'Y' and org['content'].lower() == our_org.lower():
                     au_input += 1 / len(au_affils)
@@ -164,6 +163,30 @@ def standard_case_affiliation_check(paper, au_affils, au_input, our_org):
             ['organization'][0]['content']}")
             """
     return au_input
+
+
+# Formatting the text lines for the function below
+def format_line(text, line_start, symbol_limit, safe_text):
+    if line_start + symbol_limit > len(text):
+        safe_text += f'{text[line_start:len(text)]}\n'
+        return safe_text, line_start
+    for i in range(symbol_limit):
+        if text[(line_start + symbol_limit) - i] == ' ':
+            line_end = line_start + symbol_limit - i + 1
+            safe_text += f'{text[line_start:line_end]}\n'
+            return safe_text, line_end
+
+
+# A function for word wrapping in longer messages
+def format_label_text(text, symbol_limit):
+    safe_text = ''
+    line_start = 0
+    if len(text) > symbol_limit:
+        lines_amount = (len(text) // symbol_limit) + 1
+        for line_number in range(lines_amount):
+            safe_text, line_start = format_line(text, line_start, symbol_limit, safe_text)
+        return safe_text
+    return text
 
 
 # A function for hiding/unhiding symbols in the API Key field
@@ -210,19 +233,17 @@ def validate_search():
                 app.search_query_bottom_label['text'] = (f'Records found: {records_amount}. You can export '
                                                          f'a maximum of 100k records through Expanded API\n')
                 return True
-            else:
-                return True
+            return True
+        error_message = validation_data['message']
+        if error_message == 'Invalid authentication credentials':
+            app.apikey_bottom_label['text'] = "Wrong API Key"
         else:
-            error_message = validation_data['message']
-            if error_message == 'Invalid authentication credentials':
-                app.apikey_bottom_label['text'] = "Wrong API Key"
-            else:
-                app.search_query_bottom_label['text'] = (f'Request failed with status code '
-                                                         f'{validation_request.status_code}\n'
-                                                         f'{error_message[error_message.find(": ") + 2:]}')
-            return False
-    else:
+            error_message_text = validation_data['message'][validation_data['message'].find(": ") + 2:]
+            app.search_query_bottom_label['text'] = (f'Request failed with status code '
+                                                     f'{validation_request.status_code}\n'
+                                                     f'{format_label_text(error_message_text, 94)}')
         return False
+    return False
 
 
 # A function to make sure the affiliation name provided by the user is a valid one
@@ -240,11 +261,9 @@ def validate_affiliation():
                 return True
             app.our_org_bottom_label['text'] = 'Please check your Affiliation name'
             return False
-        else:
-            app.our_org_bottom_label['text'] = 'Please check your Affiliation name'
-            return False
-    else:
+        app.our_org_bottom_label['text'] = 'Please check your Affiliation name'
         return False
+    return False
 
 
 # This function sends the API requests to retrieve the data
@@ -273,43 +292,41 @@ def wos_api_request(i, search_query, records, requests_required):
 def main_function():
     app.search_button.config(state='disabled', text='Retrieving...')
     app.progress_label['text'] = ''
+    if validate_api_key() is False:
+        app.apikey_bottom_label['text'] = "Wrong API Key"
+        app.search_button.config(state='active', text='Run')
+        return False
     if validate_search() is False:
         app.progress_label['text'] = 'Please check your search query'
         app.search_button.config(state='active', text='Run')
-    elif validate_affiliation() is False:
+        return False
+    if validate_affiliation() is False:
         app.search_button.config(state='active', text='Run')
-    else:
-        frac_counts = []
-        our_org = app.our_org_window.get()
-        if app.progress_label['text'] == 'Please check your search query':
-            app.progress_label['text'] = ''
-        search_query = app.search_query_window.get("1.0", "end-1c")
+        return False
+    frac_counts = []
+    our_org = app.our_org_window.get()
+    if app.progress_label['text'] == 'Please check your search query':
+        app.progress_label['text'] = ''
+    search_query = app.search_query_window.get("1.0", "end-1c")
 
-        # This is the initial API request
-        initial_request = requests.get(
-            f'https://api.clarivate.com/api/wos?databaseId=WOS&usrQuery={urllib.parse.quote(search_query)}&count=0&'
-            f'firstRecord=1',  headers={'X-APIKey': app.apikey_window.get()}
-        )
-        data = initial_request.json()
-        requests_required = ((data['QueryResult']['RecordsFound'] - 1) // 10) + 1
-        records = []
+    # This is the initial API request
+    initial_request = requests.get(
+        f'https://api.clarivate.com/api/wos?databaseId=WOS&usrQuery={urllib.parse.quote(search_query)}&count=0&'
+        f'firstRecord=1',  headers={'X-APIKey': app.apikey_window.get()}
+    )
+    data = initial_request.json()
+    requests_required = ((data['QueryResult']['RecordsFound'] - 1) // 10) + 1
+    records = []
 
-        # From the first response, extracting the total number of records found and calculating the number of requests
-        # required. The program can take up to a few dozen minutes, depending on the number of records being analyzed
-        for i in range(requests_required):
-            wos_api_request(i, search_query, records, requests_required)
-        fracount(records, our_org, frac_counts)
-        output(our_org, search_query, frac_counts)
-        app.search_button.config(state='active', text='Run')
-        complete_message = f"Calculation complete. Please check the {our_org} - {date.today()}.xlsx file for results"
-        if len(complete_message) > 94:
-            if complete_message[:94] == ' ':
-                safe_complete_message = f'{complete_message[:94]}\n{complete_message[94:]}'
-            else:
-                safe_complete_message = f'{complete_message[:94]}-\n{complete_message[94:]}'
-        else:
-            safe_complete_message = complete_message
-        app.progress_label['text'] = safe_complete_message
+    # From the first response, extracting the total number of records found and calculating the number of requests
+    # required. The program can take up to a few dozen minutes, depending on the number of records being analyzed
+    for i in range(requests_required):
+        wos_api_request(i, search_query, records, requests_required)
+    fracount(records, our_org, frac_counts)
+    output(our_org, search_query, frac_counts)
+    app.search_button.config(state='active', text='Run')
+    complete_message = f"Calculation complete. Please check the {our_org} - {date.today()}.xlsx file for results"
+    app.progress_label['text'] = format_label_text(complete_message, 94)
 
 
 # Defining a class through threading so that the interface doesn't freeze when the data is being retrieved through API

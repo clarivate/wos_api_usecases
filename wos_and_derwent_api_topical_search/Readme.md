@@ -18,18 +18,20 @@ This is how the code works:
 
 And click the Run button.
 
-The program will query Web of Science API for the scholarly document data, then query the Derwent API for the patent data. It will extract the fields of publication year from each of them, and use the Plotly library to draw a bar chart to visualize their annual dynamics, and also create a .csv-file in the same project folder that will contain the following columns for each year:
+The program will query Web of Science API for the scholarly document data, then query the Derwent API for the patent data. It will extract the fields of publication year from each of them, and use the Plotly library to draw a bar chart to visualize their annual dynamics, and also create an Excel file in the same project folder that will contain the following columns for each year:
 - A number of Web of Science documents that contain the topical search keyword and were published that year
 - A number of patent families that contain the topical search keyword and received their earliest priority that year
 - A number of patent families that contain the topical search keyword and were published that year
+
+The saved Excel files can later be loaded with the second tab of the application, "LOAD EXCEL FILE".
 
 Here is another example of the graphs that the code produces:
 
 ![Nanorobots](/wos_and_derwent_api_topical_search/screenshots/Nanorobots.png?raw=true)
 
-And a screenshot of a typical .csv file:
+And a screenshot of a typical Excel file:
 
-![csv_screenshot](/wos_and_derwent_api_topical_search/screenshots/csv_screenshot.png?raw=true)
+![excel_screenshot](/wos_and_derwent_api_topical_search/screenshots/csv_screenshot.png?raw=true)
 
 We considered it important to distinguish the earliest priority years and publication years for the patent families as there is normally an 18 months gap between the patent application submission and its publication by the patent office. We have to stress that in scholarly publishing, there is also normally a significant gap between the manuscript submission date and its publication date, but there are no standard timeframes for the manuscipt processing from submission to publication, and their range varies greatly from a few weeks to a few years in certain cases.
 

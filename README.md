@@ -8,10 +8,15 @@
 * [Cities Collaboration analysis](/cities_collaborations_analysis/)
 * [All Author IDs for the Organization](/retrieve_author_ids/)
 * [Citation from Patents Report](/citations_from_patents/)
+* [Web of Science to VOSviewer exporter](/wos_to_vosviewer_exporter/)
 
 
 ## Researcher API:
 * [Researcher API to Excel Converter](/researcher-api-excel-converter/)
+
+
+## Starter API:
+* [Web of Science to VOSviewer exporter](/wos_to_vosviewer_exporter/)
 
 
 ## Various Clarivate API use cases:
