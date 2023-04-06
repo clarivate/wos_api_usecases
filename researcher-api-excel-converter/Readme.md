@@ -5,7 +5,7 @@
 
 ## A program with a simple GUI that extracts the researchers data from an organizational search using Researcher API, and organises it into an Excel table
 
-This is a very simple program that requires a Researcher API key, and an Affiliation name. It's running a search on every researcher profile that is affiliated with that organization, returns the researcher metadata, and saves it in an .xlsx file in the project folder
+This is a very simple program that requires a [Researcher API key](https://developer.clarivate.com/apis/wos-researcher), and an Affiliation name. It's running a search on every researcher profile that is affiliated with that organization, returns the researcher metadata, and saves it in an .xlsx file in the project folder
 
 
 #### The user needs to launch the main.py file and enter:
@@ -20,6 +20,6 @@ The program will create an Excel file in the same project folder, where each Res
 
 ![Screenshot](/researcher-api-excel-converter/screenshots/results.png)
 
-It is important that the data available through the /researchers{rid} endpoint contains additional data fields, such as Published Names, research output by years, times cited without self-citations, and more. It is possible to develop a functionality to retrieve this extended researcher metadata (as well basic document-level and peer reviews data), as the relevant links to the correct endpoints are also returned by a get-request to the default /researchers endpoint, but each of these requests will take additional time.
+It is important that the data available through the /researchers/{rid} endpoint contains additional data fields, such as Published Names, research output by years, times cited without self-citations, and more. It is possible to develop a functionality to retrieve this extended researcher metadata (as well basic document-level and peer reviews data), as the relevant links to the correct endpoints are also returned by a get-request to the default /researchers endpoint, but each of these requests will take additional time.
 
 As always, we welcome any feedback on this code.
