@@ -81,7 +81,10 @@ def fetch_expanded_metadata(record, records):
     else:
         doc_title = ''
     try:
-        keywords = '; '.join(record['static_data']['fullrecord_metadata']['keywords']['keyword'])
+        if record['static_data']['fullrecord_metadata']['keywords']['count'] == 1:
+            keywords = record['static_data']['fullrecord_metadata']['keywords']['keyword']
+        else:
+            keywords = '; '.join(record['static_data']['fullrecord_metadata']['keywords']['keyword'])
     except KeyError:
         keywords = ''
         """You can add the following lines for debugging:
@@ -125,9 +128,13 @@ def fetch_expanded_metadata(record, records):
 # If the user provided the Expanded API key, this is the way to retrieve the data
 def expanded_api_request(i, search_query, requests_required, records):
     user_apikey = app.apikey_window.get()
-    request = requests.get(f'https://api.clarivate.com/api/wos?databaseId=WOS&usrQuery='
-                           f'{urllib.parse.quote(search_query)}&count=100&firstRecord={i}01',
-                           headers={'X-APIKey': user_apikey})
+    request_json = {"databaseId": "WOS",
+                    "usrQuery": f"{search_query}",
+                    "count": 100,
+                    "firstRecord": int(f'{i}01')}
+    request = requests.post('https://wos-api.clarivate.com/api/wos',
+                            json=request_json,
+                            headers={'X-APIKey': user_apikey})
     data = request.json()
     try:
         for wos_record in data['Data']['Records']['records']['REC']:
@@ -276,12 +283,19 @@ def cited_endpoint_request(record, records, i, user_apikey):
 # Saving the data into a .csv file
 def output(search_query, records):
     df = pd.DataFrame(records)
-    filename = f'{search_query} - {date.today()}'
-    safe_filename = filename.replace('?', '').replace('*', '').replace('"', '')
-    if app.retrieve_cited_references.get():
-        df.to_csv(f'{safe_filename} - with cited references.txt', index=False, sep='\t')
+    if len(search_query) > 100 and app.retrieve_cited_references.get():
+        safe_search_query = search_query[:100]
+        filename = f'{safe_search_query}... - {date.today()} - with cited references.txt'
+    elif len(search_query) <= 100 and app.retrieve_cited_references.get():
+        filename = f'{search_query} - {date.today()} - with cited references.txt'
+    elif len(search_query) > 100 and app.retrieve_cited_references.get() == False:
+        safe_search_query = search_query[:100]
+        filename = f'{safe_search_query}... - {date.today()}.txt'
     else:
-        df.to_csv(f'{safe_filename}.txt', index=False, sep='\t')
+        filename = f'{search_query} - {date.today()}.txt'
+    safe_filename = filename.replace('?', '').replace('*', '').replace('"', '')
+    df.to_csv(f'{safe_filename}', index=False, sep='\t')
+    return safe_filename
 
 
 # Formatting the text lines for the function below
@@ -363,9 +377,14 @@ def validate_search_query():
     user_apikey = app.apikey_window.get()
     search_query = app.search_query_window.get("1.0", "end-1c")
     if wos_api_type == 'expanded':
-        validation_request = requests.get(
-            f'https://api.clarivate.com/api/wos?databaseId=WOS&usrQuery={urllib.parse.quote(search_query)}&'
-            f'count=0&firstRecord=1', headers={'X-APIKey': user_apikey})
+        validation_request_json = {"databaseId": "WOS",
+                                   "usrQuery": f"{search_query}",
+                                   "count": 0,
+                                   "firstRecord": 1
+                                   }
+        validation_request = requests.post('https://wos-api.clarivate.com/api/wos',
+                                           json=validation_request_json,
+                                           headers={'X-APIKey': user_apikey})
         validation_data = validation_request.json()
         if validation_request.status_code == 200:
             records_amount = validation_data['QueryResult']['RecordsFound']
@@ -386,7 +405,6 @@ def validate_search_query():
             app.search_query_bottom_label['text'] = (f'Request failed with status code '
                                                      f'{validation_request.status_code}\n'
                                                      f'{format_label_text(error_message_text, 94)}')
-        return False
     if wos_api_type == 'starter':
         validation_request = requests.get(
             f'https://api.clarivate.com/apis/wos-starter/v1/documents?db=WOS&q={urllib.parse.quote(search_query)}&'
@@ -435,10 +453,13 @@ def main_function():
         app.progress_label['text'] = ''
     if wos_api_type == 'expanded':
         # This is the initial Expanded API request
-        initial_request = requests.get(
-            f'https://api.clarivate.com/api/wos?databaseId=WOS&usrQuery={urllib.parse.quote(search_query)}&count=0&'
-            f'firstRecord=1', headers={'X-APIKey': app.apikey_window.get()}
-        )
+        initial_request_json = {"databaseId": "WOS",
+                                "usrQuery": f"{search_query}",
+                                "count": 0,
+                                "firstRecord": 1}
+        initial_request = requests.post('https://wos-api.clarivate.com/api/wos',
+                                        json=initial_request_json,
+                                        headers={'X-APIKey': app.apikey_window.get()})
         data = initial_request.json()
         requests_required = ((data['QueryResult']['RecordsFound'] - 1) // 100) + 1
         for i in range(requests_required):
@@ -457,15 +478,10 @@ def main_function():
         requests_required = ((data['metadata']['total'] - 1) // 100) + 1
         for i in range(requests_required):
             starter_api_request(i, search_query, requests_required, records)
-    output(search_query, records)
+    safe_filename = output(search_query, records)
     app.search_button.config(state='active', text='Run')
-    if app.retrieve_cited_references.get():
-        complete_message = f"Retrieval complete. Please check the {search_query} - {date.today()} - with cited " \
-                           f"references.txt file for results"
-    else:
-        complete_message = f"Retrieval complete. Please check the {search_query} - {date.today()}.txt file for" \
-                           f" results"
-    app.progress_label['text'] = format_label_text(complete_message, 94)
+    message = f"Retrieval complete. Please check the {safe_filename} file for results"
+    app.progress_label['text'] = format_label_text(message, 94)
 
 
 # Defining a class through threading so that the interface doesn't freeze when the data is being retrieved through API
