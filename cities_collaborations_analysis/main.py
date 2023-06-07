@@ -620,14 +620,18 @@ class App(threading.Thread):
             pd.read_excel(self.filename_entry.get(), sheet_name='Our Org Cities')
             self.exclude_collaborations_offline_radio.place(x=5, y=130, width=250, height=25)
             self.keep_collaborations_offline_radio.place(x=255, y=130, width=250, height=25)
-            self.draw_graph_button.place(x=220, y=180, width=100, height=35)
+            self.filename_bottom_label.place(x=5, y=160, width=495, height=24)
+            self.draw_graph_button.place(x=220, y=210, width=100, height=35)
+            self.filename_bottom_label['text'] = ''
         except ValueError:
             try:
                 pd.read_excel(self.filename_entry.get(), sheet_name='Cities')
                 self.exclude_collaborations_offline.set(0)
                 self.exclude_collaborations_offline_radio.place_forget()
                 self.keep_collaborations_offline_radio.place_forget()
+                self.filename_bottom_label.place(x=5, y=119, width=495, height=24)
                 self.draw_graph_button.place(x=220, y=150, width=100, height=35)
+                self.filename_bottom_label['text'] = ''
             except ValueError:
                 self.filename_bottom_label['text'] = 'Oops! Seems like a wrong Excel file'
 
@@ -766,40 +770,43 @@ def offline_plotting():
     # Loading the excel file into a dataframe
     search_parameters = pd.read_excel(app.filename_entry.get(), sheet_name='Search Parameters')
     if app.exclude_collaborations_offline.get() == 0:
-        df = pd.read_excel(app.filename_entry.get(), sheet_name='Cities')
+        try:
+            df = pd.read_excel(app.filename_entry.get(), sheet_name='Cities')
 
-        df_us = pd.DataFrame()
-        df_us['name'] = df[df['country'] == 'United States']['name'] + ', ' + \
-            df[df['country'] == 'United States']['state'] + ', ' + \
-            df[df['country'] == 'United States']['country']
-        df_us['occurrences'] = df[df['country'] == 'United States']['occurrences']
-        df_non_us = pd.DataFrame()
-        df_non_us['name'] = df[df['country'] != 'United States']['name'] + ', ' + \
-            df[df['country'] != 'United States']['country']
-        df_non_us['occurrences'] = df[df['country'] != 'United States']['occurrences']
+            df_us = pd.DataFrame()
+            df_us['name'] = df[df['country'] == 'United States']['name'] + ', ' + \
+                df[df['country'] == 'United States']['state'] + ', ' + \
+                df[df['country'] == 'United States']['country']
+            df_us['occurrences'] = df[df['country'] == 'United States']['occurrences']
+            df_non_us = pd.DataFrame()
+            df_non_us['name'] = df[df['country'] != 'United States']['name'] + ', ' + \
+                df[df['country'] != 'United States']['country']
+            df_non_us['occurrences'] = df[df['country'] != 'United States']['occurrences']
 
-        df2_us, df2_non_us = worldcities()
+            df2_us, df2_non_us = worldcities()
 
-        df3 = pd.merge(df_non_us, df2_non_us, on='name', how='left')
-        df3_us = pd.merge(df_us, df2_us, on='name', how='left')
+            df3 = pd.merge(df_non_us, df2_non_us, on='name', how='left')
+            df3_us = pd.merge(df_us, df2_us, on='name', how='left')
 
-        df4 = pd.concat([df3, df3_us], ignore_index=True)
+            df4 = pd.concat([df3, df3_us], ignore_index=True)
 
-        fig = px.scatter_geo(df4,
-                             lat='lat',
-                             lon='lng',
-                             size='occurrences',
-                             hover_name='name',
-                             size_max=50,
-                             hover_data={'occurrences': True, 'lat': False, 'lng': False},
-                             projection='natural earth',
-                             title=f'Cities where "{search_parameters["Search Query"][0]}" research is concentrated<br>'
-                                   f'<sup>{subtitle}</sup>')
+            fig = px.scatter_geo(df4,
+                                 lat='lat',
+                                 lon='lng',
+                                 size='occurrences',
+                                 hover_name='name',
+                                 size_max=50,
+                                 hover_data={'occurrences': True, 'lat': False, 'lng': False},
+                                 projection='natural earth',
+                                 title=f'Cities where "{search_parameters["Search Query"][0]}" research is concentrated<br>'
+                                       f'<sup>{subtitle}</sup>')
 
-        fig.update_traces(marker=dict(color='#5E33BF'))
-        fig.update_geos(landcolor='#F0F0EB', showcoastlines=False, showcountries=True, countrycolor='#FFFFFF',
-                        countrywidth=1)
-        fig.show()
+            fig.update_traces(marker=dict(color='#5E33BF'))
+            fig.update_geos(landcolor='#F0F0EB', showcoastlines=False, showcountries=True, countrycolor='#FFFFFF',
+                            countrywidth=1)
+            fig.show()
+        except ValueError:
+            app.filename_bottom_label['text'] = 'Choose whether you need the collaborating cities excluded'
 
     elif app.exclude_collaborations_offline.get() == 1:
         df_our = pd.read_excel(app.filename_entry.get(), sheet_name='Our Org Cities')
