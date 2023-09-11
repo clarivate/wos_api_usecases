@@ -92,7 +92,7 @@ average_citations_per_item = total_citations / documents_found
 
 # Printing results
 print(f"Total Documents: {documents_found}")
-print(f"Total Citations: {total_citations}")
+print(f"Sum of the Times Cited: {total_citations}")
 print(f"H-Index: {h_index}")
 print(f"Average Citations Per Item: {average_citations_per_item}")
 
