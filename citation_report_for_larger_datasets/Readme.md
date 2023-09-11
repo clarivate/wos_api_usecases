@@ -32,7 +32,7 @@ H-Index: 315
 Average Citations Per Item: 30.0249434198488
 ```
 
-In the end, the program will also create a documents.csv file in the same project folder. That file will contain the Web of Science document IDs and the times this document has been cited.
+In the end, the program will also create a documents.csv file in the same project folder. That file will contain the Web of Science document IDs, and the number of times each of these document have been cited.
 
 The main use case of this code is analyzing citations for the datasets larger than 10,000 records. As Web of Science Starter API - Institutional Plan currently has a limit of 5,000 requests per day, and the maximum possible value for the `page` API query parameter is 1000, the maximum dataset available for such an analysis is 50,000 Web of Science records (in which case the data retrieval might take up to an hour, depending also on your internet connection). 
 
