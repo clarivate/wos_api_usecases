@@ -5,7 +5,7 @@
 
 ## A program with a simple GUI that extracts the researchers data from an organizational search using Researcher API, and organises it into an Excel table
 
-This is a very simple program that requires a Researcher API key, and an Affiliation name. It's running a search on every researcher profile that is affiliated with that organization, returns the researcher metadata, and saves it in an .xlsx file in the project folder
+This is a very simple program that requires a [Researcher API key](https://developer.clarivate.com/apis/wos-researcher), and an Affiliation name. It's running a search on every researcher profile that is affiliated with that organization, returns the researcher metadata, and saves it in an .xlsx file in the project folder
 
 
 #### The user needs to launch the main.py file and enter:
