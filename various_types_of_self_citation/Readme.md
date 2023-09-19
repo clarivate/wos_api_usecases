@@ -20,7 +20,9 @@ This is how it works:
 
 And launch the code.
 
-The program will query Web of Science Expanded API, retrieve the necessary document metadata, and apply sets.intersection() method to each of them to check if self-citation occured at any of the described levels, and for every case where a self-citation even would occur, the program will additionally query Web of Science Expanded API for the cited references of the citing paper to check the number of cited reference in it that lead to the cited document. The total self-citation is calculated as follows:
+The program will query Web of Science Expanded API, retrieve the necessary document metadata, and apply sets.intersection() method to each of them to check if self-citation occured at any of the described levels, and for every case where a self-citation even would occur, the program will additionally query Web of Science Expanded API for the cited references of the citing paper to check the number of cited reference in it that lead to the cited document. The result is then printed in the IDE Run window / terminal / command prompt (depending on where you launched the program from), visualized using plotly package, and saved into a .csv file in the same project folder.
+
+The total self-citation is calculated as follows:
 
 Self-citation of a set of documents = (number of self-citations of this type found in the citing documents) / (total times cited count for that set of cited papers)
 
