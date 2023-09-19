@@ -1,7 +1,8 @@
 # Various types of Self-citation
 
+![Example visualisation](/various_types_of_self_citation/screenshots/plot.png)
 
-## A simple but universal script to evaluate the self-citation percentage for a set of Web of Science documents at any level of user's preference. The script relies on retrieving the publication data via Web of Science Expanded API.
+## A universal script to evaluate the self-citation percentage for a set of Web of Science documents at any level of user's preference. The script relies on retrieving the publication data via Web of Science Expanded API.
 
 
 
@@ -19,17 +20,19 @@ This is how it works:
 
 And launch the code.
 
-The program will query Web of Science Expanded API to create objects of class CitedPaper and CitingPaper. Every CitingPaper class object would be a list item for of papers a CitedPaper class object which is a way the program tracks citation links between cited and citing papers. After that, the program will create lists of sets for the author, organization, and journal names for every cited and citing record, and apply sets.intersection() method to each of them to check if self-citation occured at any of the described levels, and for every case where a self-citation even would occur, the program will additionally query Web of Science Expanded API for the cited references of the citing paper to check the number of cited reference in it that lead to the cited document. The total self-citation is calculated as follows:
+The program will query Web of Science Expanded API, retrieve the necessary document metadata, and apply sets.intersection() method to each of them to check if self-citation occured at any of the described levels, and for every case where a self-citation even would occur, the program will additionally query Web of Science Expanded API for the cited references of the citing paper to check the number of cited reference in it that lead to the cited document. The result is then printed in the IDE Run window / terminal / command prompt (depending on where you launched the program from), visualized using plotly package, and saved into a .csv file in the same project folder.
+
+The total self-citation is calculated as follows:
 
 Self-citation of a set of documents = (number of self-citations of this type found in the citing documents) / (total times cited count for that set of cited papers)
 
 Although this is a good step towards increasing the precision of self-citation calculation, we would like to address a few limitations of this approach:
 
 1. As the author name in Web of Science Core Collection might require additional disambiguation, coauthor-level self-citation analysis provides additional check for:
-- document sets made by Clarivate Distinct Author Identification System, currently being used in Web of Science Author Search
 - documents linked to ResearcherID profiles of the authors
-- documents linked to ORCID profiles of the authors But we would like to stress that neither of those approaches can guarantee 100% precision of author disambiguation at the moment.
-2. It is important that the coauthor-level analysis mentioned above works exactly what it is named for: coauthor-level self-citations, and we suggest that the users understand the differentce between coauthor self-citation and author self-citation which are not the same phenomenons in bibliometrics. Author self-citation identifies a self-citation event only if the specific author being analyzed appears on both cited and citing paper. On contrast, coauthor self-citation identifies a self-citation event even if the author being analyzed didn't cite their own research, but it's their coauthors who did. While it is techincally possible to include only the author-level self-citation into this algorithm, we decided that including too many output metrics might actually make it harder to measure self-citations wiht this program, so we decided to use the same coauthor-level self-citation approach used in the following two scholarly papers which we consider very important to understanding the self-citation methodology:
+- documents linked to ORCID profiles of the authors
+But we would like to stress that neither of those approaches can guarantee 100% precision of author disambiguation at the moment.
+2. It is important that the coauthor-level analysis mentioned above works exactly what it is named for: coauthor-level self-citations, and we suggest that the users understand the differentce between coauthor self-citation and author self-citation which are not the same phenomenons in bibliometrics. Author self-citation identifies a self-citation event only if the specific author being analyzed appears on both cited and citing paper. On contrast, coauthor self-citation identifies a self-citation event even if the author being analyzed didn't cite their own research, but it's their coauthors who did. While it is techincally possible to include only the author-level self-citation into this algorithm, we decided that including too many inputs as well as output metrics might actually make it harder to measure self-citations wiht this program, so we decided to use the same coauthor-level self-citation approach used in the following two scholarly papers which we consider very important to understanding the self-citation methodology:
 
 [Dag W. Aksnes,
 A macro study of self-citation,
