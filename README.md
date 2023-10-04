@@ -18,6 +18,7 @@
 ## Starter API:
 * [Web of Science to VOSviewer exporter](/wos_to_vosviewer_exporter/)
 * [Citation Report for Larger Datasets](/citation_report_for_larger_datasets/)
+* [Most Recent Web of Science Records Summary](/most_recent_wos_items/)
 
 
 ## Various Clarivate API use cases:
