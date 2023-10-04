@@ -1,6 +1,6 @@
 # Most recent Web of Science records
 
-![Example](/most_recent_wos_ites/screenshots/screenshot.png)
+![Example](/most_recent_wos_items/screenshots/screenshot.png)
 
 
 ## A simple Python script that uses Web of Science Starter API and Flask to create an HTML page with 5 most recent Web of Science Core Collection records
