@@ -35,7 +35,7 @@ for wos_document in initial_json['hits'][:RECORDS_TO_DISPLAY]:
                                        headers={'X-ApiKey': STARTER_APIKEY})
         journal_json = journal_request.json()
         if journal_json['hits']:
-            wos_document['source']['sourceTitle'] = f"<a href={journal_json['hits'][0]['links'][0]['url']}" \
+            wos_document['source']['sourceTitle'] = f"<a href={journal_json['hits'][0]['links'][0]['url']}>" \
                 + wos_document['source']['sourceTitle'] + '</a>'
 
 app = Flask(__name__)
