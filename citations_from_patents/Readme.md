@@ -11,15 +11,14 @@ This is how the code works:
 
 And launch the code.
 
-The program will query Web of Science Expanded API for the document identifiers, query each of them for the cited items and catch every citing document that comes from Derwent Innovations Index database. In the end, the program will print how many documents were found, and how many citations from patents they received. Also, the program generates a .csv file containing:
+The program will query Web of Science Expanded API for the document metadata, and then query each Web of Science record with more than 0 citations from Derwent Innovations Index, for the cited items and catch every citing document ID that comes from Derwent Innovations Index database. In the end, the program will print how many documents were found, and how many citations from patents they received. Also, the program generates a .csv file containing:
 - the document identifiers, or UTs, of each of the documents returned by the search query that the user entered
 - the number of citations that each of these documents received from patents
-- the list of citing patents for each of these documents, separated by spaces.
+- the list of citing patent families IDs for each of these documents, separated by spaces.
 
 The main use case of this code is checking which documents are cited by patents the most.
 
 Although this code makes it much easier to check citations from patents, there are some important considerations to keep in mind while using this code:
-1. The code checks every citing document, and thus takes time to process. So, a search query returning 3000 documents might take up to an hour to process, while larger search queries (10K+ documents) might only be able to complete overnight.
-2. The code only retrieves the document identifiers, not the actual documents, so it doesn't consume any Web of Science Expanded API usage - even if you launch it for processing thousands of documents, it won't get you any closer to hitting the annual usage threshold.
-3. The list of cited Web of Science documents - as well as the lists of citing Derwent Innovation Index patent families - can be copied and pasted into the Web of Science advanced search window to analyze the datasets in the Web of Science platform user interface.
-4. InCites Benchmarking & Analytics also has a powerful feature to quickly calculate the number of citing patents in any of the six Analyze reports (Author, Organization, Location, Research Area, Publication Source, or Funding Agency) and a capability to apply various filters to your analysis.
+1. The code checks every citing document that has more than 0 citations individually. This takes time to process. So, a search query returning 3-5K documents might take up to half an hour to process, while larger search queries (50K+ documents) might only be able to complete overnight.
+2. The list of cited Web of Science documents - as well as the lists of citing Derwent Innovation Index patent families - can be copied and pasted into the Web of Science advanced search window to analyze the datasets in the Web of Science platform user interface.
+3. InCites Benchmarking & Analytics also has a powerful feature to quickly calculate the number of citing patents in any of the six Analyze reports (Author, Organization, Location, Research Area, Publication Source, or Funding Agency) and a capability to apply various filters to your analysis.
