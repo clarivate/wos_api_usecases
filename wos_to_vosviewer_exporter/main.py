@@ -1,8 +1,9 @@
 """
-This code is created to simplify the data export from Web of Science and to prepare the files acceptable by VOSviewer.
-All you need to do is enter your Web of Science API key (Expanded is better, but Starter would also work), enter the
-Web of Science Advanced Search query, and click "Run". You can also choose to retrieve the cited references data, but
-it currently takes much longer through the API.
+This code is created to simplify the data export from Web of Science and to prepare the files
+acceptable by VOSviewer. All you need to do is enter your Web of Science API key (Expanded is
+better, but Starter would also work), enter the Web of Science Advanced Search query, and click
+"Run". You can also choose to retrieve the cited references data, but it currently takes much
+longer through the API.
 """
 
 import urllib.parse
@@ -15,118 +16,147 @@ import pandas as pd
 import requests
 
 
-# If the user provided the Starter API key, this is the way to fetch the necessary metadata from the records
-def fetch_expanded_metadata(record, records):
+def fetch_author_names(names_json):
+    """Retrieve the names of the authors.
+
+    :param names_json: dict.
+    :return: str.
+    """
+    if isinstance(names_json['name'], dict):
+        if names_json['name']['role'] == 'author':
+            return names_json['name']['full_name']
+        return ''
+    return ', '.join([n['full_name'] for n in names_json['name'] if n['role'] == 'author'])
+
+
+def fetch_author_affiliation_links(address_json):
+    """Retrieve the author names, but for the 'C1' field that stores them in
+    relation to specific affiliations.
+
+    :param address_json: dict.
+    :return: str.
+    """
+    address = address_json['address_spec']['full_address']
+    if 'names' not in address_json.keys():
+        return f'[] {address}'
+    if isinstance(address_json['names']['name'], list):
+        names_list = []
+        for name in address_json['names']['name']:
+            try:
+                names_list.append(name['full_name'])
+            except KeyError:
+                # Uncomment the following string for debugging:if
+                # print('Missing Author Full name in the record: {address_json}')
+                pass
+        return f"[{'; '.join(names_list)}] {address}"
+    name = address_json['names']['name']['full_name']
+    return f"[{name}] {address}"
+
+
+def fetch_affiliations(address_json):
+    """Retrieve the names of the authors-affiliations links.
+
+    :param address_json: dict.
+    :return: str.
+    """
+
+    # When there are no address fields on the record
+    if address_json['count'] == 0:
+        return ''
+
+    # When there are multiple address fields on the record
+    if isinstance(address_json['address_name'], list):
+        au_affil_list = []
+        for address_subfield in address_json['address_name']:
+            au_affil_list.append(fetch_author_affiliation_links(address_subfield))
+        return '; '.join(au_affil_list)
+
+    # When there is only one address field on the record
+    return fetch_author_affiliation_links(address_json['address_name'])
+
+
+def fetch_titles(titles_json):
+    """Retrieve the source title and document title.
+
+    :param titles_json: dict.
+    :return: str, str.
+    """
+    return ([t['content'] for t in titles_json if t['type'] == 'source'][0],
+            [t['content'] for t in titles_json if t['type'] == 'item'][0])
+
+
+def fetch_keywords(keywords_json):
+    """Retrieve the author keywords and keywords plus
+
+    :param keywords_json: dict.
+    :return: str.
+    """
+    if isinstance(keywords_json['keyword'], str):
+        return keywords_json['keyword']
+    return '; '.join(str(e) for e in keywords_json['keyword'])
+
+
+def fetch_abstract(fullrecord_metadata):
+    """Retrieve the abstract of the document.
+
+    :param fullrecord_metadata: dict.
+    :return: str.
+    """
+    if 'abstracts' in fullrecord_metadata.keys():
+        if 'p' in fullrecord_metadata['abstracts']['abstract']['abstract_text'].keys():
+            return fullrecord_metadata['abstracts']['abstract']['abstract_text']['p']
+        return ''
+    return ''
+
+
+def fetch_times_cited(tc_json):
+    """Retrieve the times cited counts.
+
+    :param tc_json: dict
+    :return: str or int.
+    """
+    for database in tc_json:
+        if database['coll_id'] == 'WOS':
+            return database['local_count']
+    return ''
+
+
+def fetch_expanded_metadata(record):
+    """Parse the metadata fields required for VOSviewer that are available via
+    Web of Science Expanded API
+
+    :param record: dict.
+    :return: dict.
+    """
     ut = record['UID']
     py = record['static_data']['summary']['pub_info']['pubyear']
-    try:
-        names = []
-        for name in record['static_data']['summary']['names']['name']:
-            names.append(name['full_name'])
-        authors = '; '.join(names)
-    except TypeError:
-        authors = record['static_data']['summary']['names']['name']['full_name']
-    c1 = ''
-    # When there are multiple address fields on the record
-    if record['static_data']['fullrecord_metadata']['addresses']['count'] > 1:
-        c1_1 = []
-        for address_subfield in record['static_data']['fullrecord_metadata']['addresses']['address_name']:
-            names_c1 = []
-            address = address_subfield['address_spec']['full_address']
-            try:
-                if address_subfield['names']['count'] > 1:
-                    for name in address_subfield['names']['name']:
-                        try:
-                            names_c1.append(name['full_name'])
-                        except KeyError:
-                            pass
-                    c1_1.append(f"[{'; '.join(names_c1)}] {address}")
-                else:
-                    names_c1 = address_subfield['names']['name']['full_name']
-                    c1_1.append(f"[{names_c1}] {address}")
-            except KeyError:
-                address = address_subfield['address_spec']['full_address']
-                c1_1.append(address)
-        c1 = '; '.join(c1_1)
-    # When there are no address fields on the record
-    elif record['static_data']['fullrecord_metadata']['addresses']['count'] == 0:
-        pass
-    # When there is only one address field on the record
+    authors = fetch_author_names(record['static_data']['summary']['names'])
+    c1 = fetch_affiliations(record['static_data']['fullrecord_metadata']['addresses'])
+    source_title, doc_title = fetch_titles(record['static_data']['summary']['titles']['title'])
+    if 'keywords' in record['static_data']['fullrecord_metadata'].keys():
+        keywords = fetch_keywords(record['static_data']['fullrecord_metadata']['keywords'])
     else:
-
-        names_c1 = []
-        address = record['static_data']['fullrecord_metadata']['addresses']['address_name']['address_spec'][
-            'full_address']
-        try:
-            if record['static_data']['fullrecord_metadata']['addresses']['address_name']['names']['count'] > 1:
-                for name in record['static_data']['fullrecord_metadata']['addresses']['address_name']['names']['name']:
-                    names_c1.append(name['full_name'])
-                c1 = f"[{'; '.join(names_c1)}] {address}"
-            else:
-                name_c1 = record['static_data']['fullrecord_metadata']['addresses']['address_name']['names']['name'][
-                    'full_name']
-                c1 += f"[{name_c1}] {address}"
-        except KeyError:
-            pass
-    for title in record['static_data']['summary']['titles']['title']:
-        if title['type'] == 'source':
-            source_title = title['content']
-            break
-    else:
-        source_title = ''
-    for title in record['static_data']['summary']['titles']['title']:
-        if title['type'] == 'item':
-            doc_title = title['content']
-            break
-    else:
-        doc_title = ''
-    try:
-        if record['static_data']['fullrecord_metadata']['keywords']['count'] == 1:
-            keywords = record['static_data']['fullrecord_metadata']['keywords']['keyword']
-        else:
-            keywords = '; '.join(record['static_data']['fullrecord_metadata']['keywords']['keyword'])
-    except KeyError:
         keywords = ''
-        """You can add the following lines for debugging:
-        print(f'no keywords for record {ut}')
-        print(record['static_data']['fullrecord_metadata'])"""
-    except TypeError:
-        keywords = ['']
-        """You can add the following lines for debugging:
-        print(f"something weird in record {ut}: {record['static_data']['fullrecord_metadata']['keywords']}")"""
-    try:
-        if record['static_data']['item']['keywords_plus']['count'] == 1:
-            keywords_plus = record['static_data']['item']['keywords_plus']['keyword']
-        else:
-            keywords_plus = '; '.join(record['static_data']['item']['keywords_plus']['keyword'])
-    except KeyError:
+    if 'keywords_plus' in record['static_data']['item'].keys():
+        keywords_plus = fetch_keywords(record['static_data']['item']['keywords_plus'])
+    else:
         keywords_plus = ''
-        """You can add the following lines for debugging:
-        print(f'no keywords plus for record {ut}')
-        print(record['static_data']['item'])"""
-    try:
-        abstract = record['static_data']['fullrecord_metadata']['abstracts']['abstract']['abstract_text']['p']
-    except KeyError:
-        abstract = ''
-        """You can add the following lines for debugging:
-        print(f'no abstract metadata found for record {ut}')"""
-    tc = record['dynamic_data']['citation_related']['tc_list']['silo_tc']['local_count']
-    records.append({
-        'UT': ut,
-        'PY': py,
-        'AU': authors,
-        'SO': source_title,
-        'C1': c1,
-        'TI': doc_title,
-        'DE': keywords,
-        'ID': keywords_plus,
-        'AB': abstract,
-        'TC': tc
-    })
+    abstract = fetch_abstract(record['static_data']['fullrecord_metadata'])
+    tc = fetch_times_cited(record['dynamic_data']['citation_related']['tc_list']['silo_tc'])
+    return {'UT': ut, 'PY': py, 'AU': authors, 'SO': source_title, 'C1': c1,
+            'TI': doc_title, 'DE': keywords, 'ID': keywords_plus, 'AB': abstract, 'TC': tc}
 
 
 # If the user provided the Expanded API key, this is the way to retrieve the data
 def expanded_api_request(i, search_query, requests_required, records):
+    """Send Web of Science Expanded API request to get records metadata.
+
+    :param i: int.
+    :param search_query: str.
+    :param requests_required: int.
+    :param records: list.
+    :return: None.
+    """
     user_apikey = app.apikey_window.get()
     request_json = {"databaseId": "WOS",
                     "usrQuery": f"{search_query}",
@@ -134,17 +164,18 @@ def expanded_api_request(i, search_query, requests_required, records):
                     "firstRecord": int(f'{i}01')}
     request = requests.post('https://wos-api.clarivate.com/api/wos',
                             json=request_json,
-                            headers={'X-APIKey': user_apikey})
+                            headers={'X-APIKey': user_apikey},
+                            timeout=16)
     data = request.json()
     try:
         for wos_record in data['Data']['Records']['records']['REC']:
-            fetch_expanded_metadata(wos_record, records)
-    except (requests.exceptions.ConnectionError, requests.exceptions.JSONDecodeError, KeyError):
+            records.append(fetch_expanded_metadata(wos_record))
+    except (requests.exceptions.ConnectionError, requests.exceptions.JSONDecodeError):
         print(f'Resending WoS API request #{i + 1}')
         time.sleep(1)
         expanded_api_request(i, search_query, requests_required, records)
     print(f"{((i + 1) * 100) / requests_required:.1f}% documents retrieved")
-    if app.retrieve_cited_references.get():
+    if app.retrieve_cited_refs.get():
         progress = ((i + 1) / requests_required)
     else:
         progress = ((i + 1) / requests_required) * 100
@@ -153,8 +184,13 @@ def expanded_api_request(i, search_query, requests_required, records):
     app.root.update_idletasks()
 
 
-# If the user provided the Starter API key, this is the way to fetch the necessary metadata from the records
-def fetch_starter_metadata(record, records):
+def fetch_starter_metadata(record):
+    """Parse the metadata fields required for VOSviewer that are available via
+    Web of Science Starter API
+
+    :param record: dict.
+    :return: dict.
+    """
     ut = record['uid']
     py = record['source']['publishYear']
     try:
@@ -164,21 +200,22 @@ def fetch_starter_metadata(record, records):
         authors = '; '.join(names)
     except TypeError:
         authors = ''
-        """You can add the following lines for debugging:
-        print(f'something weird with the author names in record: {ut}')"""
+        # Uncomment the following line for debugging:
+        # print(f'Something weird with the author names in record: {ut}')
     source_title = record['source']['sourceTitle']
     doc_title = record['title']
     try:
         keywords = '; '.join(record['keywords']['authorKeywords'])
     except KeyError:
         keywords = ''
-        """You can add the following lines for debugging:
-        print(f'no keywords for record {ut}')
-        print(record['static_data']['fullrecord_metadata'])"""
+        # Uncomment the following lines for debugging:
+        # print(f'No keywords for record {ut}')
+        # print(record['static_data']['fullrecord_metadata'])
     except TypeError:
         keywords = ['']
-        """You can add the following lines for debugging:
-        print(f"something weird in record {ut}: {record['static_data']['fullrecord_metadata']['keywords']}")"""
+        # Uncomment the following lines for debugging:
+        # print(f"Something weird in record {ut}:
+        # {record['static_data']['fullrecord_metadata']['keywords']}")
     try:
         for db in record['citations']:
             if db['db'] == 'wos':
@@ -188,32 +225,34 @@ def fetch_starter_metadata(record, records):
             tc = 0
     except KeyError:
         tc = 0
-    records.append({
-        'UT': ut,
-        'PY': py,
-        'AU': authors,
-        'SO': source_title,
-        'TI': doc_title,
-        'DE': keywords,
-        'TC': tc
-    })
+    return {'UT': ut, 'PY': py, 'AU': authors, 'SO': source_title, 'TI': doc_title,
+            'DE': keywords, 'TC': tc}
 
 
-# If the user provided the Starter API key, this is the way to retrieve the data
 def starter_api_request(i, search_query, requests_required, records):
+    """Send Web of Science Starter API request to get records metadata.
+
+    :param i: int.
+    :param search_query: str.
+    :param requests_required: int.
+    :param records: list.
+    :return: None.
+    """
     user_apikey = app.apikey_window.get()
     request = requests.get(f'https://api.clarivate.com/apis/wos-starter/v1/documents?db=WOS&q='
-                           f'{urllib.parse.quote(search_query)}&limit=50&page={i+1}', headers={'X-APIKey': user_apikey})
+                           f'{urllib.parse.quote(search_query)}&limit=50&page={i + 1}',
+                           headers={'X-APIKey': user_apikey},
+                           timeout=16)
     data = request.json()
     try:
         for wos_record in data['hits']:
-            fetch_starter_metadata(wos_record, records)
-    except (requests.exceptions.ConnectionError, requests.exceptions.JSONDecodeError, KeyError):
+            records.append(fetch_starter_metadata(wos_record))
+    except (requests.exceptions.ConnectionError, requests.exceptions.JSONDecodeError):
         print(f'Resending WoS API request #{i + 1}')
         time.sleep(1)
-        expanded_api_request(i, search_query, requests_required, records)
+        starter_api_request(i, search_query, requests_required, records)
     print(f"{((i + 1) * 100) / requests_required:.1f}% complete")
-    if app.retrieve_cited_references.get():
+    if app.retrieve_cited_refs.get():
         progress = ((i + 1) / requests_required)
     else:
         progress = ((i + 1) / requests_required) * 100
@@ -222,84 +261,93 @@ def starter_api_request(i, search_query, requests_required, records):
     app.root.update_idletasks()
 
 
-def fetch_cited_metadata(crs, cited_data):
-    for cited_record in cited_data['Data']:
-        cr = ''
-        try:
-            cr += f"{cited_record['CitedAuthor']}"
-        except KeyError:
-            pass
-        try:
-            cr += f", {cited_record['Year']}"
-        except KeyError:
-            pass
-        try:
-            cr += f", {cited_record['CitedWork']}"
-        except KeyError:
-            pass
-        try:
-            cr += f", V{cited_record['Volume']}"
-        except KeyError:
-            pass
-        try:
-            cr += f", P{cited_record['Page']}"
-        except KeyError:
-            pass
-        try:
-            cr += f", DOI {cited_record['DOI']}"
-        except KeyError:
-            pass
-        crs.append(cr)
+def fetch_cited_metadata(cited_record):
+    """Parse the cited reference record for individual metadata fields.
+
+    :param cited_record: dict.
+    :return: str.
+    """
+    cited_ref_string = ''
+    fields = ('CitedAuthor', 'Year', 'CitedWork', 'Volume', 'Page', 'DOI')
+    for field in fields:
+        if field in cited_record.keys():
+            cited_ref_string += f"{cited_record[field]}, "
+    return cited_ref_string[:-2]
 
 
-# Querying the cited endpoint if the "Also retrieve Cited References" checkbox is ticked
 def cited_endpoint_request(record, records, i, user_apikey):
+    """Query the cited endpoint if the "Also retrieve Cited References" checkbox is ticked.
+
+    :param record: dict.
+    :param records: list.
+    :param i: int.
+    :param user_apikey: str.
+    :return: None
+    """
     crs = []
-    initial_cited_request = requests.get(f'https://api.clarivate.com/api/wos/references?databaseId=WOS&uniqueId='
-                                         f'{record["UT"]}&count=100&firstRecord=1',
-                                         headers={'X-APIKey': user_apikey})
+    initial_cited_request = requests.get(f'https://api.clarivate.com/api/wos/references?'
+                                         f'databaseId=WOS&uniqueId={record["UT"]}'
+                                         f'&count=100&firstRecord=1',
+                                         headers={'X-APIKey': user_apikey},
+                                         timeout=16)
     try:
-        cited_data = initial_cited_request.json()
-        fetch_cited_metadata(crs, cited_data)
-        if cited_data['QueryResult']['RecordsFound'] > 100:
-            cited_requests_required = ((cited_data['QueryResult']['RecordsFound'] - 1) // 100) + 1
+        cited_json = initial_cited_request.json()
+        for cited_record in cited_json['Data']:
+            crs.append(fetch_cited_metadata(cited_record))
+        if cited_json['QueryResult']['RecordsFound'] > 100:
+            cited_requests_required = ((cited_json['QueryResult']['RecordsFound'] - 1) // 100) + 1
             for j in range(1, cited_requests_required):
-                cited_request = requests.get(f'https://api.clarivate.com/api/wos/references?databaseId=WOS&'
-                                             f'uniqueId={record["UT"]}&count=100&firstRecord={j}01',
-                                             headers={'X-APIKey': user_apikey})
-                cited_data = cited_request.json()
-                fetch_cited_metadata(crs, cited_data)
+                cited_request = requests.get(f'https://api.clarivate.com/api/wos/references?'
+                                             f'databaseId=WOS&uniqueId={record["UT"]}'
+                                             f'&count=100&firstRecord={j}01',
+                                             headers={'X-APIKey': user_apikey},
+                                             timeout=16)
+                cited_json = cited_request.json()
+                for cited_record in cited_json['Data']:
+                    crs.append(fetch_cited_metadata(cited_record))
         record['CR'] = '; '.join(crs)
-    except (requests.exceptions.ConnectionError, requests.exceptions.JSONDecodeError, KeyError):
+    except (requests.exceptions.ConnectionError, requests.exceptions.JSONDecodeError):
         print(f'Resending WoS API request #{i + 1}')
         time.sleep(1)
         cited_endpoint_request(record, records, i, user_apikey)
-    progress = ((len(records)/100 + i + 1) / (len(records) * 1.01)) * 100
+    progress = ((len(records) / 100 + i + 1) / (len(records) * 1.01)) * 100
     app.progress_bar.config(value=progress)
     app.style.configure('Clarivate.Horizontal.TProgressbar', text=f'{progress:.1f}%')
     app.root.update_idletasks()
 
 
-# Saving the data into a .csv file
 def output(search_query, records):
+    """Save data into a .txt tab-felimited file.
+
+    :param search_query: str.
+    :param records: list.
+    :return: str.
+    """
     df = pd.DataFrame(records)
-    if len(search_query) > 100 and app.retrieve_cited_references.get():
+    if len(search_query) > 100 and app.retrieve_cited_refs.get():
         safe_search_query = search_query[:100]
         filename = f'{safe_search_query}... - {date.today()} - with cited references.txt'
-    elif len(search_query) <= 100 and app.retrieve_cited_references.get():
+    elif len(search_query) <= 100 and app.retrieve_cited_refs.get():
         filename = f'{search_query} - {date.today()} - with cited references.txt'
-    elif len(search_query) > 100 and app.retrieve_cited_references.get() == False:
+    elif len(search_query) > 100 and app.retrieve_cited_refs.get() is False:
         safe_search_query = search_query[:100]
-        filename = f'{safe_search_query}... - {date.today()}.txt'
+        filename = f'{safe_search_query} - {date.today()}.txt'
     else:
         filename = f'{search_query} - {date.today()}.txt'
-    safe_filename = filename.replace('?', '').replace('*', '').replace('"', '')
+    safe_filename = (filename.replace('?', '').replace('*', '').replace('"', ''))
     df.to_csv(f'{safe_filename}', index=False, sep='\t')
     return safe_filename
 
 
-# Formatting the text lines for the function below
 def format_line(text, line_start, symbol_limit, safe_text):
+    """Format the text lines for the label text
+
+    :param text: str.
+    :param line_start: int.
+    :param symbol_limit: int.
+    :param safe_text: str.
+    :return: str, int.
+    """
     if line_start + symbol_limit > len(text):
         safe_text += f'{text[line_start:len(text)]}\n'
         return safe_text, line_start
@@ -310,8 +358,13 @@ def format_line(text, line_start, symbol_limit, safe_text):
             return safe_text, line_end
 
 
-# A function for word wrapping in longer messages
 def format_label_text(text, symbol_limit):
+    """Wraps words for longer messages.
+
+    :param text: str.
+    :param symbol_limit: int.
+    :return: str.
+    """
     safe_text = ''
     line_start = 0
     if len(text) > symbol_limit:
@@ -322,8 +375,11 @@ def format_label_text(text, symbol_limit):
     return text
 
 
-# A function for hiding/unhiding symbols in the API Key field
 def unhide_symbols():
+    """Hide/unhide symbols in the API key field.
+
+    :return: None.
+    """
     if app.apikey_window['show'] == "*":
         app.apikey_window['show'] = ""
     else:
@@ -332,34 +388,42 @@ def unhide_symbols():
 
 # A function for checking the validity of the API key
 def validate_api_key():
+    """Validate the API key, check how many records are left for Expanded API.
+
+    :return: str or None.
+    """
     user_apikey = app.apikey_window.get()
     # Sending an Expanded test request to check if it passes authentication
-    validation_request = requests.get(
-        'https://api.clarivate.com/api/wos?databaseId=WOS&usrQuery=AU=Garfield&count=0&firstRecord=1',
-        headers={'X-APIKey': user_apikey}
-    )
+    validation_request = requests.get('https://api.clarivate.com/api/wos?databaseId=WOS&'
+                                      'usrQuery=AU=Garfield&count=0&firstRecord=1',
+                                      headers={'X-APIKey': user_apikey},
+                                      timeout=16)
     if validation_request.status_code == 200:
-        # If the API call with this key is a success, we're also return the amount of records remaining
+        # If the API call with this key is a success,also return the amount of records remaining
         docs_left = validation_request.headers['X-REC-AmtPerYear-Remaining']
-        app.apikey_bottom_label['text'] = f"Expanded API Authentication succeeded; Records left to retrieve: " \
-                                          f"{docs_left}"
+        app.apikey_bottom_label['text'] = (f"Expanded API Authentication succeeded; "
+                                           f"Records left to retrieve: {docs_left}")
         app.cited_references_checkbutton.config(state='active')
         return 'expanded'
-    # If the Expanded API request status is anything but 200, sending a Starter API test request
-    validation_request_starter = requests.get(
-        'https://api.clarivate.com/apis/wos-starter/v1/documents?db=WOS&q=AU=Garfield&limit=1&page=1',
-        headers={'X-APIKey': user_apikey}
-    )
+    # If the Expanded API request status is anything but 200, send a Starter API test request
+    validation_request_starter = requests.get('https://api.clarivate.com/apis/wos-starter/v1/'
+                                              'documents?db=WOS&q=AU=Garfield&limit=1&page=1',
+                                              headers={'X-APIKey': user_apikey},
+                                              timeout=16)
     if validation_request_starter.status_code == 200:
-        requests_left_today = validation_request_starter.headers['X-RateLimit-Remaining-Day']
+        try:
+            requests_left_today = validation_request_starter.headers['X-RateLimit-Remaining-Day']
+        except KeyError:
+            requests_left_today = 99999999
         if int(requests_left_today) < 100:
-            label_text = f'Starter API authentication succeeded; Requests left today: {requests_left_today}'
+            label_text = (f'Starter API authentication succeeded; Requests left today: '
+                          f'{requests_left_today}')
 
         else:
-            label_text = 'Starter API authentication succeeded. Address, Abstract, Keywords Plus, and Cited ' \
-                         'references metadata is only available with Expanded API'
+            label_text = ('Starter API authentication succeeded. Address, Abstract, Keywords Plus,'
+                          ' and Cited references metadata is only available with Expanded API')
         app.apikey_bottom_label['text'] = format_label_text(label_text, 94)
-        if app.retrieve_cited_references.get():
+        if app.retrieve_cited_refs.get():
             app.cited_references_checkbutton.invoke()
         app.cited_references_checkbutton.config(state='disabled')
         return 'starter'
@@ -367,8 +431,11 @@ def validate_api_key():
     return None
 
 
-# A function to make sure the affiliation name provided by the user is a valid one
 def validate_search_query():
+    """Make sure the search query provided by the user is a valid one.
+
+    :return: bool.
+    """
     app.search_query_bottom_label['text'] = 'Validating...\n\n'
     wos_api_type = validate_api_key()
     if wos_api_type is None:
@@ -384,7 +451,8 @@ def validate_search_query():
                                    }
         validation_request = requests.post('https://wos-api.clarivate.com/api/wos',
                                            json=validation_request_json,
-                                           headers={'X-APIKey': user_apikey})
+                                           headers={'X-APIKey': user_apikey},
+                                           timeout=16)
         validation_data = validation_request.json()
         if validation_request.status_code == 200:
             records_amount = validation_data['QueryResult']['RecordsFound']
@@ -392,8 +460,8 @@ def validate_search_query():
             if records_amount == 0:
                 return False
             if records_amount > 100000:
-                text = f'Records found: {records_amount}. You can export a maximum of 100k records through Expanded ' \
-                       f'API\n'
+                text = (f'Records found: {records_amount}. You can export a maximum of 100k '
+                        f'records through Expanded API\n')
                 app.search_query_bottom_label['text'] = format_label_text(text, 94)
                 return True
             return True
@@ -406,21 +474,27 @@ def validate_search_query():
                                                      f'{validation_request.status_code}\n'
                                                      f'{format_label_text(error_message_text, 94)}')
     if wos_api_type == 'starter':
-        validation_request = requests.get(
-            f'https://api.clarivate.com/apis/wos-starter/v1/documents?db=WOS&q={urllib.parse.quote(search_query)}&'
-            f'limit=1&page=1', headers={'X-APIKey': user_apikey})
+        validation_request = requests.get(f'https://api.clarivate.com/apis/wos-starter/v1/documents'
+                                          f'?db=WOS&q={urllib.parse.quote(search_query)}&'
+                                          f'limit=1&page=1', headers={'X-APIKey': user_apikey},
+                                          timeout=16)
         validation_data = validation_request.json()
         if validation_request.status_code == 200:
             records_amount = validation_data['metadata']['total']
-            wos_api_limit = (int(validation_request.headers['X-RateLimit-Remaining-Day']) - 1) * 50
+            try:
+                wos_api_limit = (int(validation_request.headers['X-RateLimit-Remaining-Day']) - 1) * 50
+            except KeyError:
+                wos_api_limit = 99999999
             if records_amount == 0:
                 return False
             if records_amount > wos_api_limit:
-                label_text = f'Web of Science records found: {records_amount}. You have a maximum of {wos_api_limit} ' \
-                             f'records remaining to export today using {wos_api_type}'
+                label_text = (f'Web of Science records found: {records_amount}. You have '
+                              f'a maximum of {wos_api_limit} records remaining to export '
+                              f'today using {wos_api_type}')
                 app.search_query_bottom_label['text'] = format_label_text(label_text, 94)
                 return True
-            app.search_query_bottom_label['text'] = f'Web of Science records found: {records_amount}\n\n'
+            app.search_query_bottom_label['text'] = (f'Web of Science records found: '
+                                                     f'{records_amount}\n\n')
             return True
         try:
             error_message_text = validation_data["error"]["details"]
@@ -438,8 +512,11 @@ def validate_search_query():
     return False
 
 
-# This function is launched when the "Run" button is clicked
 def main_function():
+    """When the 'Run' button is clicked, manage all the other functions.
+
+    :return: None.
+    """
     app.search_button.config(state='disabled', text='Retrieving...')
     app.progress_label['text'] = ''
     wos_api_type = validate_api_key()
@@ -459,21 +536,25 @@ def main_function():
                                 "firstRecord": 1}
         initial_request = requests.post('https://wos-api.clarivate.com/api/wos',
                                         json=initial_request_json,
-                                        headers={'X-APIKey': app.apikey_window.get()})
+                                        headers={'X-APIKey': app.apikey_window.get()},
+                                        timeout=16)
         data = initial_request.json()
         requests_required = ((data['QueryResult']['RecordsFound'] - 1) // 100) + 1
         for i in range(requests_required):
             expanded_api_request(i, search_query, requests_required, records)
-        if app.retrieve_cited_references.get():
+        if app.retrieve_cited_refs.get():
             for record in records:
                 user_apikey = app.apikey_window.get()
                 cited_endpoint_request(record, records, records.index(record), user_apikey)
-                print(f"{((records.index(record) + 1) * 100) / len(records):.1f}% cited references requests complete")
+                print(f"{((records.index(record) + 1) * 100) / len(records):.1f}% cited "
+                      f"references requests complete")
     elif wos_api_type == 'starter':
         # This is the initial Starter API request
-        initial_request = requests.get(f'https://api.clarivate.com/apis/wos-starter/v1/documents?db=WOS&q='
-                                       f'{urllib.parse.quote(search_query)}&limit=1&page=1',
-                                       headers={'X-APIKey': app.apikey_window.get()})
+        initial_request = requests.get(f'https://api.clarivate.com/apis/wos-starter/v1/documents?'
+                                       f'db=WOS&q={urllib.parse.quote(search_query)}&'
+                                       f'limit=1&page=1',
+                                       headers={'X-APIKey': app.apikey_window.get()},
+                                       timeout=16)
         data = initial_request.json()
         requests_required = ((data['metadata']['total'] - 1) // 100) + 1
         for i in range(requests_required):
@@ -484,10 +565,13 @@ def main_function():
     app.progress_label['text'] = format_label_text(message, 94)
 
 
-# Defining a class through threading so that the interface doesn't freeze when the data is being retrieved through API
 class App(threading.Thread):
+    """Application class through threading so that the interface doesn't
+    freeze when the data is being retrieved through API.
 
-    def __init__(self,):
+    """
+
+    def __init__(self, ):
         threading.Thread.__init__(self)
         self.root = None
         self.style = None
@@ -501,7 +585,7 @@ class App(threading.Thread):
         self.search_query_label = None
         self.search_query_window = None
         self.search_validate_button = None
-        self.retrieve_cited_references = None
+        self.retrieve_cited_refs = None
         self.cited_references_checkbutton = None
         self.search_query_bottom_label = None
         self.search_button = None
@@ -515,18 +599,18 @@ class App(threading.Thread):
         # Setting up style and geometry
         self.root.iconbitmap('./assets/clarivate.ico')
         self.root.title("Web of Science API to VOSviewer extractor")
-        self.root.geometry("540x440")
+        self.root.geometry("535x440")
         self.root.resizable(False, False)
         self.style = ttk.Style(self.root)
         self.style.theme_use('clam')
         self.style.configure('White.TFrame', background='#FFFFFF')
-        self.style.configure('Bold.TLabel', font=('Calibri bold', 12), borderwidth=0, bordercolor='#000000',
-                             selectborderwidth=0)
+        self.style.configure('Bold.TLabel', font=('Calibri bold', 12), borderwidth=0,
+                             bordercolor='#000000', selectborderwidth=0)
         self.style.map('Bold.TLabel',
                        foreground=[('focus', '#000000'), ('!focus', '#000000')],
                        background=[('focus', '#FFFFFF'), ('!focus', '#FFFFFF')])
-        self.style.configure('Regular.TLabel', font=('Calibri', 10), borderwidth=0, bordercolor='#000000',
-                             selectborderwidth=0)
+        self.style.configure('Regular.TLabel', font=('Calibri', 10), borderwidth=0,
+                             bordercolor='#000000', selectborderwidth=0)
         self.style.map('Regular.TLabel',
                        foreground=[('focus', '#000000'), ('!focus', '#000000')],
                        background=[('focus', '#FFFFFF'), ('!focus', '#FFFFFF')])
@@ -548,11 +632,11 @@ class App(threading.Thread):
                        background=[('disabled', '#DADADA'), ('!disabled', '#5E33BF')],
                        focuscolor=[('disabled', '#DADADA'), ('!disabled', '#5E33BF')]
                        )
-        # Setting up a Checkbutton to look 
+        # Setting up a Checkbutton to look
         img_unselected = tk.PhotoImage(file='./assets/XC_icon_box_01.png')
         img_selected = tk.PhotoImage(file='./assets/XC_icon_tick_04.png')
         self.style.element_create('custom.indicator', 'image', img_unselected,
-                             ('selected', '!disabled', img_selected))
+                                  ('selected', '!disabled', img_selected))
         self.style.layout(
             'Clarivate.TCheckbutton',
             [('Checkbutton.padding',
@@ -569,33 +653,39 @@ class App(threading.Thread):
                        background=[('disabled', '#FFFFFF'), ('!disabled', '#FFFFFF')],
                        focuscolor=[('disabled', '#FFFFFF'), ('!disabled', '#FFFFFF')],
                        indicatorforeground=[('selected', '#5E33BF'), ('!selected', '#FFFFFF')],
-                       indicatorbackground=[('selected', '#FFFFFF'), ('active', '#F0F0EB'), ('!selected', '#FFFFFF')],
-                       upperbordercolor=[('selected', '#5E33BF'), ('!selected', '#646363'), ('disabled', '#DADADA')],
-                       lowerbordercolor=[('selected', '#5E33BF'), ('!selected', '#646363'), ('disabled', '#DADADA')])
-        # We had to borrow the horizontal progressbar from the Default scheme in order to remove one extra frame
-        # around the progress bar
+                       indicatorbackground=[('selected', '#FFFFFF'),
+                                            ('active', '#F0F0EB'),
+                                            ('!selected', '#FFFFFF')],
+                       upperbordercolor=[('selected', '#5E33BF'),
+                                         ('!selected', '#646363'),
+                                         ('disabled', '#DADADA')],
+                       lowerbordercolor=[('selected', '#5E33BF'),
+                                         ('!selected', '#646363'),
+                                         ('disabled', '#DADADA')])
+        # Borrowed the horizontal progressbar from the Default scheme in order to remove one extra
+        # frame around the progress bar
         self.style.element_create('color.pbar', 'from', 'default')
         self.style.layout(
             'Clarivate.Horizontal.TProgressbar',
             [('Horizontal.Progressbar.trough',
-                    {'sticky': 'nswe',
-                        'children':
-                            [('Horizontal.Progressbar.color.pbar', {'side': 'left', 'sticky': 'ns'})]}
-                ),
-                ('Horizontal.Progressbar.label', {'sticky': 'nswe'})
-            ]
+              {'sticky': 'nswe',
+               'children':
+                   [('Horizontal.Progressbar.color.pbar', {'side': 'left', 'sticky': 'ns'})]}
+              ),
+             ('Horizontal.Progressbar.label', {'sticky': 'nswe'})
+             ]
         )
-        self.style.configure('Clarivate.Horizontal.TProgressbar', font=('Calibri bold', 12), borderwidth=0,
-                             troughcolor='#F0F0EB', background='#16AB03', foreground='#000000', text='',
-                             anchor='center')
+        self.style.configure('Clarivate.Horizontal.TProgressbar', font=('Calibri bold', 12),
+                             borderwidth=0, troughcolor='#F0F0EB', background='#16AB03',
+                             foreground='#000000', text='', anchor='center')
 
         # Setting up widgets
         self.api_frame = ttk.Frame(self.root, style='White.TFrame')
         self.apikey_top_label = ttk.Label(self.api_frame, style='Bold.TLabel',
                                           text="Web of Science API Key:")
         apikey = tk.StringVar()
-        self.apikey_window = ttk.Entry(self.api_frame, font=('Calibri', 11), show="*", textvariable=apikey,
-                                       validate="focusout")
+        self.apikey_window = ttk.Entry(self.api_frame, font=('Calibri', 11), show="*",
+                                       textvariable=apikey, validate="focusout")
         self.unhide_image = tk.PhotoImage(file='./assets/XC_icon_eye_01.png')
         self.apikey_unhide_button = ttk.Button(self.api_frame,
                                                text="Show symbols",
@@ -606,17 +696,20 @@ class App(threading.Thread):
                                         command=self.check_api_key)
         self.apikey_bottom_label = ttk.Label(self.api_frame, text="", style='Regular.TLabel')
         self.search_query_label = ttk.Label(self.api_frame, style='Bold.TLabel',
-                                            text="Web of Science Core Collection Advanced Search query:")
+                                            text="Web of Science Core Collection Advanced Search "
+                                                 "query:")
         self.search_query_window = tk.Text(self.api_frame, font=("Calibri", 12),
                                            borderwidth=1, relief='solid', wrap='word')
         self.search_query_window.insert('1.0', 'OG=Clarivate and PY=2008-2022')
-        self.search_validate_button = ttk.Button(self.api_frame, text="Validate", style='Small.TButton',
+        self.search_validate_button = ttk.Button(self.api_frame, text="Validate",
+                                                 style='Small.TButton',
                                                  command=self.check_search_query)
-        self.retrieve_cited_references = BooleanVar()
+        self.retrieve_cited_refs = BooleanVar()
         self.cited_references_checkbutton = ttk.Checkbutton(self.api_frame,
-                                                            text='  Also retrieve Cited References (takes significantly'
-                                                                 ' more time)',
-                                                            variable=self.retrieve_cited_references,
+                                                            text='  Also retrieve Cited References'
+                                                                 ' (takes significantly '
+                                                                 'more time)',
+                                                            variable=self.retrieve_cited_refs,
                                                             onvalue=True,
                                                             offvalue=False,
                                                             style='Clarivate.TCheckbutton')
@@ -625,12 +718,13 @@ class App(threading.Thread):
                                         text='Run',
                                         style='Large.TButton',
                                         command=self.run_button)
-        self.progress_bar = ttk.Progressbar(self.api_frame, style='Clarivate.Horizontal.TProgressbar',
+        self.progress_bar = ttk.Progressbar(self.api_frame,
+                                            style='Clarivate.Horizontal.TProgressbar',
                                             mode="determinate")
         self.progress_label = ttk.Label(self.api_frame, style='Regular.TLabel')
 
         # Placing widgets
-        self.api_frame.place(x=0, y=0, width=540, height=440)
+        self.api_frame.place(x=0, y=0, width=535, height=440)
         self.apikey_top_label.place(x=5, y=5, width=535, height=24)
         self.apikey_window.place(x=5, y=29, width=400, height=30)
         self.apikey_unhide_button.place(x=406, y=29, width=30, height=30)
