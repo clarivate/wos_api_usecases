@@ -7,6 +7,7 @@ longer through the API.
 """
 
 import urllib.parse
+import textwrap
 import time
 import threading
 import tkinter as tk
@@ -201,7 +202,7 @@ def fetch_starter_metadata(record):
     except TypeError:
         authors = ''
         # Uncomment the following line for debugging:
-        # print(f'Something weird with the author names in record: {ut}')
+        print(f'Something weird with the author names in record: {ut}')
     source_title = record['source']['sourceTitle']
     doc_title = record['title']
     try:
@@ -339,25 +340,6 @@ def output(search_query, records):
     return safe_filename
 
 
-def format_line(text, line_start, symbol_limit, safe_text):
-    """Format the text lines for the label text
-
-    :param text: str.
-    :param line_start: int.
-    :param symbol_limit: int.
-    :param safe_text: str.
-    :return: str, int.
-    """
-    if line_start + symbol_limit > len(text):
-        safe_text += f'{text[line_start:len(text)]}\n'
-        return safe_text, line_start
-    for i in range(symbol_limit):
-        if text[(line_start + symbol_limit) - i] == ' ':
-            line_end = line_start + symbol_limit - i + 1
-            safe_text += f'{text[line_start:line_end]}\n'
-            return safe_text, line_end
-
-
 def format_label_text(text, symbol_limit):
     """Wraps words for longer messages.
 
@@ -365,14 +347,7 @@ def format_label_text(text, symbol_limit):
     :param symbol_limit: int.
     :return: str.
     """
-    safe_text = ''
-    line_start = 0
-    if len(text) > symbol_limit:
-        lines_amount = (len(text) // symbol_limit) + 1
-        for line_number in range(lines_amount):
-            safe_text, line_start = format_line(text, line_start, symbol_limit, safe_text)
-        return safe_text
-    return text
+    return '\n'.join(textwrap.wrap(text, symbol_limit))
 
 
 def unhide_symbols():
