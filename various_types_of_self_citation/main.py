@@ -1,5 +1,5 @@
 """Calculate the percentage and absolute values of self-citation at the following levels:
-    - Coauthor self-citation (when both cited and citing documents come from the same author), defined by:
+- Coauthor self-citation (when both cited and citing documents come from the same author), defined by:
     - Coauthor name
     - ResearcherID
     - ORCID
@@ -15,97 +15,97 @@ import requests
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from plotly import offline
 from apikey import APIKEY  # Your API key, it's better not to store it in the main python file
 
 # Enter the WoS search query to evaluate its self-citation percentage:
-SEARCH_QUERY = 'OG=National Technical Museum in Prague'
+SEARCH_QUERY = 'AI=A-5224-2009'
 
 HEADERS = {'X-APIKey': APIKEY}
 BASEURL = "https://api.clarivate.com/api/wos"
 
 
-def get_author_fields(record):
-    """Retrieve required author metadata fields from each WoS document record obtained via API.
+def get_times_cited(tc_json):
+    """Fetch the times cited counts from the document metadata.
+
+    :param tc_json: dict.
+    :return: int or str.
+    """
+    for database in tc_json:
+        if database['coll_id'] == 'WOS':
+            return database['local_count']
+    return 0
+
+
+def fetch_rids(name_json):
+    """Retrieve Researcher ID data from the name dictionary/JSON object.
+
+    :param name_json: dict.
+    :return: str.
+    """
+    if 'data-item-ids' in name_json:
+        if isinstance(name_json['data-item-ids']['data-item-id'], dict):
+            if name_json['data-item-ids']['data-item-id']['id-type'] == 'PreferredRID':
+                return name_json['data-item-ids']['data-item-id']['content']
+        else:
+            for data_item_id in name_json['data-item-ids']['data-item-id']:
+                if data_item_id['id-type'] == 'PreferredRID':
+                    return data_item_id['content']
+    return set()
+
+
+def fetch_author_fields(record):
+    """Retrieve required author metadata fields from each WoS document
+    record obtained via API.
 
     :param record: dict from API JSON.
     :return: sets of str.
     """
-    au_names = set()  # This set uses the author name field, which can be spelled differently for the same person
+    au_names = set()  # Author names field, which can be spelled differently for the same person
     au_rids = set()  # This set relies on author ResearcherID
     au_orcids = set()  # This set relies on author ORCID
-    if record['static_data']['summary']['names']['count'] == 1:
-        au_names.add(record['static_data']['summary']['names']['name']['wos_standard'])
-        try:
-            for rid in record['static_data']['summary']['names']['name']['data-item-ids']['data-item-id']:
-                if rid['id-type'] == 'PreferredRID':
-                    au_rids.add(rid['content'])
-        except KeyError:
-            pass  # No RID data in this author record
-        except TypeError:
-            # A case when the RID is linked to the author, but the record isn't claimed
-            try:
-                if record['static_data']['contributors']['count'] == 1:
-                    au_rids.add(record['static_data']['contributors']['contributor']['name']['r_id'])
-                else:
-                    for contributor in record['static_data']['contributors']['contributor']:
-                        au_rids.add(contributor['name']['r_id'])
-            except KeyError:
-                pass  # Okay, there's just no ResearcherID data in the paper
-        try:
-            au_orcids.add(record['static_data']['summary']['names']['name']['orcid_id'])
-        except KeyError:
-            pass  # No ORCID data in this author record
+    names_dict = record['static_data']['summary']['names']
+    if isinstance(names_dict['name'], dict):
+        if 'wos_standard' in names_dict['name']:
+            au_names.add(names_dict['name']['wos_standard'])
+        if 'data-item-ids' in names_dict['name']:
+            au_rids.add(fetch_rids(names_dict['name']))
+        if 'orcid_id' in names_dict['name']:
+            au_orcids.add(names_dict['name']['orcid_id'])
     else:
-        for person_name in record['static_data']['summary']['names']['name']:
-            try:
+        for person_name in names_dict['name']:
+            if 'wos_standard' in person_name:
                 au_names.add(person_name['wos_standard'])
-            except KeyError:
-                pass  # No author name data in this contributor record - i.e., it can be a group author
-            try:
-                for rid in person_name['data-item-ids']['data-item-id']:
-                    if rid['id-type'] == 'PreferredRID':
-                        au_rids.add(rid['content'])
-            except KeyError:
-                pass  # No RID data in this author record
-            except TypeError:
-                # A rare case when the RID is linked to the author, but the record isn't claimed
-                try:
-                    if record['static_data']['contributors']['count'] == 1:
-                        au_rids.add(record['static_data']['contributors']['contributor']['name']['r_id'])
-                    else:
-                        for contributor in record['static_data']['contributors']['contributor']:
-                            au_rids.add(contributor['name']['r_id'])
-                except KeyError:
-                    pass  # Okay, there's just no ResearcherID data in the paper
-            try:
+            if 'data-item-ids' in person_name:
+                au_rids.add(fetch_rids(person_name))
+            if 'orcid_id' in person_name:
                 au_orcids.add(person_name['orcid_id'])
-            except KeyError:
-                pass  # No ORCID data in this author record
     return au_names, au_rids, au_orcids
 
 
-def get_organizations(record):
-    """Retrieve country metadata fields from each WoS document record obtained via API.
+# noinspection PyTypeChecker
+def get_organizations(address_json):
+    """Retrieve country metadata fields from each WoS document record
+    obtained via API.
 
-    :param record: dict from API JSON.
+    :param address_json: dict from API JSON.
     :return: set of str.
     """
     org_names = set()
-    try:
-        if record['static_data']['fullrecord_metadata']['addresses']['count'] == 1:
-            for org in (
-                    record['static_data']['fullrecord_metadata']['addresses']['address_name']['address_spec'][
-                        'organizations']['organization']
-            ):
+    if address_json['count'] == 0:
+        return org_names
+    if isinstance(address_json['address_name'], dict):
+        org_dict = address_json['address_name']['address_spec']
+        if 'organization' in org_dict:
+            for org in org_dict['organizations']['organization']:
                 if org['pref'] == 'Y':
                     org_names.add(org['content'])
-        else:
-            for affiliation in record['static_data']['fullrecord_metadata']['addresses']['address_name']:
+    else:
+        for affiliation in address_json['address_name']:
+            if 'organization' in affiliation['address_spec']:
                 for org in affiliation['address_spec']['organizations']['organization']:
                     if org['pref'] == 'Y':
                         org_names.add(org['content'])
-    except KeyError:
-        pass  # When there is no address data on the paper record at all
     return org_names
 
 
@@ -148,14 +148,17 @@ checked_citing_papers = [('ut', 'cited_paper')]
 
 
 def self_citation_crs_calc(citing_record, citing_records_list):
-    """Perform the self-citation calculation for every cited reference. If the self-citation event
-    has been identified by the above calculation() function, then the citing document is analyzed for the number of
-    references to that particular cited document. This is required because the number of citations and the number of
-    citing documents are not the same thing. One citing document can have multiple cited references leading to the
-    cited one, so the total amount of citations to a paper can sometimes be significantly higher than the number of
+    """Perform the self-citation calculation for every cited reference
+    if the self-citation event has been identified. If that happens,
+    then the citing document is analyzed for the number of references
+    to that particular cited document. This is required because the
+    number of citations and the number of citing documents are not the
+    same thing. One citing document can have multiple cited references
+    leading to the cited one, so the total amount of citations to a
+    paper can sometimes be significantly higher than the number of
     citing records.
 
-    :param citing_record: dict representing the citing document being analyzed.
+    :param citing_record: dict representing the citing document.
     :param citing_records_list: list containing all citing documents.
     :return: None, sets the value of ['self_citation_references'] key of the citing paper.
     """
@@ -164,19 +167,25 @@ def self_citation_crs_calc(citing_record, citing_records_list):
             cr_data = checked_citing_paper[1]
             break
     else:  # If it hasn't - the code will send a request to Web of Science API for cited references of that paper
-        initial_cited_response = requests.get(f"{BASEURL}/references?"
-                                              f"databaseId=WOS&uniqueId={citing_record['citing_ut']}&"
-                                              f"count=100&firstRecord=1", headers=HEADERS)
+        initial_cited_response = requests.get(
+            f"{BASEURL}/references?databaseId=WOS&uniqueId="
+            f"{citing_record['citing_ut']}&count=100&firstRecord=1",
+            headers=HEADERS,
+            timeout=16
+        )
         initial_cited_data = initial_cited_response.json()
         cr_data = initial_cited_data['Data']
         print(f'Oops, seems like a self-citation found: cited paper {citing_record["cited_ut"]}, '
-              f'citing paper {citing_record["citing_ut"]}, ({citing_records_list.index(citing_paper)} of '
+              f'citing paper {citing_record["citing_ut"]}, ({citing_records_list.index(citing_paper) + 1} of '
               f'{len(citing_records_list)} citing articles processed)')
         if initial_data['QueryResult']['RecordsFound'] > 100:
             for j in range(1, ((initial_cited_data['QueryResult']['RecordsFound'] - 1) // 100) + 1):
-                subsequent_cited_response = requests.get(f"{BASEURL}/references?databaseId=WOS&"
-                                                         f"uniqueId={citing_record['citing_ut']}&count=100&"
-                                                         f"firstRecord={j}01", headers=HEADERS)
+                subsequent_cited_response = requests.get(
+                    f"{BASEURL}/references?databaseId=WOS&uniqueId="
+                    f"{citing_record['citing_ut']}&count=100&firstRecord={j}01",
+                    headers=HEADERS,
+                    timeout=16
+                )
                 addtl_cited_data = subsequent_cited_response.json()
                 for cited_reference in addtl_cited_data['Data']:
                     cr_data.append(cited_reference)
@@ -188,28 +197,37 @@ def self_citation_crs_calc(citing_record, citing_records_list):
 
 # First we create a list of cited papers based on a search query specified in the start of the code
 cited_data = []
-initial_response = requests.get(f'{BASEURL}?databaseId=WOS&usrQuery={urllib.parse.quote(SEARCH_QUERY)}&count=0&'
-                                f'firstRecord=1', headers=HEADERS)
+initial_response = requests.get(
+    f'{BASEURL}?databaseId=WOS&usrQuery={urllib.parse.quote(SEARCH_QUERY)}&'
+    f'count=0&firstRecord=1',
+    headers=HEADERS,
+    timeout=16
+)
 initial_data = initial_response.json()
 requests_required = (((initial_data['QueryResult']['RecordsFound'] - 1) // 10) + 1)
 for i in range(requests_required):
     subsequent_response = requests.get(
-        f'{BASEURL}?databaseId=WOS&usrQuery={urllib.parse.quote(SEARCH_QUERY)}&count=10&firstRecord={i}1',
-        headers=HEADERS)
+        f'{BASEURL}?databaseId=WOS&usrQuery={urllib.parse.quote(SEARCH_QUERY)}'
+        f'&count=10&firstRecord={i}1',
+        headers=HEADERS,
+        timeout=16
+    )
     print(f"Getting cited papers data: {i+1} of {requests_required}")
     addtl_data = subsequent_response.json()
     for cited_paper in addtl_data['Data']['Records']['records']['REC']:
         cited_data.append(cited_paper)
 cited_papers_list = []
 citing_papers_list = []
-# Breaking the received JSON data into separate dictionaries for each cited_paper
+
+# Fetching the required metadata fields for each paper in the received JSON data.
 for paper in cited_data:
     ut = paper['UID']
-    author_names, author_rids, author_orcids = get_author_fields(paper)
-    organizations_names = get_organizations(paper)
+    print(ut)  # Uncomment for debugging
+    author_names, author_rids, author_orcids = fetch_author_fields(paper)
+    organizations_names = get_organizations(paper['static_data']['fullrecord_metadata']['addresses'])
     country_names = get_countries(paper)
     source_name = get_source(paper)
-    times_cited = paper['dynamic_data']['citation_related']['tc_list']['silo_tc']['local_count']
+    times_cited = get_times_cited(paper['dynamic_data']['citation_related']['tc_list']['silo_tc'])
     cited_papers_list.append({
         'ut': ut, 'author_names': author_names, 'author_rids': author_rids,
         'author_orcids': author_orcids, 'org_names': organizations_names, 'country_names': country_names,
@@ -222,22 +240,34 @@ for paper in cited_papers_list:
         print(f"    {paper['ut']}, {cited_papers_list.index(paper) + 1} of {len(cited_papers_list)}")
         citing_data = []
         try:
-            initial_response = requests.get(f"{BASEURL}/citing?databaseId=WOS&uniqueId={paper['ut']}&"
-                                            f"count=100&firstRecord=1", headers=HEADERS)
+            initial_response = requests.get(
+                f"{BASEURL}/citing?databaseId=WOS&uniqueId={paper['ut']}&"
+                f"count=100&firstRecord=1",
+                headers=HEADERS,
+                timeout=16
+            )
             initial_data = initial_response.json()
             for citing_paper in initial_data['Data']['Records']['records']['REC']:
                 citing_data.append(citing_paper)
             if initial_data['QueryResult']['RecordsFound'] > 100:
                 requests_required = (((initial_data['QueryResult']['RecordsFound'] - 1) // 100) + 1)
                 for i in range(1, requests_required):
-                    subsequent_response = requests.get(f"{BASEURL}/citing?databaseId=WOS&uniqueId={paper['ut']}"
-                                                       f"&count=100&firstRecord={i}01", headers=HEADERS)
+                    subsequent_response = requests.get(
+                        f"{BASEURL}/citing?databaseId=WOS&uniqueId={paper['ut']}"
+                        f"&count=100&firstRecord={i}01",
+                        headers=HEADERS,
+                        timeout=16
+                    )
                     addtl_data = subsequent_response.json()
                     for citing_paper in addtl_data['Data']['Records']['records']['REC']:
                         citing_data.append(citing_paper)
         except (requests.exceptions.ConnectionError, requests.exceptions.JSONDecodeError):
-            initial_response = requests.get(f"{BASEURL}/citing?databaseId=WOS&uniqueId={paper['ut']}&"
-                                            f"count=10&firstRecord=1", headers=HEADERS)
+            initial_response = requests.get(
+                f"{BASEURL}/citing?databaseId=WOS&uniqueId={paper['ut']}&"
+                f"count=10&firstRecord=1",
+                headers=HEADERS,
+                timeout=16
+            )
             initial_data = initial_response.json()
             for citing_paper in initial_data['Data']['Records']['records']['REC']:
                 citing_data.append(citing_paper)
@@ -245,15 +275,19 @@ for paper in cited_papers_list:
                 requests_required = (((initial_data['QueryResult']['RecordsFound'] - 1) // 10) + 1)
                 for i in range(1, requests_required):
                     subsequent_response = requests.get(
-                        f"{BASEURL}/citing?databaseId=WOS&uniqueId={paper['ut']}&count=10&"
-                        f"firstRecord={i}1", headers=HEADERS)
+                        f"{BASEURL}/citing?databaseId=WOS&uniqueId="
+                        f"{paper['ut']}&count=10&firstRecord={i}1",
+                        headers=HEADERS,
+                        timeout=16
+                    )
                     addtl_data = subsequent_response.json()
                     for citing_paper in addtl_data['Data']['Records']['records']['REC']:
                         citing_data.append(citing_paper)
         for item in citing_data:
             citing_ut = item['UID']
-            citing_author_names, citing_author_rids, citing_author_orcids = get_author_fields(item)
-            citing_org_names = get_organizations(item)
+            print(f'Citing paper ID: {citing_ut}')  # Uncomment for debugging
+            citing_author_names, citing_author_rids, citing_author_orcids = fetch_author_fields(item)
+            citing_org_names = get_organizations(item['static_data']['fullrecord_metadata']['addresses'])
             citing_country_names = get_countries(item)
             citing_source_name = get_source(item)
             citing_papers_list.append({
@@ -276,8 +310,9 @@ org_self_citation = 0
 country_self_citation = 0
 source_self_citation = 0
 
-# Every citing paper is checked for set.intersection(). If at least 1 match is found, a calculation of references
-# from citing to cited document is made
+# Every citing paper is checked for set.intersection(). If at least 1
+# match is found, a calculation of references from citing to cited
+# document is made.
 for citing_paper in citing_papers_list:
     if len(citing_paper['cited_author_names'].intersection(citing_paper['citing_author_names'])) > 0:
         self_citation_crs_calc(citing_paper, citing_papers_list)
@@ -327,8 +362,14 @@ print(f'Publication Source-level self-citation: {(source_self_citation / len(cit
 
 df = pd.DataFrame(citing_papers_list)
 
-for col in df.drop(['cited_ut', 'self_citation_references', 'cited_source_name', 'citing_ut', 'citing_source_name'],
-                   axis=1).columns:
+non_set_cols = [
+    'cited_ut',
+    'self_citation_references',
+    'cited_source_name',
+    'citing_ut',
+    'citing_source_name']
+
+for col in df.drop(non_set_cols, axis=1).columns:
     df[col] = df[col].apply(lambda x: '; '.join(x))
 
 
@@ -360,9 +401,11 @@ df2 = pd.DataFrame({'Coauthor Name': [author_name_self_citation,
 
 
 # Saving data to Excel
-with pd.ExcelWriter(f"self-citations - {SEARCH_QUERY.replace('?', '').replace('*', '')}.xlsx") as writer:
-    df.to_excel(writer, sheet_name='Citation links', index=False)
-    df2.to_excel(writer, sheet_name='Self-citation rates')
+safe_query = SEARCH_QUERY.replace('?', '').replace('*', '').replace('"', '')
+df.to_excel(excel_writer=f'self-citations - {safe_query}.xlsx',
+            sheet_name='Citation links', index=False)
+df2.to_excel(excel_writer=f'self-citations - {safe_query}.xlsx',
+             sheet_name='Self-citation rates')
 
 
 # Visualizing the data
@@ -393,4 +436,5 @@ fig.update_layout(
                  dict(text='Organization', x=0.62, y=0.89, font_size=16, showarrow=False),
                  dict(text='Country', x=0.64, y=0.5, font_size=16, showarrow=False),
                  dict(text='Publication Source', x=0.6, y=0.13, font_size=16, showarrow=False)])
-fig.show()
+
+offline.plot(fig)

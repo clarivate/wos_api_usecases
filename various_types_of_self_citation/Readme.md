@@ -16,7 +16,12 @@ This is how it works:
 
 #### In the code of the program, the user needs to enter:
 1. Their Web of Science Expanded API key;
-2. A Web of Science Core Collection advanced search query for a set of records they would like to analyze;
+2. In the line 22, pass the string containing the Web of Science Core Collection advanced search query for a set of records they would like to analyze, for example:
+
+```
+# Enter the WoS search query to evaluate its self-citation percentage:
+SEARCH_QUERY = 'AI=A-5224-2009'
+```
 
 And launch the code.
 
