@@ -22,3 +22,11 @@ Although this code makes it much easier to check citations from patents, there a
 1. The code checks every citing document that has more than 0 citations individually. This takes time to process. So, a search query returning 3-5K documents might take up to half an hour to process, while larger search queries (50K+ documents) might only be able to complete overnight.
 2. The list of cited Web of Science documents - as well as the lists of citing Derwent Innovation Index patent families - can be copied and pasted into the Web of Science advanced search window to analyze the datasets in the Web of Science platform user interface.
 3. InCites Benchmarking & Analytics also has a powerful feature to quickly calculate the number of citing patents in any of the six Analyze reports (Author, Organization, Location, Research Area, Publication Source, or Funding Agency) and a capability to apply various filters to your analysis.
+
+This code has a further potential of development for some of the following use cases:
+- to find out the inventors who cite specific research papers in their inventions
+- to find assignees that own the IP citing specific research papers
+- list the countries where the inventions, that cite specific research papers, have been protected with patents
+- etc.
+
+As always, we welcome your feedback on this code and invite everyone to contribute and share their ideas.
