@@ -1,3 +1,6 @@
 /*/*/apikey*.py
 /*/*/apikey*.R
 /*/*/downloads/*
+/R/*/.RData
+/R/*/.RHistory
+/R/*/.Rproj.user/
