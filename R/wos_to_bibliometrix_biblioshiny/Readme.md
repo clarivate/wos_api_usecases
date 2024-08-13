@@ -22,7 +22,7 @@ SEARCH_QUERY = "TS=bibiometric*"
 
 And launch the code.
 
-The program will query Web of Science Expanded API for the document metadata, parse the necessary metadata fields, and save them into a plain text file that you can also export from Web of Science platform user interface Export button, except for in this case the process is going to be fully automated.
+The program will query Web of Science Expanded API for the document metadata, parse the necessary metadata fields, and save them into a plain text - you can also export similar files from Web of Science platform user interface using the Export button, except for in this case the process is going to be fully automated.
 
 It is also possible to modify this code so that it works with Web of Science Starter API, but Expanded API is the one that returns all the Web of Science metadata fields you can work with on Bibliometrix and Biblioshiny.
 
