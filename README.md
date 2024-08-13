@@ -31,7 +31,7 @@
 ## R scripts:
 
 ### Web of Science Expanded API:
-* [Web of Science API to Bibliometrix or Biblioshiny exporter](/wos_to_bibliometrix_biblioshiny/]
+* [Web of Science API to Bibliometrix or Biblioshiny exporter](/wos_to_bibliometrix_biblioshiny/)
 
 ### Web of Science Starter API:
 * [Starter API to a dataframe exporter](/starter_api_to_dataframe/)
