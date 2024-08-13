@@ -18,7 +18,7 @@ We recommend to store your API key value in a separate file to prevent inadverte
 # Search query for which to form a dataframe
 SEARCH_QUERY = "TS=bibiometric*"
 ```
-3. Set the `retrieve_cited_references_flag` to TRUE if you want to also pull the cited references data. This will significantly increase the analytical capabilities of both Bibliometrix and Biblioshiny, but please note that the way Web of Science expanded API works is that it queries every single Web of Science document for its cited references individually, so setting this flag to TRUE will also significantly increase the time it would take to retrieve all the necessary metadata.
+3. Set the `retrieve_cited_references_flag` to TRUE if you want to also pull the cited references data. This will significantly increase the analytical capabilities of both Bibliometrix and Biblioshiny, but setting this flag to TRUE will also significantly increase the time it would take to retrieve all the necessary metadata.
 
 And launch the code.
 
