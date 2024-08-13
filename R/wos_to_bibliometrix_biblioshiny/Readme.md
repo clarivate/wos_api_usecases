@@ -6,7 +6,7 @@
 This is how the code works:
 
 #### After downloading the script, the user needs to:
-1. Create a new R file called apikeys.R in the same project folder, and add only one line of code there, namely set up a hidden variable named .starter_apikey and pass their Web of Science Starter API key as a string value, i.e.:
+1. Create a new R file called apikeys.R in the same project folder, and add only one line of code there, namely set up a hidden variable named .expanded_apikey and pass their Web of Science Starter API key as a string value, i.e.:
 ```
 .expanded_apikey <- "mY3xp4nd3d4p1k3y1$$0m37h1Ngl1k37h15"
 ```
