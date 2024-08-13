@@ -24,7 +24,7 @@ SEARCH_QUERY = 'OG=Clarivate'
 RECORDS_TO_DISPLAY = 5
 
 initial_request = requests.get(f'https://api.clarivate.com/apis/wos-starter/v1/documents?q={SEARCH_QUERY}'
-                               f'&limit=50&page=1&db=WOS&sortField=PY+D', headers={'X-ApiKey': STARTER_APIKEY})
+                               f'&limit=50&page=1&db=WOS&sortField=LD+D', headers={'X-ApiKey': STARTER_APIKEY})
 initial_json = initial_request.json()
 for wos_document in initial_json['hits'][:RECORDS_TO_DISPLAY]:
     if 'issn' not in wos_document['identifiers']:
@@ -53,9 +53,9 @@ def create_authors_list(doc):
         if 'researcherId' in author:
             profile_link = (f'https://www.webofscience.com/wos/author/record/'
                             f'{author["researcherId"]}')
-            authors.append(f'<a href={profile_link}>{author["wosStandard"]}</a>')
+            authors.append(f'<a href={profile_link}>{author["displayName"]}</a>')
         else:
-            authors.append(author["wosStandard"])
+            authors.append(author["displayName"])
     if len(doc['names']['authors']) < 4:
         return ', '.join(authors)
     return f"{', '.join(authors[:3])} et al."

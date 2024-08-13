@@ -1,0 +1,8 @@
+# Load necessary libraries
+library(httr)
+library(jsonlite)
+library(bibliometrix)
+
+M <- convert2df("TS=cubesat*.txt")
+
+to_plot <- biblioAnalysis(M)

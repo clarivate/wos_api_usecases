@@ -1,6 +1,6 @@
 # Web of Science to VOSviewer exporter
 
-![Example](/wos_to_vosviewer_exporter/screenshots/GUI.png)
+![Example](/wos_to_vosviewer_exporter_tkinter/screenshots/GUI.png)
 
 
 ## A program with a simple GUI to export the necessary Web of Science metadata via Web of Science API to use it in the VOSviewer
@@ -16,8 +16,12 @@ This app isn't necessary going to reduce the time it takes to export the Web of 
 
 The program will retrieve all the necessary documents from the Web of Science via the API, extract the metadata fields required for analysis in VOSviewer, and save them into a tab-delimited file in the same project folder. This file can then be easily uploaded into VOSviewer application.
 
-![Result](/wos_to_vosviewer_exporter/screenshots/result.png)
+![Result](/wos_to_vosviewer_exporter_tkinter/screenshots/result.png)
 
 You also have an option of extracting the cited references along with the documents. The cited reference data is required to perform the citation, bibliographic coupling, and co-citation analyses, but it takes significantly longer for all the cited references to be retrieved. If you'd only like to run a co-authorship or keyword co-occurrence analysis on VOSviewer, we recommend that you leave this option unchecked.
+
+#### Running this script on Mac
+
+Because of some MacOS peculiarities, this script is unlikely to run smoothly on Mac and will probably result in throwing a 'NSInternalInconsistencyException', reason: 'NSWindow should only be instantiated on the main thread!'. If you prefer working on Mac, please try a ![slightly different version of this script that uses Flask instead of tkinter](../wos_to_vosviewer_exporter_flask/.
 
 As always, we welcome your feedback on this code.

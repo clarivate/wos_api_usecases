@@ -1,0 +1,5 @@
+library(bibliometrix)
+library(bibliometrixData)
+
+some_object <- data("isiCollection", package = "bibliometrixData")
+biblioNetwork(some_object, analysis = "co-occurrences", network = "author_keywords")

@@ -1,0 +1,28 @@
+{
+    "id": "1312E85A",
+    "path": "~/RStudioProjects/wos_search_to_df/main.R",
+    "project_path": "main.R",
+    "type": "r_source",
+    "hash": "1638931359",
+    "contents": "",
+    "dirty": false,
+    "created": 1720418485976.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "tempName": "Untitled1",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "5,0",
+        "scrollLine": "0",
+        "docOutlineVisible": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1722424644,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1722424644,
+    "read_only": false,
+    "read_only_alternatives": []
+}
