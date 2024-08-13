@@ -11,13 +11,14 @@ This is how the code works:
 .expanded_apikey <- "mY3xp4nd3d4p1k3y1$$0m37h1Ngl1k37h15"
 ```
 We recommend to store your API key value in a separate file to prevent inadvertent sharing.
+
 2. Edit your Web of Science advanced search query right in the code - can be an Topical search, Affiliation name, Author name, Author identifier, etc, i.e.:
 
 ```
 # Search query for which to form a dataframe
 SEARCH_QUERY = "TS=bibiometric*"
 ```
-3. Set the retrieve_cited_reference_flag to TRUE if you want to also pull the cited references data. This will significantly increase the analytical capabilities of both Bibliometrix and Biblioshiny, but please note that the way Web of Science expanded API works is that it queries every single Web of Science document for its cited references individually, so setting this flag to TRUE will also significantly increase the time it would take to retrieve all the necessary metadata.
+3. Set the retrieve_cited_references_flag to TRUE if you want to also pull the cited references data. This will significantly increase the analytical capabilities of both Bibliometrix and Biblioshiny, but please note that the way Web of Science expanded API works is that it queries every single Web of Science document for its cited references individually, so setting this flag to TRUE will also significantly increase the time it would take to retrieve all the necessary metadata.
 
 And launch the code.
 
