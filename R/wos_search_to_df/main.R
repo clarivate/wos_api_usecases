@@ -51,7 +51,7 @@ if (requests_required > 1) {
 # View the result as a dataframe
 View(records)
 
-# Vizualise the dataframe
+# Start plotting
 pub_years <- table(records$source.publishYear)
 barplot(pub_years, col="#B175E1", border="#B175E1")
 
