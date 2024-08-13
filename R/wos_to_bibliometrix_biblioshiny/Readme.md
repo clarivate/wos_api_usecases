@@ -25,4 +25,4 @@ The program will query Web of Science Expanded API for the document metadata, pa
 
 It is also possible to modify this code so that it works with Web of Science Starter API, but Expanded API is the one that returns all the Web of Science metadata fields you can work with on Bibliometrix and Biblioshiny.
 
-As always, we welcome any feedback on this code.
+As always, we welcome your feedback on this code.
