@@ -10,7 +10,7 @@ This is how the code works:
 ```
 .expanded_apikey <- "mY3xp4nd3d4p1k3y1$$0m37h1Ngl1k37h15"
 ```
-We recommend to store your API key value in a separate file to prevent inadvertent sharing. 
+We recommend to store your API key value in a separate file to prevent inadvertent sharing.
 2. Edit your Web of Science advanced search query right in the code - can be an Topical search, Affiliation name, Author name, Author identifier, etc, i.e.:
 
 ```
