@@ -568,9 +568,9 @@ if(retrieve_cited_references_flag == TRUE) {
 safe_filename <- gsub("*", "", gsub("?", "", gsub("'", "", filename)))
 writeLines(output, file(paste("Downloads/", safe_filename, sep = "")))
 
-# mem.maxVSize(vsize = 128000)
-
-# biblioshiny(maxUploadSize=2000)
-
+# Convert the output into a Bibliometrix dataframe for further analysis
 M <- convert2df(output)
 View(M)
+
+# Or simply launch biblioshiny to explore the data there
+# biblioshiny()
