@@ -16,3 +16,4 @@
 /python/cities_collboration_analysis/*.xlsx
 /python/researcher_api_excel_converter/*.xlsx
 /python/researcherid-based_h-index_excluding_self-citations/*.csv
+/python/retrieve_author_ids/*.csv

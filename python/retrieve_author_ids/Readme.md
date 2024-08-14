@@ -1,14 +1,16 @@
 # All Author IDs associated with an organization
 
 
-## A simple script to retrieve all author identifiers associated with a certain Affiliation (or Organizational profile) in the Web of Science Core Collection. The code relies on Web of Science article data obtained using Web of Science Expanded API.
+## A simple script to retrieve all author identifiers associated with a certain Affiliation (or Organisational profile) in the Web of Science Core Collection. The code relies on Web of Science article data obtained using Web of Science Expanded API.
 
-This is how the code works
-
-#### The user needs to enter in the code:
-1. Their Web of Science Expanded API key;
-2. Organization profile name - any Affiliation that exists in the Web of Science Core Collection.
-3. Any additional parameters, such as publication years, subject area, source title, etc. Please use the Web of Science Advanced Search query syntax.
+### How to use this script
+Simply open the main.py file with your code editor and:
+1. Create a new python file named apikey.py in the same project folder, and add only one line of code there, namely set up a constant named APIKEY and pass your Web of Science Expanded API key as a string value, i.e.:
+```
+APIKEY = "mY3xp4nd3d4p1k3y1$$0m37h1Ngl1k37h15"
+```
+2. Edit the Organization profile name as a string constant right in the code
+3. Add any additional parameters, such as publication years, subject area, source title, etc. Please use the Web of Science Advanced Search query syntax.
 
 And launch the code.
 
@@ -18,11 +20,11 @@ The program will query Web of Science Expanded API for the document data, extrac
 - the author's ORCID (if it exists)
 - the link to the author's record in Web of Science
 - whether the author's record has been claimed by the author or not (True/False)
-- the list of author's document IDs in Web of Science (also known as Ascession Numbers, or UTs)
+- the list of author's document IDs in Web of Science (also known as Accession Numbers, or UTs)
 
 The main use case of this code is checking which author identifiers exist for your organization and how up to date each of them is.
 
-Although this code makes it much easier to work on a set of author IDs associated with your organizations, there are some important considerations to keep in mind while using this code:
+Although this code makes it much easier to work on a set of author IDs associated with your organisations, there are some important considerations to keep in mind while using this code:
 1. The code only relies on the links between "author" and "organization" fields in the Web of Science Core Collection record metadata. As there was no generally accepted practice to have these links in every published paper before mid-2007, this code might not return a lot of results for the documents published earlier than year 2008.
 2. This also means that if your employee doesn't have any documents affiliated with your organization, they won't appear in the results.
 3. This code does not rely on the current organization that the authors provide manually on their Web of Science author profiles or Publons profiles.
