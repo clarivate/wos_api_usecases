@@ -11,4 +11,4 @@
 /python/*/.venv/
 /python/*/.idea/
 /python/author-level_fractional_counting_for_organizations/*.xlsx
-/python/citation_reports_for_larger_datasets/.csv
+/python/citation_report_for_larger_datasets/.csv
