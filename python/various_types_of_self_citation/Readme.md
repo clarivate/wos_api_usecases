@@ -1,6 +1,6 @@
 # Various types of Self-citation
 
-![Example visualisation](/various_types_of_self_citation/screenshots/plot.png)
+![Example visualisation](screenshots/plot.png)
 
 ## A universal script to evaluate the self-citation percentage for a set of Web of Science documents at any level of user's preference. The script relies on retrieving the publication data via Web of Science Expanded API.
 
@@ -9,14 +9,14 @@
 This script allows to evaluate the following types of self-citation to a given Web of Science document or a set of documents:
 1. Coauthor-level self-citation (when there are the same author records appearing in both cited and citing paper)
 2. Organization-level self-citation (when the authors in cited and citing papers might be different, but represent the same organization)
-3. Country-level self citation (when the authors and organizations in cited and citing papers might be different, but all come from the same country)
+3. Country-level self citation (when the authors and organisations in cited and citing papers might be different, but all come from the same country)
 4. Journal self-citation (when the authors and/or organization in cited and citing papers might be different, but both records were published in the same title)
 
 This is how it works:
 
 #### In the code of the program, the user needs to enter:
 1. Their Web of Science Expanded API key;
-2. In the line 22, pass the string containing the Web of Science Core Collection advanced search query for a set of records they would like to analyze, for example:
+2. In the line 22, pass the string containing the Web of Science Core Collection advanced search query for a set of records they would like to analyse, for example:
 
 ```
 # Enter the WoS search query to evaluate its self-citation percentage:
@@ -25,7 +25,7 @@ SEARCH_QUERY = 'AI=A-5224-2009'
 
 And launch the code.
 
-The program will query Web of Science Expanded API, retrieve the necessary document metadata, and apply sets.intersection() method to each of them to check if self-citation occured at any of the described levels, and for every case where a self-citation even would occur, the program will additionally query Web of Science Expanded API for the cited references of the citing paper to check the number of cited reference in it that lead to the cited document. The result is then printed in the IDE Run window / terminal / command prompt (depending on where you launched the program from), visualized using plotly package, and saved into a .csv file in the same project folder.
+The program will query Web of Science Expanded API, retrieve the necessary document metadata, and apply sets.intersection() method to each of them to check if self-citation occured at any of the described levels, and for every case where a self-citation even would occur, the program will additionally query Web of Science Expanded API for the cited references of the citing paper to check the number of cited reference in it that lead to the cited document. The result is then printed in the IDE Run window / terminal / command prompt (depending on where you launched the program from), visualised using Plotly package, and saved into a .csv file in the same project folder.
 
 The total self-citation is calculated as follows:
 
