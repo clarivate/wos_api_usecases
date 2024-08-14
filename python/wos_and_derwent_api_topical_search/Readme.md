@@ -27,7 +27,7 @@ The saved Excel files can later be loaded with the second tab of the application
 
 Here is another example of the graphs that the code produces:
 
-![Nanorobots](screenshots/Nanorobots.png?raw=true)
+![Nanorobots](screenshots/Nanorobots.png)
 
 And a screenshot of a typical Excel file:
 
