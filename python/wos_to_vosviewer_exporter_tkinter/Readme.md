@@ -22,6 +22,6 @@ You also have an option of extracting the cited references along with the docume
 
 #### Running this script on Mac
 
-Because of some MacOS peculiarities, this script is unlikely to run smoothly on Mac and will probably result in throwing a 'NSInternalInconsistencyException', reason: 'NSWindow should only be instantiated on the main thread!'. If you prefer working on Mac, please try a [slightly different version of this script that uses Flask instead of tkinter](./python/wos_to_vosviewer_exporter_flask/).
+Because of some MacOS peculiarities, this script is unlikely to run smoothly on Mac and will probably result in throwing a 'NSInternalInconsistencyException', reason: 'NSWindow should only be instantiated on the main thread!'. If you prefer working on Mac, please try a [slightly different version of this script that uses Flask instead of tkinter](/./python/wos_to_vosviewer_exporter_flask/).
 
 As always, we welcome your feedback on this code.
