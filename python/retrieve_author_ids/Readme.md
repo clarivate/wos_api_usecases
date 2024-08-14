@@ -9,7 +9,7 @@ Simply open the main.py file with your code editor and:
 ```
 APIKEY = "mY3xp4nd3d4p1k3y1$$0m37h1Ngl1k37h15"
 ```
-2. Edit the Organization profile name as a string constant right in the code
+2. Edit the Organization profile name as a string constant `OUR_ORG` right in the code
 3. Add any additional parameters, such as publication years, subject area, source title, etc. Please use the Web of Science Advanced Search query syntax.
 
 And launch the code.
