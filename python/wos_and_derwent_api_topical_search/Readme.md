@@ -31,7 +31,7 @@ Here is another example of the graphs that the code produces:
 
 And a screenshot of a typical Excel file:
 
-![excel_screenshot](screenshots/excel_screenshot.png?raw=true)
+![excel_screenshot](screenshots/excel_screenshot.png)
 
 We considered it important to distinguish the earliest priority years and publication years for the patent families as there is normally an 18 months gap between the patent application submission and its publication by the patent office. We have to stress that in scholarly publishing, there is also normally a significant gap between the manuscript submission date and its publication date, but there are no standard timeframes for the manuscript processing from submission to publication, and their range varies greatly from a few weeks to a few years in certain cases.
 

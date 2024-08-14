@@ -21,3 +21,4 @@
 /python/retrieve_author_ids/*.csv
 /python/various_types_of_self_citation/*.xlsx
 /python/various_types_of_self_citation/temp-plot.html
+/python/wos_and_derwent_api_topical_search/*.xlsx
