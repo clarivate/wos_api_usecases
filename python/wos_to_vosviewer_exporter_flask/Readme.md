@@ -1,6 +1,6 @@
 # Web of Science to VOSviewer exporter
 
-![Example](/screenshots/GUI.png)
+![Example](screenshots/GUI.png)
 
 
 ## A Flask application for exporting the necessary metadata via Web of Science Expanded API to use it in the VOSviewer
@@ -21,7 +21,7 @@ EXPANDED_APIKEY = 'mY3xp4nd3d4p1k3y1$$0m37h1Ngl1k37h15'
 
 The program will retrieve all the necessary documents from the Web of Science via the Web of Science Expanded API, extract the metadata fields required for analysis in VOSviewer, and save them into a tab-delimited file in the /documents subfolder of the project. These files can then be easily uploaded into VOSviewer application.
 
-![Result](/screenshots/result.png)
+![Result](screenshots/result.png)
 
 This app isn't going to significantly reduce the time it takes to export the Web of Science data, but it will definitely allow you to enter the search query that you would like to analyse on the VOSviewer, hit the "run" button, and forget about the exporting process until it's finished.
 
