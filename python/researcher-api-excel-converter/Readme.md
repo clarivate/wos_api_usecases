@@ -1,9 +1,9 @@
 # Researcher API to Excel converter
 
-![Example](/researcher-api-excel-converter/screenshots/GUI.png)
+![Example](screenshots/GUI.png)
 
 
-## A program with a simple GUI that extracts the researchers data from an organizational search using Researcher API, and organises it into an Excel table
+## A program with a simple GUI that extracts the researchers data from an organisational search using Researcher API, and organises it into an Excel table
 
 This is a very simple program that requires a [Researcher API key](https://developer.clarivate.com/apis/wos-researcher), and an Affiliation name. It's running a search on every researcher profile that is affiliated with that organization, returns the researcher metadata, and saves it in an .xlsx file in the project folder
 
@@ -13,7 +13,7 @@ This is a very simple program that requires a [Researcher API key](https://devel
 2. The name of the Affiliaiton for which they would like to retrieve the researchers data
 3. Click the checkbutton if they want the program to query each researcher profile individually and receive full researcher profiles metadata (including research output numbers broken down by publication years, first/last/corresponding author statistics, published names, alternative affiliations, etc.) or if they are ok with receiving basic profiles metadata which is going to be much quicker
 
-![Screenshot](/researcher-api-excel-converter/screenshots/GUI2.png)
+![Screenshot](screenshots/GUI2.png)
 
 And click the Run button.
 
@@ -26,7 +26,7 @@ The program will create an Excel file in the same project folder, where, if the 
 - Times cited counts,
 - as well as a link to their researcher profile on Web of Science platform user interface, resolved through the ResearcherID.
 
-![Screenshot](/researcher-api-excel-converter/screenshots/results.png)
+![Screenshot](screenshots/results.png)
 
 If the "Retrieve full researcher profiles metadata" tickbox has been ticked, then additional data fields, such as Published Names, research output by years, times cited without self-citations, and more, will also be retrieved and stored in the excel file, some of them on separate sheets.
 
