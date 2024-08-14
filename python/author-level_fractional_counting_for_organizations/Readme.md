@@ -1,6 +1,6 @@
 # Fractional Counting Calculator
 
-![Example](/../../author-level_fractional_counting_for_organizations/screenshots/clarivate.png)
+![Example](/../../../python/author-level_fractional_counting_for_organizations/screenshots/clarivate.png)
 
 
 ## A program with a simple GUI to calculate and visualize the number of papers of an organization using fractional counting approach that retrieves the publication data via Web of Science Expanded API
