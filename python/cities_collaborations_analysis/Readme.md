@@ -1,6 +1,6 @@
 # Cities Collaborations Analysis
 
-![Example](/cities_collaborations_analysis/screenshots/topical.png)
+![Example](screenshots/topical.png)
 
 ## A simple script to evaluate a set of Web of Science docuents for the cities in which this research has been made - or to evaluate a specific organization for which cities it mostly collaborates with. The code relies on Web of Science article data obtained using Web of Science Expanded API.
 
@@ -15,7 +15,7 @@ This is how the code works
 	- or if they don't want the program to break down the the organization for analysis, and rather visualize every city that appears in the dataset
 4. If they selected anything but the third option in the previous step, the user also needs to enter the name of the affiliation with regards to which the cities will be split into own or collaborating ones.
 
-![GUI](/cities_collaborations_analysis/screenshots/GUI1.png)
+![GUI](screenshots/GUI1.png)
 
 And launch the code.
 
@@ -30,6 +30,6 @@ Three main use cases of this code are:
 
 Here is another example of the graphs that the code produces:
 
-![Screenshot](/cities_collaborations_analysis/screenshots/collaborating.png)
+![Screenshot](screenshots/collaborating.png)
 
 As always, we welcome any feedback to further improve this algorithm.

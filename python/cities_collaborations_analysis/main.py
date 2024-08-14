@@ -1,9 +1,16 @@
 """
-This code can analyze cities involvement in certain research, i.e., analyzing which cities are the
-centers of scientific research on a given topics, which cities does a specific organization
-collaborate with, or which cities does a specific organization concentrate its research at.
-Just modify in the search_query and - optionally - our_org variables, and run the code.
+This code can analyze cities involvement in certain research, i.e.,
+analyzing which cities are the centers of scientific research on a
+given topic, which cities does a specific organization collaborate
+with, or which cities does a specific organization concentrate its
+research at.
+
+Just run the code, authenticate with your Web of Science Expanded API
+key, specify the search query and - optionally - the organization
+which you would like to analyze for its focusing or collaborating
+cities.
 """
+
 import threading
 import urllib.parse
 import time
