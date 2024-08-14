@@ -2,16 +2,17 @@
 
 ## A simple script to evaluate the H-index for a given ResearcherID both including and excluding coauthor self-citations. The script relies on retrieving the publication data via Web of Science Expanded API.
 
-
-This is how it works:
-
-#### In the code of the program, the user needs to enter:
-1. Their Web of Science Expanded API key;
-2. A Web of Science Core Collection advanced search query for a ResearcherID or ORCID they would like to analyze;
+### How to use this script
+Simply open the main.py file with your code editor and:
+1. Create a new python file named apikey.py in the same project folder, and add only one line of code there, namely set up a constant named APIKEY and pass your Web of Science Expanded API key as a string value, i.e.:
+```
+APIKEY = "mY3xp4nd3d4p1k3y1$$0m37h1Ngl1k37h15"
+```
+2. Edit the Web of Science Core Collection advanced search query constant right in the code
 
 And launch the code.
 
-The program will query the Web of Science Expanded API, extract the necessary article metadata as well as the cited references for each of them, and analyze each of the documents linked to that specific ResearcherID to check if any of them were referencing other documents in the same set. For every case of identified self-citation, the "times_cited_without_self-citation" field for the cited paper is reduced by 1. Afterwards, both H-index including self-citations and H-index excluding self-citations are printed by the program, and the detailed document-level citation data is being saved to a .csv file in the same project folder.
+The program will query the Web of Science Expanded API, extract the necessary article metadata as well as the cited references for each of them, and analyse each of the documents linked to that specific ResearcherID to check if any of them were referencing other documents in the same set. For every case of identified self-citation, the "times_cited_without_self-citation" field for the cited paper is reduced by 1. Afterwards, both H-index including self-citations and H-index excluding self-citations are printed by the program, and the detailed document-level citation data is being saved to a .csv file in the same project folder.
 
 Although this is a good step towards increasing the precision of self-citation calculation, we would like to address a few limitations of this approach:
 
