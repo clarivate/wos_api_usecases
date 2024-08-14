@@ -28,7 +28,7 @@ For the purposes of this algorithm, we apply the author-level fractional countin
 2. The Web of Science Core Collection advanced search query that they would like to run;
 3. The name of the Affiliaiton that they would like to analyze for its fractional output
 
-![Screenshot](/screenshots/GUI1.png)
+![Screenshot](screenshots/GUI1.png)
 
 And click the Run button.
 
