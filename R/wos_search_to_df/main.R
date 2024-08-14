@@ -6,13 +6,13 @@ library(jsonlite)
 source('apikeys.R')
 
 # Define your search query
-search_query <- "OG=Clarivate"
+search_query <- "TS=(('artificial intelligence' or ai) and 'scientific writing')"
 
 # Set up the parameters for the API request
 params <- list(
   'db' = 'WOS',
   'limit' = 50,
-  'q' = URLencode(search_query),
+  'q' = search_query,
   'page' = 1
 )
 
@@ -20,7 +20,7 @@ params <- list(
 response <- GET(
   "https://api.clarivate.com/apis/wos-starter/v1/documents",
   query = params,
-  add_headers(`X-ApiKey` = starter_apikey)
+  add_headers(`X-ApiKey` = .starter_apikey)
 )
 
 # Parse the initial JSON content of the response
@@ -39,7 +39,7 @@ if (requests_required > 1) {
     response <- GET(
       "https://api.clarivate.com/apis/wos-starter/v1/documents",
       query = params,
-      add_headers(`X-ApiKey` = starter_apikey)
+      add_headers(`X-ApiKey` = .starter_apikey)
     )
     subsequent_content <- content(response, as = "text", encoding = "UTF-8")
     subsequent_json <- fromJSON(subsequent_content, flatten = TRUE)

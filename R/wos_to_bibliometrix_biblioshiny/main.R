@@ -7,12 +7,12 @@ library(bibliometrix)
 source('apikeys.R')
 
 # Define your search query
-search_query <- "UT=WOS:000245406500017"
+search_query <- "TS=(('artificial intelligence' or ai) and 'scientific writing')"
 
 # Define if you require cited references metadata (gives you more options for 
 # analysis on Bibliometrix/Biblioshiny but significantly increases the time
 # required to retrieve all the metadata)
-retrieve_cited_references_flag = TRUE
+retrieve_cited_references_flag = FALSE
 
 # Process JSON data into a string
 json_to_str <- function(x) {
@@ -30,7 +30,7 @@ json_to_str <- function(x) {
       fetch_source_type(static_data$summary$pub_info$pubtype),
       "\n",
       sep = ""
-      )
+    )
     
     return_string <- paste(
       return_string,
@@ -38,7 +38,7 @@ json_to_str <- function(x) {
       fetch_author_wos_standard_names(static_data$summary$names$name),
       "\n",
       sep = ""
-      )
+    )
     
     return_string <- paste(
       return_string,
@@ -46,7 +46,7 @@ json_to_str <- function(x) {
       fetch_author_full_names(static_data$summary$names$name),
       "\n",
       sep = ""
-      )
+    )
     
     return_string <- paste(
       return_string,
@@ -54,7 +54,7 @@ json_to_str <- function(x) {
       fetch_doc_title(static_data$summary$titles$title),
       "\n",
       sep = ""
-      )
+    )
     
     return_string <- paste(
       return_string,
@@ -62,7 +62,7 @@ json_to_str <- function(x) {
       fetch_source_title(static_data$summary$titles$title),
       "\n",
       sep = ""
-      )
+    )
     
     return_string <- paste(
       return_string,
@@ -70,7 +70,7 @@ json_to_str <- function(x) {
       fetch_source_abbreviation(static_data$summary$titles$title),
       "\n",
       sep = ""
-      )
+    )
     
     return_string <- paste(
       return_string,
@@ -86,7 +86,7 @@ json_to_str <- function(x) {
       fetch_doctypes(static_data$summary$doctypes$doctype),
       "\n",
       sep = ""
-      )
+    )
     
     return_string <- paste(
       return_string,
@@ -94,15 +94,15 @@ json_to_str <- function(x) {
       fetch_keywords(fullrecord_metadata$keywords$keyword),
       "\n",
       sep = ""
-      )
-
+    )
+    
     return_string <- paste(
       return_string,
       "ID ",
       fetch_keywords(static_data$item$keywords_plus$keyword),
       "\n",
       sep = ""
-      )
+    )
     
     return_string <- paste(
       return_string,
@@ -110,7 +110,7 @@ json_to_str <- function(x) {
       fetch_abstract(abstracts$abstract$abstract_text$p),
       "\n",
       sep = ""
-      )
+    )
     
     return_string <- paste(
       return_string,
@@ -118,16 +118,16 @@ json_to_str <- function(x) {
       fetch_c1(fullrecord_metadata$addresses),
       "\n",
       sep = ""
-      )
-
+    )
+    
     return_string <- paste(
       return_string,
       "RP ",
       fetch_rp(fullrecord_metadata$reprint_addresses),
       "\n",
       sep = ""
-      )
-
+    )
+    
     if(retrieve_cited_references_flag == TRUE) {
       return_string <- paste(
         return_string,
@@ -135,7 +135,7 @@ json_to_str <- function(x) {
         cited_api_request(x[i, ]$UID, .expanded_apikey),
         "\n",
         sep = ""
-        )
+      )
     }
     
     return_string <- paste(
@@ -144,7 +144,7 @@ json_to_str <- function(x) {
       static_data$summary$pub_info$pubyear,
       "\n",
       sep = ""
-      )
+    )
     
     return_string <- paste(
       return_string,
@@ -152,7 +152,7 @@ json_to_str <- function(x) {
       fetch_times_cited(dynamic_data$citation_related$tc_list$silo_tc),
       "\n",
       sep = ""
-      )
+    )
     
     return_string <- paste(
       return_string,
@@ -160,7 +160,7 @@ json_to_str <- function(x) {
       fetch_subject_categories(category_info$subjects$subject),
       "\n",
       sep = ""
-      )
+    )
     
     return_string <- paste(
       return_string,
@@ -168,7 +168,7 @@ json_to_str <- function(x) {
       fetch_doi(dynamic_data$cluster_related$identifiers$identifier),
       "\n",
       sep = ""
-      )
+    )
     
     return_string <- paste(return_string, "UT ", x[i, ]$UID, "\n", sep = "")
     return_string <- paste(return_string, "ER\n\n", sep = "")
@@ -254,7 +254,7 @@ fetch_keywords <- function(x) {
   if(is.null(x[[1]])) {
     return(NA)
   } else {
-  return(paste(x[[1]], collapse = "; "))
+    return(paste(x[[1]], collapse = "; "))
   }
 }
 
@@ -269,7 +269,6 @@ fetch_abstract <- function(x) {
 
 # Retrieve the Affiliation links
 fetch_c1 <- function(x) {
-  browser()
   if(x$count == 1) {
     if(!is.null(x$address_name$names$name)) {
       authors <- fetch_c1_author_names(x$address_name$names$name)
@@ -307,9 +306,9 @@ fetch_c1_author_names <- function(x) {
   } else if (is.null(nrow(x[[1]]))) {
     return(x[[1]]$full_name)
   } else {
-  authors <- list()
-  for(i in rownames(x[[1]])) {
-    authors[i] <- x[[1]][i, ]$full_name
+    authors <- list()
+    for(i in rownames(x[[1]])) {
+      authors[i] <- x[[1]][i, ]$full_name
     }
   }
   return(paste(authors, collapse = "; "))
@@ -370,7 +369,7 @@ cited_api_request <- function(x, .apikey) {
   initial_cited_content <- content(response, as = "text", encoding = "UTF-8")
   initial_cited_json <- fromJSON(initial_cited_content, flatten = FALSE)
   cited_references <- initial_cited_json$Data
-
+  
   # Calculate the number of necessary requests to retrieve all the data
   cited_refs_found <- initial_cited_json$QueryResult$RecordsFound
   requests_required <- ((cited_refs_found - 1 ) %/% params$count) + 1
@@ -389,18 +388,18 @@ cited_api_request <- function(x, .apikey) {
         response,
         as = "text",
         encoding = "UTF-8"
-        )
+      )
       
       subsequent_cited_json <- fromJSON(
         subsequent_cited_content,
         flatten = FALSE
-        )
+      )
       
       cited_references <- merge(
         cited_references,
         subsequent_cited_json$Data,
         all = TRUE
-        )
+      )
     }
   }
   
@@ -442,7 +441,7 @@ fetch_cited_references <- function(x) {
           cited_reference <- append(
             cited_reference,
             paste("V", x[i, ]$Volume, sep = "")
-            )
+          )
         }
       }
       if("Page" %in% colnames(x[i, ])) {
@@ -450,7 +449,7 @@ fetch_cited_references <- function(x) {
           cited_reference <- append(
             cited_reference,
             paste("P", x[i, ]$Page, sep = "")
-            )
+          )
         }
       }
       if("DOI" %in% colnames(x[i, ])) {
@@ -458,13 +457,13 @@ fetch_cited_references <- function(x) {
           cited_reference <- append(
             cited_reference,
             paste("DOI", x[i, ]$DOI, sep = " ")
-            )
+          )
         }
       }
       cited_suboutput <- append(
         cited_suboutput,
         paste(cited_reference, collapse = ", ")
-        )
+      )
     }
     return(paste(sort(cited_suboutput), collapse = "\n   "))
   }
@@ -531,7 +530,7 @@ output <- paste(
   output,
   json_to_str(initial_json$Data$Records$records$REC),
   sep = ""
-  )
+)
 
 # Calculate the number of necessary requests to retrieve all the data
 documents_found <- initial_json$QueryResult$RecordsFound
@@ -548,11 +547,11 @@ if (requests_required > 1) {
     )
     subsequent_content <- content(response, as = "text", encoding = "UTF-8")
     subsequent_json <- fromJSON(subsequent_content, flatten = FALSE)
-
+    
     output <- paste(output,
                     json_to_str(subsequent_json$Data$Records$records$REC),
                     sep = ""
-                    )
+    )
     print(paste(i, "out of", requests_required, "requests complete", sep = " "))
   }
 }
@@ -568,9 +567,10 @@ if(retrieve_cited_references_flag == TRUE) {
 safe_filename <- gsub("*", "", gsub("?", "", gsub("'", "", filename)))
 writeLines(output, file(paste("Downloads/", safe_filename, sep = "")))
 
-# Convert the output into a Bibliometrix dataframe for further analysis
+
+# Convert the output into a Bibliometrix dartaframe and view it
 M <- convert2df(output)
 View(M)
 
-# Or simply launch biblioshiny to explore the data there
+# Or simply launch biblioshiny and explore the data there
 # biblioshiny()

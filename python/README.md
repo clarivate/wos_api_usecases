@@ -7,9 +7,9 @@
 * [Cities Collaboration analysis](cities_collaborations_analysis/)
 * [All Author IDs for the Organization](retrieve_author_ids/)
 * [Citation from Patents Report](citations_from_patents/)
-* [Web of Science to VOSviewer exporter on tkinter GUI](wos_to_vosviewer_exporter_tkinter/)
-* [Web of Science to VOSviewer exporter on Flask](wos_to_vosviewer_exporter_flask/)
 * [Web of Science Grants Index Analytics on Flask](wos_grants_index_analytics_flask/)
+* [Web of Science to VOSviewer exporter on Flask](wos_to_vosviewer_exporter_flask/)
+* [Web of Science to VOSviewer exporter on tkinter GUI](wos_to_vosviewer_exporter_tkinter/)
 
 
 ## Researcher API:
