@@ -34,15 +34,15 @@ And click the Run button.
 
 The program will create an Excel file in the same project folder, where each Web of Science Core Collection record will have its Accession Number (a unique record identifier in the Web of Science Core Collection), the number of coauthors of this paper from the organization, and the fraction of an organization's input into this specific paper in the rightmost column. It will also create a separate tab in this file with the sum of the values for the fractional and full counting research out of this organization broken down by years.
 
-![Screenshot](/screenshots/annual_dynamics_sheet.png)
+![Screenshot](screenshots/annual_dynamics_sheet.png)
 
-![Screenshot](/screenshots/document_level_data_sheet.png)
+![Screenshot](screenshots/document_level_data_sheet.png)
 
 Using Plotly library, the program also visualises the annual research output of the organization using both whole and fractional counting methods. Please note that the number of university's authors per paper is not visualized, but it's available for each document in the excel file on the document level data sheet.
 
 It is also possible to use the LOAD EXCEL FILE tab to visualize the data previously retrieved and saved into Excel files:
 
-![Screenshot](/screenshots/GUI2.png)
+![Screenshot](screenshots/GUI2.png)
 
 
 Although this is a good step in automating the routine work of calculating the research output using fractional counting method, we would like to address a few limitations:
