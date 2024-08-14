@@ -29,6 +29,6 @@ You also have an option of extracting the cited references along with the docume
 
 #### Using this app with Web of Science Starter API
 
-This code, unlike ![a similar tkinter-based converter](/../wos_to_vosviewer_exporter_tkinter/) is not compatible with Web of Science Starter API. However, it is possible to adapt this code to run with Web of Science Starter API, but please keep in mind that Web of Science Starter API is not designed to return a number of metadata fields that are important for analysis on VOSviewer.  
+This code, unlike ![a similar tkinter-based converter](/./wos_to_vosviewer_exporter_tkinter/) is not compatible with Web of Science Starter API. However, it is possible to adapt this code to run with Web of Science Starter API, but please keep in mind that Web of Science Starter API is not designed to return a number of metadata fields that are important for analysis on VOSviewer.  
 
 As always, we welcome your feedback on this code.
