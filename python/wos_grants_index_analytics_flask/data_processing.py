@@ -96,9 +96,10 @@ def fetch_pi_institution(item):
     :return: str.
     """
     if isinstance(item, dict):
-        for key in item.keys():
-            if key == 'pref' and item[key] == 'Y':
+        if 'pref' in item.keys():
+            if item['pref'] == 'Y':
                 return item['content']
+        for key in item.keys():
             return fetch_pi_institution(item[key])
     if isinstance(item, list):
         names_list = []

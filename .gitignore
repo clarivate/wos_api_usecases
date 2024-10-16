@@ -13,7 +13,7 @@
 /python/author-level_fractional_counting_for_organizations/*.xlsx
 /python/author-level_fractional_counting_for_organizations/temp-plot.html
 /python/citation_report_for_larger_datasets/.csv
-/python/citations_from_patents/.csv
+/python/citations_from_patents/*.csv
 /python/cities_collboration_analysis/*.xlsx
 /python/cities_collboration_analysis/temp-plot.html
 /python/researcher_api_excel_converter/*.xlsx
