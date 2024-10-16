@@ -27,13 +27,12 @@ SEARCH_QUERY = 'OG=The World Bank'
 
 
 def retrieve_key_fields(document):
-    """This function retrieves key metadata fields from the Web of Science document records retrieved through the
+    """Fetch key metadata fields from the Web of Science document records retrieved through the
     API. For reproducing the citation report, we only need the Times Cited, but for logging/debugging purposes
     we can also retrieve the document unique ID (or UT) and the document title.
 
-    :param document: dict containing all document metadata fields available in Web of Science Starter API and
-    imported from the JSON object
-    :return: None, appends selected fields to records list
+    :param document: dict.
+    :return: None, appends selected fields to records list.
     """
     try:
         records.append({'UT': document['uid'],

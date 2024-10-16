@@ -73,7 +73,7 @@ def visualize_data(df):
     gbo['Principal Investigator Institution'] = (gbo['Principal Investigator Institution'].
                                                  apply(word_wrap))
 
-    display_items_gbo = 15
+    display_items_gbo = min(gbo.shape[0], 15)
     fig = px.treemap(
         data_frame=gbo[:display_items_gbo],
         names='Principal Investigator Institution',
