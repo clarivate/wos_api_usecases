@@ -132,7 +132,7 @@ def run_button_main_function(apikey, search_query):
             first_record
         )
         for record in subsequent_json['Data']['Records']['records']['REC']:
-            fetch_data(record, usd_rates)
+            grants_list.append(fetch_data(record, usd_rates))
         print(f'Request {i + 1} of {requests_required} complete.')
 
     df = pd.DataFrame(grants_list)
