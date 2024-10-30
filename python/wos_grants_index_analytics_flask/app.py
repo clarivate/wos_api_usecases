@@ -122,8 +122,9 @@ def run_button_main_function(apikey, search_query):
         grants_list.append(fetch_data(record, usd_rates))
     total_results = initial_json['QueryResult']['RecordsFound']
     requests_required = ((total_results - 1) // records_per_page) + 1
+    max_requests = min(requests_required, 1000)
     print(f'Total Web of Science API requests required: {requests_required}.')
-    for i in range(1, requests_required):
+    for i in range(1, max_requests):
         first_record = int(f'{i}01')
         subsequent_json = retrieve_wos_metadata_via_api(
             apikey,
@@ -133,7 +134,7 @@ def run_button_main_function(apikey, search_query):
         )
         for record in subsequent_json['Data']['Records']['records']['REC']:
             grants_list.append(fetch_data(record, usd_rates))
-        print(f'Request {i + 1} of {requests_required} complete.')
+        print(f'Request {i + 1} of {max_requests} complete.')
 
     df = pd.DataFrame(grants_list)
     safe_filename = search_query.replace('*', '').replace('"', '')
