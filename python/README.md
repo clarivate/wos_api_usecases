@@ -3,7 +3,7 @@
 ## Web of Science Expanded API:
 * [Author-level Fractional Counting for Organizations](author-level_fractional_counting_for_organizations/)
 * [Self-citation: simple calculator](researcherid-based_h-index_excluding_self-citations/)
-* [Self-citation: scientific calculator](various_types_of_self_citation/)
+* [Self-citation: scientific calculator](self_citation_explorer/)
 * [Cities Collaboration analysis](cities_collaborations_analysis/)
 * [All Author IDs for the Organization](retrieve_author_ids/)
 * [Citation from Patents Report](citations_from_patents/)

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="{{ url_for('static', filename='favicon.png')}}" />
+        <title>Web of Science Expanded API - Self-Citation Explorer</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css')}}" />
+    </head>
+    <body>
+        <header>
+            <h1>Web of Science Expanded API</h1>
+            <h3>Self-Citation Explorer</h3>
+        </header>
+
+        <main>
+            <section>
+                <form class="form" method="POST" id="search">
+                    <h2>Advanced search query builder</h2>
+                    <p>
+                        <label for="search_query" class="form__label"></label>
+                        <textarea class="form__textarea" name="search_query" id="search_query"
+                                  aria-label="Search Query"
+                                  placeholder="Enter or edit your query here, e.g. TS=cubesat*">{{search_query}}</textarea>
+                    </p>
+                    <p><a href="https://webofscience.help.clarivate.com/en-us/Content/wos-core-collection/woscc-search-field-tags.htm">Check which advanced search field tags are available</a><br><br>
+                    If you are not sure of how many records your search query returns, try validating it first.<br>
+                    Maximum number of Web of Science documents records returned through the API for a single search query is 100,000.<br>
+                    {% if not message %} <br> {% else %} {{ message }} {% endif %}</p>
+                    <button class="form__validate" type="submit" name="button" value="validate">Validate</button>
+                    <button class="form__submit" type="submit" name="button" value="run">Run</button>
+                    <br>
+                    <p>{% if not filename %} <br> {% else %}
+                        Retrieval complete. For further analysis, check "{{ filename }}" file in the /downloads <br>subfolder of the project.
+                        {% endif %}</p>
+                </form>
+            </section>
+            <section>
+                <form class="form" method="POST" id="load">
+                    <h2>Load a previously saved Excel file</h2>
+                    <p class="load__form">
+                        <input class="form__input" type="file" id="filename" name="filename" accept=".xlsx" />
+                        <input class="form__button" type="submit" value="Load File" />
+                    </p>
+                </form>
+            </section>
+            {% if plot %}
+            <section>
+                {{ plot|safe }}
+            </section>
+            {% endif %}
+        </main>
+        <footer></footer>
+    </body>
+</html>
