@@ -19,8 +19,6 @@
 /python/researcher_api_excel_converter/*.xlsx
 /python/researcherid-based_h-index_excluding_self-citations/*.csv
 /python/retrieve_author_ids/*.csv
-/python/various_types_of_self_citation/*.xlsx
-/python/various_types_of_self_citation/temp-plot.html
 /python/wos_and_derwent_api_topical_search/*.xlsx
 /python/wos_grants_index_analytics_flask/*.xlsx
 /python/wos_to_vosviewer_exporter_flask/*.xlsx
