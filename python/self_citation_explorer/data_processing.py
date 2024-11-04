@@ -169,9 +169,9 @@ def fetch_rids(name_json):
             if data_item_id['id-type'] == 'PreferredRID':
                 return data_item_id['content']
         else:
-            for item_id in data_item_id:
-                if item_id['id-type'] == 'PreferredRID':
-                    return item_id['content']
+            for _id in data_item_id:
+                if _id['id-type'] == 'PreferredRID':
+                    return _id['content']
     return set()
 
 

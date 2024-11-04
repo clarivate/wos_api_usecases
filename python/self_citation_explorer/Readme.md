@@ -19,9 +19,9 @@ This is how it works.
 ```
 EXPANDED_APIKEY = 'mY3xp4nd3d4p1k3y1$$0m37h1ngl1k37h1$'
 ```
-3. And don't forget to install dependencies listed in the requirements.txt file.
+3. Finally, don't forget to install the dependencies listed in the requirements.txt file.
 
-And launch the code.
+And launch the `app.py` file.
 
 The program will create a development server at http://127.0.0.1:5000 which you can open locally in any browser. This is what the start page looks like:
 
