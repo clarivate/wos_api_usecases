@@ -53,21 +53,26 @@
                     <button class="graph_button_switchable" name="button" value="grant_funding_by_year">Grant Funding by Year</button>
                     {% endif %}
                     {% if index==1 %}
-                    <button class="graph_button" name="button" value="top_grant_receivers">Top Grant Receivers</button>
+                    <button class="graph_button" name="button" value="top_principal_investigators">Top Principal Investigators</button>
                     {% else %}
-                    <button class="graph_button_switchable" name="button" value="top_grant_receivers">Top Grant Receivers</button>
+                    <button class="graph_button_switchable" name="button" value="top_principal_investigators">Top Principal Investigators</button>
                     {% endif %}
                     {% if index==2 %}
+                    <button class="graph_button" name="button" value="top_grant_receivers">Top PI Institutions</button>
+                    {% else %}
+                    <button class="graph_button_switchable" name="button" value="top_grant_receivers">Top PI Institutions</button>
+                    {% endif %}
+                    {% if index==3 %}
                     <button class="graph_button" name="button" value="top_funders">Top Funding Agencies</button>
                     {% else %}
                     <button class="graph_button_switchable" name="button" value="top_funders">Top Funding Agencies</button>
                     {% endif %}
-                    {% if index==3 %}
+                    {% if index==4 %}
                     <button class="graph_button" name="button" value="average_grant_volume_per_year">Average Grant Volume per Year</button>
                     {% else %}
                     <button class="graph_button_switchable" name="button" value="average_grant_volume_per_year">Average Grant Volume per Year</button>
                     {% endif %}
-                    {% if index==4 %}
+                    {% if index==5 %}
                     <button class="graph_button" name="button" value="top_grants_by_associated_wos_records">Top Grants by Associated WoS Records</button>
                     {% else %}
                     <button class="graph_button_switchable" name="button" value="top_grants_by_associated_wos_records">Top Grants by Associated WoS Records</button>

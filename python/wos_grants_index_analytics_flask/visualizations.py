@@ -62,6 +62,27 @@ def visualize_data(df):
     fig.update_xaxes(title_text=None, linecolor='#9D9D9C')
     grants_by_years_plot = offline.plot(fig, output_type='div')
 
+    # Visualizing top principal investigators by grant volumes
+    gbpi = df.groupby('Principal Investigator')['Grant Amount, USD'].sum('').to_frame().reset_index()
+    gbpi.sort_values('Grant Amount, USD', ascending=False, inplace=True)
+    display_items_gbpi = min(gbpi.shape[0], 20)
+    fig = px.treemap(
+        data_frame=gbpi[:display_items_gbpi],
+        names='Principal Investigator',
+        parents=[None for x in range(display_items_gbpi)],
+        color_discrete_sequence=color_palette,
+        values='Grant Amount, USD',
+        hover_data={'Grant Amount, USD': ':,.2f'},
+        title='Top Principal Investigators by funding volumes, USD'
+    )
+    fig.update_traces(
+        textfont={'color': '#FFFFFF',
+                  'family': "Source Sans Pro",
+                  'size': 16},
+        textinfo="label+value"
+    )
+    top_principal_investigators_plot = offline.plot(fig, output_type='div')
+
     # Visualizing top organizations receiving grant funding.
     df['Principal Investigator Institution'] = (
         df['Principal Investigator Institution'].replace(to_replace='',
@@ -81,7 +102,7 @@ def visualize_data(df):
         color_discrete_sequence=color_palette,
         values='Grant Amount, USD',
         hover_data={'Grant Amount, USD': ':,.2f'},
-        title='Top Grant Receivers by funding volumes, USD'
+        title='Top Principal Investigator Institutions by funding volumes, USD'
     )
     fig.update_traces(
         textfont={'color': '#FFFFFF',
@@ -178,6 +199,7 @@ def visualize_data(df):
     fig.update_xaxes(title_text=None, linecolor='#9D9D9C')
     top_grants_by_associated_wos_records_plot = offline.plot(fig, output_type='div')
     return (grants_by_years_plot,
+            top_principal_investigators_plot,
             top_grant_receivers_plot,
             top_funders_plot,
             average_grants_volume_by_years_plot,
