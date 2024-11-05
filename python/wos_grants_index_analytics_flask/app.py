@@ -41,10 +41,11 @@ def start_menu():
     if request.method == 'POST' and 'button' in request.form.keys():
         visualizations = {
             "grant_funding_by_year": plots_list[0],
-            "top_grant_receivers": plots_list[1],
-            "top_funders": plots_list[2],
-            "average_grant_volume_per_year": plots_list[3],
-            "top_grants_by_associated_wos_records": plots_list[4]
+            "top_principal_investigators": plots_list[1],
+            "top_grant_receivers": plots_list[2],
+            "top_funders": plots_list[3],
+            "average_grant_volume_per_year": plots_list[4],
+            "top_grants_by_associated_wos_records": plots_list[5]
         }
         if request.form['button'] in visualizations:
             for key, value in visualizations.items():
