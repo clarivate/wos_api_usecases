@@ -42,7 +42,7 @@ def run_button(apikey, search_query):
     safe_filename = search_query.replace('*', '').replace('"', '')
     with pd.ExcelWriter(f'downloads/{safe_filename} - {date.today()}.xlsx') as writer:
         df.to_excel(writer, sheet_name='Citation Links', index=False)
-        df2.to_excel(writer, sheet_name='Self-citation rates', index=False)
+        df2.to_excel(writer, sheet_name='Self-citation rates')
         df3.to_excel(writer, sheet_name='Search query', index=False)
 
     # Visualise the data

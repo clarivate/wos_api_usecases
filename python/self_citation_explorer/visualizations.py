@@ -118,8 +118,8 @@ def visualize_excel(file):
     :param file: str.
     :return: str.
     """
-    df = pd.read_excel(file, sheet_name='Self-citation rates')
-    query = pd.read_excel(file, sheet_name='Search query')
+    df = pd.read_excel(file, sheet_name='Self-citation rates', index_col=0)
+    query = pd.read_excel(file, sheet_name='Search query')['Search Query'][0]
 
     return visualize_data(df, query)
 
