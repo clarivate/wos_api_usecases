@@ -2,14 +2,14 @@
 
 ![Example visualisation](screenshots/grants_by_years.png)
 
-## A Flask application with a simple graphical user interface to analyse and visualise the grant data from Web of Science Grants Index that retrieves the publication data via Web of Science Expanded API
+## A Flask application with a simple graphical user interface to analyse and visualise the grant data from Web of Science Grants Index. The application retrieves the grant data via Web of Science Expanded API
 
 This application retrieves grants records from Web of Science Grants Index for any Advanced Search query via Web of Science Expanded API, visualises it in a variety of ways with Plotly package, and saves them records metadata into an Excel spreadsheet.
 
 The application uses [Open Exchange Rates API](https://open.er-api.com) for converting grant values into US dollars in order for the app to be able to produce trend graphs in a common currency.
 
 #### How to use it
-Download the code, open the project folder where you saved it and create there a python file apikeys.py. There, you need to create a constant representing your Web of Science Expanded API key and pass its value as a string like in the example below:
+Download the code, open the project folder where you saved it and create a python file named `apikeys.py`. There, create a constant representing your Web of Science Expanded API key and pass its value as a string like in the example below:
 
 ```
 EXPANDED_APIKEY = 'mYw3b0f$c14nc33xp4nd3d4p1k3y1$4$3cr37'
