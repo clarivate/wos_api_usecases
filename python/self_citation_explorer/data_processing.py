@@ -5,8 +5,8 @@ self-citations, and convert them into Pandas dataframes for
 visualizing.
 """
 
-import pandas as pd
 from datetime import date
+import pandas as pd
 from api_operations import base_records_api_call, citing_records_api_call
 from visualizations import visualize_data
 
@@ -17,7 +17,7 @@ def run_button(apikey, search_query):
 
     :param apikey: str.
     :param search_query: str.
-    :return: str, tuple.
+    :return: str, str.
     """
 
     # Retrieving the base records and parsing their metadata
@@ -147,11 +147,11 @@ def count_self_citations(links):
     }
 
     for link in links:
-        for k in self_citations.keys():
-            if link[f'cited_{k}'].intersection(link[f'citing_{k}']):
-                if 'is_self' not in link.keys():
+        for key in self_citations:
+            if link[f'cited_{key}'].intersection(link[f'citing_{key}']):
+                if 'is_self' not in link:
                     link['is_self'] = True
-                self_citations[k] += 1
+                self_citations[key] += 1
 
     return links, self_citations
 
@@ -333,6 +333,13 @@ def fetch_citing_metadata(cited_rec, citing_rec):
 
 
 def convert_to_df(links, self_citations, query):
+    """Convert the list of citation links into a Pandas dataframe.
+
+    :param links: list[dict].
+    :param self_citations: dict.
+    :param query: str.
+    :return: df, df, df.
+    """
     df = pd.DataFrame(links)
 
     non_set_cols = [
