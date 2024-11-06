@@ -19,7 +19,7 @@ This is how it works.
 ```
 EXPANDED_APIKEY = 'mY3xp4nd3d4p1k3y1$$0m37h1ngl1k37h1$'
 ```
-3. Finally, don't forget to install the dependencies listed in the requirements.txt file.
+3. Finally, don't forget to install the dependencies listed in the `requirements.txt` file.
 
 And launch the `app.py` file.
 
@@ -48,7 +48,7 @@ Although this is a good step towards increasing the precision of self-citation c
 - documents linked to ORCID profiles of the authors
 
 But we would like to stress that neither of those approaches can guarantee 100% precision of author disambiguation at the moment.
-2. It is important that the coauthor-level analysis mentioned above works exactly what it is named for: coauthor-level self-citations, and we suggest that the users understand the differentce between coauthor self-citation and author self-citation which are not the same phenomenons in bibliometrics. Author self-citation identifies a self-citation event only if the specific author being analyzed appears on both cited and citing paper. On contrast, coauthor self-citation identifies a self-citation event even if the author being analyzed didn't cite their own research, but it's their coauthors who did. While it is techincally possible to include only the author-level self-citation into this algorithm, we decided that including too many inputs as well as output metrics might actually make it harder to measure self-citations wiht this program, so we decided to use the same coauthor-level self-citation approach used in the following two scholarly papers which we consider very important to understanding the self-citation methodology:
+2. It is important that the coauthor-level analysis mentioned above works exactly what it is named for: coauthor-level self-citations, and we suggest that the users understand the difference between coauthor self-citation and author self-citation which are not the same phenomenons in bibliometrics. Author self-citation identifies a self-citation event only if the specific author being analyzed appears on both cited and citing paper. On contrast, coauthor self-citation identifies a self-citation event even if the author being analyzed didn't cite their own research, but it's their coauthors who did. While it is technically possible to include only the author-level self-citation into this algorithm, we decided that including too many inputs as well as output metrics might actually make it harder to measure self-citations with this program, so we decided to use the same coauthor-level self-citation approach used in the following two scholarly papers which we consider very important to understanding the self-citation methodology:
 
 [Dag W. Aksnes,
 A macro study of self-citation,

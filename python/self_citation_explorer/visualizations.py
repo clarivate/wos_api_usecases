@@ -58,55 +58,61 @@ def visualize_data(df2, query):
     fig.update_traces(hole=.83,
                       direction='clockwise',
                       sort=False,
-                      marker=dict(colors=colors, line=dict(color='#FFFFFF', width=2)))
+                      marker={
+                          'colors': colors,
+                          'line': {
+                              'color': '#FFFFFF',
+                              'width': 2
+                              }
+                          })
 
     fig.update_layout(
         title_text=f"Self-citations analysis for: {query}",
 
         # Add annotations in the center of the donut pies.
         annotations=[
-            dict(
-                text='Coauthor Name',
-                x=0,
-                y=0.89,
-                font_size=16,
-                showarrow=False
-            ),
-            dict(
-                text='Coauthor RID',
-                x=0.02,
-                y=0.5,
-                font_size=16,
-                showarrow=False
-            ),
-            dict(
-                text='Coauthor ORCID',
-                x=0,
-                y=0.13,
-                font_size=16,
-                showarrow=False
-            ),
-            dict(
-                text='Organization',
-                x=0.62,
-                y=0.89,
-                font_size=16,
-                showarrow=False
-            ),
-            dict(
-                text='Country',
-                x=0.64,
-                y=0.5,
-                font_size=16,
-                showarrow=False
-            ),
-            dict(
-                text='Publication Source',
-                x=0.6,
-                y=0.13,
-                font_size=16,
-                showarrow=False
-            )
+            {
+                'text': 'Coauthor Name',
+                'x': 0,
+                'y': 0.89,
+                'font_size': 16,
+                'showarrow': False
+            },
+            {
+                'text': 'Coauthor RID',
+                'x': 0.02,
+                'y': 0.5,
+                'font_size': 16,
+                'showarrow': False
+            },
+            {
+                'text': 'Coauthor ORCID',
+                'x': 0,
+                'y': 0.13,
+                'font_size': 16,
+                'showarrow': False
+            },
+            {
+                'text': 'Organization',
+                'x': 0.62,
+                'y': 0.89,
+                'font_size': 16,
+                'showarrow': False
+            },
+            {
+                'text': 'Country',
+                'x': 0.64,
+                'y': 0.5,
+                'font_size': 16,
+                'showarrow': False
+            },
+            {
+                'text': 'Publication Source',
+                'x': 0.6,
+                'y': 0.13,
+                'font_size': 16,
+                'showarrow': False
+            }
         ])
 
     return offline.plot(fig, output_type='div')
@@ -118,8 +124,7 @@ def visualize_excel(file):
     :param file: str.
     :return: str.
     """
-    df = pd.read_excel(file, sheet_name='Self-citation rates')
-    query = pd.read_excel(file, sheet_name='Search query')
+    df = pd.read_excel(file, sheet_name='Self-citation rates', index_col=0)
+    query = pd.read_excel(file, sheet_name='Search query')['Search Query'][0]
 
     return visualize_data(df, query)
-
