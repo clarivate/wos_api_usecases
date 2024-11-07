@@ -35,39 +35,51 @@ def visualize_data(df):
     :return: tuple of str.
     """
     # Visualizing Grants by Years.
-    df['Grant Amount, USD'] = df['Grant Amount, USD'].replace(to_replace='', value=0)
-    gby = df.groupby('Publication Year')['Grant Amount, USD'].sum()
+    df['Grant Amount, USD'] = df['Grant Amount, USD'].replace(
+        to_replace='',
+        value=0
+    )
+
+    grants_by_years = (
+        df.groupby('Publication Year')['Grant Amount, USD'].sum()
+    )
 
     fig = px.bar(
-        data_frame=gby,
+        data_frame=grants_by_years,
         y='Grant Amount, USD',
         title='Grant Funding by Year, USD',
         hover_data={'Grant Amount, USD': ':,.2f'}
     )
     fig.update_traces(marker_color=color_palette[0])
-    fig.update_layout({'plot_bgcolor': '#FFFFFF', 'paper_bgcolor': '#FFFFFF'},
-                      font_family='Calibri',
-                      font_color='#646363',
-                      font_size=18,
-                      title_font_family='Calibri',
-                      title_font_color='#646363',
-                      legend_title_text=None,
-                      legend=dict(
-                          yanchor="bottom",
-                          y=-0.4,
-                          xanchor="center",
-                          x=0.5
-                      ))
+    fig.update_layout(
+        {'plot_bgcolor': '#FFFFFF', 'paper_bgcolor': '#FFFFFF'},
+        font_family='Calibri',
+        font_color='#646363',
+        font_size=18,
+        title_font_family='Calibri',
+        title_font_color='#646363',
+        legend_title_text=None,
+        legend={'yanchor': "bottom", 'y': -0.4, 'xanchor': "center", 'x': 0.5}
+    )
     fig.update_yaxes(title_text=None, showgrid=True, gridcolor='#9D9D9C')
     fig.update_xaxes(title_text=None, linecolor='#9D9D9C')
     grants_by_years_plot = offline.plot(fig, output_type='div')
 
     # Visualizing top principal investigators by grant volumes
-    gbpi = df.groupby('Principal Investigator')['Grant Amount, USD'].sum('').to_frame().reset_index()
-    gbpi.sort_values('Grant Amount, USD', ascending=False, inplace=True)
-    display_items_gbpi = min(gbpi.shape[0], 20)
+    grants_by_pi = (
+        df.groupby('Principal Investigator')['Grant Amount, USD'].sum('')
+        .to_frame().reset_index()
+    )
+
+    grants_by_pi.sort_values(
+        'Grant Amount, USD',
+        ascending=False,
+        inplace=True
+    )
+
+    display_items_gbpi = min(grants_by_pi.shape[0], 20)
     fig = px.treemap(
-        data_frame=gbpi[:display_items_gbpi],
+        data_frame=grants_by_pi[:display_items_gbpi],
         names='Principal Investigator',
         parents=[None for x in range(display_items_gbpi)],
         color_discrete_sequence=color_palette,
@@ -81,22 +93,33 @@ def visualize_data(df):
                   'size': 16},
         textinfo="label+value"
     )
-    top_principal_investigators_plot = offline.plot(fig, output_type='div')
+    grants_by_pi_plot = offline.plot(fig, output_type='div')
 
     # Visualizing top organizations receiving grant funding.
     df['Principal Investigator Institution'] = (
-        df['Principal Investigator Institution'].replace(to_replace='',
-                                                         value='(name unavailable)')
+        df['Principal Investigator Institution'].replace(
+            to_replace='',
+            value='(name unavailable)'
+        )
     )
-    gbo = (df.groupby('Principal Investigator Institution')['Grant Amount, USD'].
-           sum('').to_frame().reset_index())
-    gbo.sort_values('Grant Amount, USD', ascending=False, inplace=True)
-    gbo['Principal Investigator Institution'] = (gbo['Principal Investigator Institution'].
-                                                 apply(word_wrap))
+    grants_by_organizations = (
+        df.groupby('Principal Investigator Institution')['Grant Amount, USD'].
+        sum('').to_frame().reset_index()
+    )
+    grants_by_organizations.sort_values(
+        'Grant Amount, USD',
+        ascending=False,
+        inplace=True
+    )
 
-    display_items_gbo = min(gbo.shape[0], 15)
+    grants_by_organizations['Principal Investigator Institution'] = (
+        grants_by_organizations['Principal Investigator Institution']
+        .apply(word_wrap)
+    )
+
+    display_items_gbo = min(grants_by_organizations.shape[0], 15)
     fig = px.treemap(
-        data_frame=gbo[:display_items_gbo],
+        data_frame=grants_by_organizations[:display_items_gbo],
         names='Principal Investigator Institution',
         parents=[None for x in range(display_items_gbo)],
         color_discrete_sequence=color_palette,
@@ -110,18 +133,23 @@ def visualize_data(df):
                   'size': 16},
         textinfo="label+value"
     )
-    top_grant_receivers_plot = offline.plot(fig, output_type='div')
+    grants_by_organizations_plot = offline.plot(fig, output_type='div')
 
     # Visualizing top funding agencies by funding volume.
-    df['Funding Agency'] = (df['Funding Agency'].replace(to_replace='',
-                                                         value='(name unavailable)'))
-    gbf = (df.groupby(['Funding Agency', 'Funding Country'])['Grant Amount, USD'].
-           sum().to_frame().reset_index())
-    gbf.sort_values('Grant Amount, USD', ascending=False, inplace=True)
-    gbf['Funding Agency'] = gbf['Funding Agency'].apply(word_wrap)
+    df['Funding Agency'] = (df['Funding Agency'].replace(
+        to_replace='',
+        value='(name unavailable)'
+    ))
+    grants_by_funder = (
+        df.groupby(['Funding Agency', 'Funding Country'])['Grant Amount, USD']
+        .sum().to_frame().reset_index()
+    )
+    grants_by_funder.sort_values('Grant Amount, USD', ascending=False, inplace=True)
+    grants_by_funder['Funding Agency'] = (grants_by_funder['Funding Agency']
+                                          .apply(word_wrap))
 
     fig = px.treemap(
-        data_frame=gbf,
+        data_frame=grants_by_funder,
         path=['Funding Country', 'Funding Agency'],
         values='Grant Amount, USD',
         color_discrete_sequence=color_palette,
@@ -134,37 +162,44 @@ def visualize_data(df):
                   'size': 16},
         textinfo="label+value"
     )
-    top_funders_plot = offline.plot(fig, output_type='div')
+    grants_by_funder_plot = offline.plot(fig, output_type='div')
 
     # Visualizing Average Grant Size by Years
-    agvby = pd.merge(gby, df.groupby('Publication Year')['UT'].count(),
-                     on='Publication Year')
-    agvby['Average Grant Volume'] = agvby['Grant Amount, USD'] / agvby['UT']
-    agvby = agvby.rename(columns={'UT': 'Number of Grants',
-                                  'Grant Amount, USD': 'Total Funding Volume'})
+    average_grant_volume_by_year = pd.merge(
+        grants_by_years,
+        df.groupby('Publication Year')['UT'].count(), on='Publication Year'
+    )
+    average_grant_volume_by_year['Average Grant Volume'] = (
+            average_grant_volume_by_year['Grant Amount, USD'] /
+            average_grant_volume_by_year['UT']
+    )
+    average_grant_volume_by_year = average_grant_volume_by_year.rename(
+        columns={
+            'UT': 'Number of Grants',
+            'Grant Amount, USD': 'Total Funding Volume'
+        }
+    )
 
     fig = px.bar(
-        data_frame=agvby,
+        data_frame=average_grant_volume_by_year,
         y='Average Grant Volume',
         hover_data={'Average Grant Volume': ':,.2f',
                     'Number of Grants': True,
                     'Total Funding Volume': ':,.2f'},
         title='Average Grant Volume by Year, USD'
     )
+
     fig.update_traces(marker_color=color_palette[0])
-    fig.update_layout({'plot_bgcolor': '#FFFFFF', 'paper_bgcolor': '#FFFFFF'},
-                      font_family='Calibri',
-                      font_color='#646363',
-                      font_size=18,
-                      title_font_family='Calibri',
-                      title_font_color='#646363',
-                      legend_title_text=None,
-                      legend=dict(
-                          yanchor="bottom",
-                          y=-0.4,
-                          xanchor="center",
-                          x=0.5
-                      ))
+    fig.update_layout(
+        {'plot_bgcolor': '#FFFFFF', 'paper_bgcolor': '#FFFFFF'},
+        font_family='Calibri',
+        font_color='#646363',
+        font_size=18,
+        title_font_family='Calibri',
+        title_font_color='#646363',
+        legend_title_text=None,
+        legend={'yanchor': "bottom", 'y': -0.4, 'xanchor': "center", 'x': 0.5}
+    )
     fig.update_yaxes(title_text=None, showgrid=True, gridcolor='#9D9D9C')
     fig.update_xaxes(title_text=None, linecolor='#9D9D9C')
     average_grants_volume_by_years_plot = offline.plot(fig, output_type='div')
@@ -181,27 +216,29 @@ def visualize_data(df):
         title='Top Grants by Associated Web of Science Records'
 
     )
+
     fig.update_traces(marker_color='#BC99FF')
-    fig.update_layout({'plot_bgcolor': '#FFFFFF', 'paper_bgcolor': '#FFFFFF'},
-                      font_family='Calibri',
-                      font_color='#646363',
-                      font_size=18,
-                      title_font_family='Calibri',
-                      title_font_color='#646363',
-                      legend_title_text=None,
-                      legend=dict(
-                          yanchor="bottom",
-                          y=-0.4,
-                          xanchor="center",
-                          x=0.5
-                      ))
+    fig.update_layout(
+        {'plot_bgcolor': '#FFFFFF', 'paper_bgcolor': '#FFFFFF'},
+        font_family='Calibri',
+        font_color='#646363',
+        font_size=18,
+        title_font_family='Calibri',
+        title_font_color='#646363',
+        legend_title_text=None,
+        legend={'yanchor': "bottom", 'y': -0.4, 'xanchor': "center", 'x': 0.5}
+    )
     fig.update_yaxes(title_text=None, showgrid=True, gridcolor='#9D9D9C')
     fig.update_xaxes(title_text=None, linecolor='#9D9D9C')
-    top_grants_by_associated_wos_records_plot = offline.plot(fig, output_type='div')
+    top_grants_by_associated_wos_records_plot = offline.plot(
+        fig,
+        output_type='div'
+    )
+
     return (grants_by_years_plot,
-            top_principal_investigators_plot,
-            top_grant_receivers_plot,
-            top_funders_plot,
+            grants_by_pi_plot,
+            grants_by_organizations_plot,
+            grants_by_funder_plot,
             average_grants_volume_by_years_plot,
             top_grants_by_associated_wos_records_plot)
 
