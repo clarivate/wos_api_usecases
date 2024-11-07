@@ -23,7 +23,7 @@ You might also need to install the project dependencies, which are:
 
 And launch the app.py file. Flask will create a development server on http://127.0.0.1:5000 which you can open locally in any browser. This is what the start page looks like:
 
-![Start page](/screenshots/index.png)
+![Start page](screenshots/index.png)
 
 On the webpage, you can enter a Web of Science Grants Index Advanced Search query, i.e., for a topical search on bibliometrics:
 
