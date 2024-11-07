@@ -6,7 +6,51 @@ return them as dictionaries.
 
 from datetime import date, datetime, timedelta
 import pandas as pd
-from api_operations import retrieve_rates_via_api
+from api_operations import retrieve_rates_via_api, retrieve_wos_metadata_via_api
+from visualizations import visualize_data
+
+
+def run_button(apikey, search_query):
+    """When the 'Run' button is pressed, manage all the API operations,
+    data processing, and visualizations
+
+    :param apikey: str.
+    :param search_query: str.
+    :return: str, tuple.
+    """
+    grants_list = []
+    usd_rates = get_usd_rates()
+    initial_json = retrieve_wos_metadata_via_api(
+        apikey,
+        search_query,
+    )
+
+    for record in initial_json['Data']['Records']['records']['REC']:
+        grants_list.append(fetch_data(record, usd_rates))
+    total_results = initial_json['QueryResult']['RecordsFound']
+    requests_required = ((total_results - 1) // 100) + 1
+    max_requests = min(requests_required, 1000)
+    print(f'Total Web of Science API requests required: {requests_required}.')
+    for i in range(1, max_requests):
+        first_record = int(f'{i}01')
+        subsequent_json = retrieve_wos_metadata_via_api(
+            apikey,
+            search_query,
+            first_record
+        )
+        for record in subsequent_json['Data']['Records']['records']['REC']:
+            grants_list.append(fetch_data(record, usd_rates))
+        print(f'Request {i + 1} of {max_requests} complete.')
+
+    df = pd.DataFrame(grants_list)
+    safe_filename = search_query.replace('*', '').replace('"', '')
+    df.to_excel(
+        excel_writer=f'downloads/{safe_filename} - {date.today()}.xlsx',
+        sheet_name='Grants Data',
+        index=False
+    )
+    plots = visualize_data(df)
+    return f'{safe_filename} - {date.today()}.xlsx', plots
 
 
 def retrieve_rates_from_table():
@@ -18,6 +62,7 @@ def retrieve_rates_from_table():
     rates_df = pd.read_csv(filepath_or_buffer='currencies.csv',
                            skiprows=2,
                            index_col='Currency')
+
     return rates_df.to_dict(orient='dict')['Rate VS USD']
 
 
@@ -28,14 +73,17 @@ def get_usd_rates():
     """
     tod = date.today()
     with open('currencies.csv', 'r', encoding='utf-8') as reading:
-        updated = datetime.strptime(reading.readline().split(',')[1][:-1], '%m/%d/%Y').date()
+        updated = datetime.strptime(
+            reading.readline().split(',')[1][:-1], '%m/%d/%Y'
+        ).date()
     if tod - updated < timedelta(days=1):
         return retrieve_rates_from_table()
     return retrieve_rates_via_api()
 
 
 def fetch_names(names_json):
-    """Retrieve the names of the principal investigator and other grant participants, if any.
+    """Retrieve the names of the principal investigator and other grant
+    participants, if any.
 
     :param names_json: dict.
     :return: str, str.
@@ -43,9 +91,11 @@ def fetch_names(names_json):
     pr_inv = ''
     other_nms = ''
     if names_json['count'] > 0:
-        if names_json['count'] == 1 and names_json['name']['role'] == 'principal_investigator':
+        if names_json['count'] == 1 and names_json['name']['role'] == \
+                'principal_investigator':
             pr_inv = names_json['name']['full_name']
-        elif names_json['count'] == 1 and names_json['name']['role'] != 'principal_investigator':
+        elif names_json['count'] == 1 and names_json['name']['role'] != \
+                'principal_investigator':
             other_nms = names_json['name']['full_name']
         else:
             non_pis = []
@@ -110,7 +160,8 @@ def fetch_pi_institution(item):
 
 
 def fetch_fin_year(item):
-    """Retrieve the financial year value, if present in the grant record.
+    """Retrieve the financial year value, if present in the grant
+    record.
 
     :param item: dict.
     :return: int or str.
@@ -121,7 +172,8 @@ def fetch_fin_year(item):
 
 
 def fetch_related_records(item):
-    """Retrieve the associated Web of Science records list, if present in the grant record.
+    """Retrieve the associated Web of Science records list, if present
+    in the grant record.
 
     :param item: dict.
     :return: str, int.
@@ -172,7 +224,8 @@ def fetch_abstract(item):
     :return: str.
     """
     if isinstance(item['abstracts'], list):
-        return [', '.join(a['abstract_text']['p']) for a in item['abstracts']['abstract']]
+        return [', '.join(a['abstract_text']['p']) for a in
+                item['abstracts']['abstract']]
     if 'abstract' in item['abstracts'].keys():
         return item['abstracts']['abstract']['abstract_text']['p']
     return ''
@@ -195,7 +248,8 @@ def convert_to_usd(amount, currency, rates):
 
 
 def fetch_data(rec, rates):
-    """Take JSON retrieved by the API, append each record to a grants_list list.
+    """Parse the JSON file retrieved by the API for required metadata
+    fields.
 
     :param rec: dict.
     :param rates: dict.

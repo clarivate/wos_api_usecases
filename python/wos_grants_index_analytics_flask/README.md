@@ -41,13 +41,15 @@ You can also use the Load a Previously Saved Excel File form to visualise previo
 
 These are some of the examples of the visualisations:
 
-![Example visualisation - top grants receivers](screenshots/top_grants_receivers.png)
+![Example visualisation - top principal investigators](screenshots/top_principal_investigators.png)
+
+![Example visualisation - top principal investigator insitutions](screenshots/top_principal_investigator_institutions.png)
 
 ![Example visualisation - top funding agencies](screenshots/top_funding_agencies.png)
 
 ![Example visualisation - average grant volume by years](screenshots/average_grant_volume_by_years.png)
 
-![Example visualisation - top grant records by associated WoS documents](screenshots/top_grant_records_by_associated_wos_documents.png)
+
 
 This application was created to demonstrate the capabilities of Web of Science APIs and custom XML data, and is not a commercial product of Clarivate. It will be reviewed and updated in the future but it will not have the same regular update frequency we normally offer for our commercial products. We do not recommend using this application as a ready-made solution as it is for reporting purposes or for supporting important grant funding decisions. We however encourage the bibliometric community provide feedback on improving this script and to use the script as a base for more advanced analytical projects.
 
