@@ -4,7 +4,6 @@ Expanded API.
 """
 
 import requests
-import urllib.parse
 
 
 def validate_search_query(apikey, query):
@@ -26,7 +25,7 @@ def validate_search_query(apikey, query):
     return test_request.status_code, test_request.json()['message'].split(':')[-1]
 
 
-def retrieve_wos_metadata_via_api(apikey, query, rpp, first_record=1):
+def retrieve_wos_metadata_via_api(apikey, query, first_record=1):
     """Retrieve Web of Science documents metadata through Web of Science
     Expanded API.
 
@@ -39,7 +38,7 @@ def retrieve_wos_metadata_via_api(apikey, query, rpp, first_record=1):
     params = {
         'databaseId': 'WOS',
         'usrQuery': query,
-        'count': rpp,
+        'count': 100,
         'firstRecord': first_record
     }
     expanded_api_request = requests.get(
@@ -48,6 +47,7 @@ def retrieve_wos_metadata_via_api(apikey, query, rpp, first_record=1):
         headers={'X-ApiKey': apikey},
         timeout=16
     )
+
     return expanded_api_request.json()
 
 
