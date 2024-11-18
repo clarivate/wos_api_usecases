@@ -1,15 +1,16 @@
 """
-A Flask app that allows retrieving, processing, and visualizing the
-Web of Science Grants Index data.
+A Flask app that allows retrieving, processing, analyzing and
+visualizing the Web of Science cited references data.
 
 Main app file: manage Flask interface actions and rendering.
 """
 
 from flask import Flask, render_template, request
 from data_processing import run_button
-from visualizations import visualize_excel
 from api_operations import validate_search_query
+from visualizations import visualize_excel
 from apikeys import EXPANDED_APIKEY
+
 
 app = Flask(__name__)
 
@@ -20,7 +21,7 @@ plots_list = []
 def start_menu():
     """Manage Flask interface actions and rendering.
 
-    :return: Flask render_template.
+    :return: flask.render_template.
     """
 
     # Validating search query or running the search
@@ -37,12 +38,11 @@ def start_menu():
     # Switching between visualizations
     if request.method == 'POST' and 'button' in request.form.keys():
         visualizations = {
-            "grant_funding_by_year": plots_list[0],
-            "top_principal_investigators": plots_list[1],
-            "top_pi_institutions": plots_list[2],
-            "top_funders": plots_list[3],
-            "average_grant_volume_per_year": plots_list[4],
-            "top_grants_by_associated_wos_records": plots_list[5]
+            'top_journals_treemap': plots_list[0],
+            'top_publishers_treemap': plots_list[1],
+            'top_authors': plots_list[2],
+            'refs_by_year': plots_list[3],
+            'top_cited_docs_by_citations_plot': plots_list[4]
         }
         if request.form['button'] in visualizations:
             for key, value in visualizations.items():
@@ -59,7 +59,7 @@ def search_section(button, search_query):
 
     :param button: str.
     :param search_query: str.
-    :return: render_template object.
+    :return: render_template.
     """
     if search_query != '' and button == 'validate':
         response = validate_search_query(EXPANDED_APIKEY, search_query)
@@ -83,7 +83,8 @@ def search_section(button, search_query):
             'index.html',
             filename=safe_filename,
             search_query=search_query,
-            plot=plots_list[0]
+            plot=plots_list[0],
+            index=0
         )
     return render_template('index.html', search_query='')
 
@@ -92,7 +93,7 @@ def load_file_section(file):
     """Manage the actions and processes for the load file search
     section.
 
-    :param file: str.
+    :param file:
     :return: flask.render_template
     """
     plots_list.clear()
@@ -105,4 +106,4 @@ def load_file_section(file):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    app.run(debug=True)
