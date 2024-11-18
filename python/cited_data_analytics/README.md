@@ -21,7 +21,7 @@ You might also need to install the project dependencies, which are:
 
 And launch the app.py file. Flask will create a development server on http://127.0.0.1:5000 which you can open locally in any browser. This is what the start page looks like:
 
-![Start page](/screenshots/index.png)
+![Start page](screenshots/index.png)
 
 On the webpage, you can enter a Web of Science Core Collection Advanced Search query, i.e., for an affiliation search on Clarivate for publication year of 2023 (you can simply replace Clarivate with your organisation name):
 
