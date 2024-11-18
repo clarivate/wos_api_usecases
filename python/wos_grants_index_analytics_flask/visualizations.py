@@ -32,7 +32,7 @@ def visualize_data(df):
     visualizations with Plotly.
 
     :param df: pandas dataframe.
-    :return: tuple of str.
+    :return: tuple[str].
     """
     # Visualizing Grants by Years.
     df['Grant Amount, USD'] = df['Grant Amount, USD'].replace(

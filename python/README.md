@@ -4,6 +4,7 @@
 * [Author-level Fractional Counting for Organizations](author-level_fractional_counting_for_organizations/)
 * [Self-citation: simple calculator](researcherid-based_h-index_excluding_self-citations/)
 * [Self-citation: scientific calculator](self_citation_explorer/)
+* [Cited References Analyser](cited_data_analytics/)
 * [Cities Collaboration analysis](cities_collaborations_analysis/)
 * [All Author IDs for the Organization](retrieve_author_ids/)
 * [Citation from Patents Report](citations_from_patents/)
