@@ -216,13 +216,13 @@ def fetch_organizations(address_json):
         return org_names
     if isinstance(address_json['address_name'], dict):
         org_dict = address_json['address_name']['address_spec']
-        if 'organization' in org_dict:
+        if 'organizations' in org_dict:
             for org in org_dict['organizations']['organization']:
                 if org['pref'] == 'Y':
                     org_names.add(org['content'])
     else:
         for affiliation in address_json['address_name']:
-            if 'organization' in affiliation['address_spec']:
+            if 'organizations' in affiliation['address_spec']:
                 for org in affiliation['address_spec']['organizations']['organization']:
                     if org['pref'] == 'Y':
                         org_names.add(org['content'])
