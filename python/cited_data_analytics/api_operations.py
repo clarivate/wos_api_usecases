@@ -15,7 +15,7 @@ def validate_search_query(apikey, query):
     :return: int.
     """
     test_request = requests.get(
-        url=f'https://wos-api.clarivate.com/api/wos/?databaseId=WOS&usrQuery={query}&'
+        url=f'https://api.clarivate.com/api/wos/?databaseId=WOS&usrQuery={query}&'
             f'count=0&firstRecord=1',
         headers={'X-ApiKey': apikey},
         timeout=16
@@ -65,7 +65,7 @@ def cited_references_request(apikey, ut, first_record=1):
         'firstRecord': first_record
     }
     request = requests.get(
-        url='https://wos-api.clarivate.com/api/wos/references',
+        url='https://api.clarivate.com/api/wos/references',
         params=params,
         headers={'X-ApiKey': apikey},
         timeout=16
