@@ -54,7 +54,7 @@ def get_base_records_ids(apikey, search_query):
     """
     ids_list = []
     initial_json = requests.get(
-        url=f'https://wos-api.clarivate.com/api/wos/?databaseId=WOS&usrQuery='
+        url=f'https://api.clarivate.com/api/wos/?databaseId=WOS&usrQuery='
             f'{search_query}&count=0&firstRecord=1',
         headers={'X-Apikey': apikey},
         timeout=16
@@ -142,7 +142,7 @@ def parse_metadata(record):
     :return: dict.
     """
     ut = record['UID']
-    print(ut) # comment or uncomment for debugging
+    # print(ut) # comment or uncomment for debugging
     if 'publishers' in record['static_data']['summary']:
         publisher = parse_publisher(
             record['static_data']['summary']['publishers']
@@ -157,7 +157,7 @@ def parse_metadata(record):
 
 
 def parse_publisher(publisher_json):
-    """Fetch specificially the publisher name out of the relevant JSON
+    """Fetch specifically the publisher name out of the relevant JSON
     fragment.
 
     :param publisher_json: dict.
