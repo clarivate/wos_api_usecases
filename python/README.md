@@ -1,7 +1,8 @@
 # Various Web of Science APIs use cases with Python
 
 ## Web of Science Expanded API:
-* [Author-level Fractional Counting for Organizations](author-level_fractional_counting_for_organizations/)
+* [Author-level Fractional Counting for Organisations on Flask](fractional_counting_flask/)
+* [Author-level Fractional Counting for Organizations on tkinter](author-level_fractional_counting_for_organizations/)
 * [Self-citation: simple calculator](researcherid-based_h-index_excluding_self-citations/)
 * [Self-citation: scientific calculator](self_citation_explorer/)
 * [Cited References Analyser](cited_data_analytics/)
