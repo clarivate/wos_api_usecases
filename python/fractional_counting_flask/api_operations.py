@@ -42,13 +42,13 @@ def retrieve_wos_metadata(apikey, search_query, first_record=1):
     """
     params = {
         'databaseId': 'WOS',
-        'usrQuery': urllib.parse.quote(search_query),
+        'usrQuery': search_query,
         'count': 100,
         'firstRecord': first_record,
     }
     try:
         result = requests.get(
-            url='https://api.clarivate.com/api/wos/',
+            url='https://api.clarivate.com/api/wos',
             params=params,
             headers={'X-ApiKey': apikey},
             timeout=16
