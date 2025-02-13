@@ -45,7 +45,7 @@ Affiliation:
 Clarivate
 ```
 
-Although this application is designed for running searches on affiliations, you can enter any search query into the Advanced Search Query Builder field, i.e. a topical search our a country search. However, the Affiliation field should always contain one name for the organization you're trying to analyze.
+Although this application is designed for running searches on affiliations, you can enter any search query into the Advanced Search Query Builder field, i.e. a topical search or a country search. However, the Affiliation field should always contain one name for the organization you're trying to analyze.
 
 Then click the "Run" button. Please keep in mind that as Web of Science Expanded API has a limit of 100,000 records to be retrieved per search query, it is a good idea to validate your search if you're not sure how many records it's going to return.
 
