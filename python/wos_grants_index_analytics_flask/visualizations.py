@@ -53,10 +53,8 @@ def visualize_data(df):
     fig.update_traces(marker_color=color_palette[0])
     fig.update_layout(
         {'plot_bgcolor': '#FFFFFF', 'paper_bgcolor': '#FFFFFF'},
-        font_family='Calibri',
         font_color='#646363',
         font_size=18,
-        title_font_family='Calibri',
         title_font_color='#646363',
         legend_title_text=None,
         legend={'yanchor': "bottom", 'y': -0.4, 'xanchor': "center", 'x': 0.5}
@@ -89,7 +87,6 @@ def visualize_data(df):
     )
     fig.update_traces(
         textfont={'color': '#FFFFFF',
-                  'family': "Source Sans Pro",
                   'size': 16},
         textinfo="label+value"
     )
@@ -129,7 +126,6 @@ def visualize_data(df):
     )
     fig.update_traces(
         textfont={'color': '#FFFFFF',
-                  'family': "Source Sans Pro",
                   'size': 16},
         textinfo="label+value"
     )
@@ -158,7 +154,6 @@ def visualize_data(df):
     )
     fig.update_traces(
         textfont={'color': '#FFFFFF',
-                  'family': "Source Sans Pro",
                   'size': 16},
         textinfo="label+value"
     )
@@ -192,10 +187,8 @@ def visualize_data(df):
     fig.update_traces(marker_color=color_palette[0])
     fig.update_layout(
         {'plot_bgcolor': '#FFFFFF', 'paper_bgcolor': '#FFFFFF'},
-        font_family='Calibri',
         font_color='#646363',
         font_size=18,
-        title_font_family='Calibri',
         title_font_color='#646363',
         legend_title_text=None,
         legend={'yanchor': "bottom", 'y': -0.4, 'xanchor': "center", 'x': 0.5}
@@ -220,10 +213,8 @@ def visualize_data(df):
     fig.update_traces(marker_color='#BC99FF')
     fig.update_layout(
         {'plot_bgcolor': '#FFFFFF', 'paper_bgcolor': '#FFFFFF'},
-        font_family='Calibri',
         font_color='#646363',
         font_size=18,
-        title_font_family='Calibri',
         title_font_color='#646363',
         legend_title_text=None,
         legend={'yanchor': "bottom", 'y': -0.4, 'xanchor': "center", 'x': 0.5}

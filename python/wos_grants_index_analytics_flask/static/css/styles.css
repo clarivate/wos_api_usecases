@@ -156,5 +156,6 @@ input[type=file]::file-selector-button:hover {
 }
 
 .plotly-graph-div {
+    font-family: "Source Sans Pro", sans-serif !important;
     height: 750px !important;
 }
