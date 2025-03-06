@@ -43,14 +43,15 @@ def run_button(apikey, search_query):
         print(f'Request {i + 1} of {max_requests} complete.')
 
     df = pd.DataFrame(grants_list)
-    safe_filename = search_query.replace('*', '').replace('"', '')
-    df.to_excel(
-        excel_writer=f'downloads/{safe_filename} - {date.today()}.xlsx',
-        sheet_name='Grants Data',
-        index=False
-    )
-    plots = visualize_data(df)
-    return f'{safe_filename} - {date.today()}.xlsx', plots
+    safe_query = search_query.replace('*', '').replace('"', '')
+    safe_filename = f'{safe_query} - {date.today()}.xlsx'
+    df2 = pd.DataFrame({'Search Query': [search_query]}, index=None)
+    with pd.ExcelWriter(f'downloads/{safe_filename}') as writer:
+        df.to_excel(writer, sheet_name='Grants Data', index=False)
+        df2.to_excel(writer, sheet_name='Search Query', index=False)
+
+    plots = visualize_data(df, search_query)
+    return safe_filename, plots
 
 
 def retrieve_rates_from_table():
