@@ -27,11 +27,12 @@ def word_wrap(x):
     return '<br>'.join(textwrap.wrap(str(x), 40))
 
 
-def visualize_data(df):
+def visualize_data(df, query):
     """Create a number of html div object with various grant data
     visualizations with Plotly.
 
     :param df: pandas dataframe.
+    :param query: str.
     :return: tuple[str].
     """
     # Visualizing Grants by Years.
@@ -47,16 +48,14 @@ def visualize_data(df):
     fig = px.bar(
         data_frame=grants_by_years,
         y='Grant Amount, USD',
-        title='Grant Funding by Year, USD',
+        title=f'Grant Funding by Year, USD, for: {query}',
         hover_data={'Grant Amount, USD': ':,.2f'}
     )
     fig.update_traces(marker_color=color_palette[0])
     fig.update_layout(
         {'plot_bgcolor': '#FFFFFF', 'paper_bgcolor': '#FFFFFF'},
-        font_family='Calibri',
         font_color='#646363',
         font_size=18,
-        title_font_family='Calibri',
         title_font_color='#646363',
         legend_title_text=None,
         legend={'yanchor': "bottom", 'y': -0.4, 'xanchor': "center", 'x': 0.5}
@@ -85,11 +84,11 @@ def visualize_data(df):
         color_discrete_sequence=color_palette,
         values='Grant Amount, USD',
         hover_data={'Grant Amount, USD': ':,.2f'},
-        title='Top Principal Investigators by funding volumes, USD'
+        title=f'Top Principal Investigators by funding volumes, USD, for: '
+              f'{query}'
     )
     fig.update_traces(
         textfont={'color': '#FFFFFF',
-                  'family': "Source Sans Pro",
                   'size': 16},
         textinfo="label+value"
     )
@@ -125,11 +124,11 @@ def visualize_data(df):
         color_discrete_sequence=color_palette,
         values='Grant Amount, USD',
         hover_data={'Grant Amount, USD': ':,.2f'},
-        title='Top Principal Investigator Institutions by funding volumes, USD'
+        title=f'Top Principal Investigator Institutions by funding volumes, '
+              f'USD, for: {query}'
     )
     fig.update_traces(
         textfont={'color': '#FFFFFF',
-                  'family': "Source Sans Pro",
                   'size': 16},
         textinfo="label+value"
     )
@@ -144,7 +143,9 @@ def visualize_data(df):
         df.groupby(['Funding Agency', 'Funding Country'])['Grant Amount, USD']
         .sum().to_frame().reset_index()
     )
-    grants_by_funder.sort_values('Grant Amount, USD', ascending=False, inplace=True)
+    grants_by_funder.sort_values(
+        'Grant Amount, USD', ascending=False, inplace=True
+    )
     grants_by_funder['Funding Agency'] = (grants_by_funder['Funding Agency']
                                           .apply(word_wrap))
 
@@ -154,11 +155,10 @@ def visualize_data(df):
         values='Grant Amount, USD',
         color_discrete_sequence=color_palette,
         hover_data={'Grant Amount, USD': ':,.2f'},
-        title='Top Grant Agencies by funding volumes, USD'
+        title=f'Top Grant Agencies by funding volumes, USD, for: {query}'
     )
     fig.update_traces(
         textfont={'color': '#FFFFFF',
-                  'family': "Source Sans Pro",
                   'size': 16},
         textinfo="label+value"
     )
@@ -186,16 +186,14 @@ def visualize_data(df):
         hover_data={'Average Grant Volume': ':,.2f',
                     'Number of Grants': True,
                     'Total Funding Volume': ':,.2f'},
-        title='Average Grant Volume by Year, USD'
+        title=f'Average Grant Volume by Year, USD, for: {query}'
     )
 
     fig.update_traces(marker_color=color_palette[0])
     fig.update_layout(
         {'plot_bgcolor': '#FFFFFF', 'paper_bgcolor': '#FFFFFF'},
-        font_family='Calibri',
         font_color='#646363',
         font_size=18,
-        title_font_family='Calibri',
         title_font_color='#646363',
         legend_title_text=None,
         legend={'yanchor': "bottom", 'y': -0.4, 'xanchor': "center", 'x': 0.5}
@@ -213,17 +211,15 @@ def visualize_data(df):
         x='UT',
         y='Related WoS Records Count',
         hover_name='Document Title',
-        title='Top Grants by Associated Web of Science Records'
+        title=f'Top Grants by Associated Web of Science Records, for: {query}'
 
     )
 
     fig.update_traces(marker_color='#BC99FF')
     fig.update_layout(
         {'plot_bgcolor': '#FFFFFF', 'paper_bgcolor': '#FFFFFF'},
-        font_family='Calibri',
         font_color='#646363',
         font_size=18,
-        title_font_family='Calibri',
         title_font_color='#646363',
         legend_title_text=None,
         legend={'yanchor': "bottom", 'y': -0.4, 'xanchor': "center", 'x': 0.5}
@@ -249,6 +245,7 @@ def visualize_excel(file):
     :param file:
     :return: tuple of str.
     """
-    df = pd.read_excel(file)
-    plots = visualize_data(df)
-    return plots
+    df = pd.read_excel(file, sheet_name='Grants Data')
+    query = pd.read_excel(file, sheet_name='Search Query')['Search Query'][0]
+
+    return visualize_data(df, query)
