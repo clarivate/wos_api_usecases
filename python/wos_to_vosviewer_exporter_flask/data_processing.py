@@ -55,6 +55,7 @@ def run_button(apikey, search_query, cited_refs):
 
     return f'{safe_filename}'
 
+
 def fetch_author_names(names_json):
     """Retrieve the names of the authors.
 

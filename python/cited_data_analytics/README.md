@@ -4,7 +4,7 @@
 
 ## A Flask application with a simple graphical user interface to analyse and visualise the cited references data from Web of Science Core Collection. The application retrieves the data using Web of Science Expanded API.
 
-This application allows to analyse which journals, publishers, or author names were referenced by any Web of Science Core Collection dataset that you can define by an advanced search query (but not Cited Reference search). It retrieves cited references (and, for certain fields, full record metadata) using Web of Science Expanded API, visualises it in a variety of ways with Plotly package, and saves them records metadata into an Excel spreadsheet.
+This application allows to analyse which journals, publishers, or author names were referenced by any Web of Science Core Collection dataset that you can define by an advanced search query (but not Cited Reference search). It retrieves cited references (and, for certain fields, full record metadata) using Web of Science Expanded API, visualises it in a variety of ways with Plotly package, and saves them into an Excel spreadsheet.
 
 #### How to use it
 Download the code, open the project folder where you saved it and create there a python file `apikeys.py`. There, you need to create a constant representing your Web of Science Expanded API key and pass its value as a string like in the example below:

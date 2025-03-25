@@ -5,6 +5,7 @@ and parsing the required metadata fields.
 """
 
 from datetime import date
+import urllib.parse
 import requests
 import pandas as pd
 from api_operations import base_record_ids_request, cited_references_request, fullrecord_request
@@ -55,7 +56,7 @@ def get_base_records_ids(apikey, search_query):
     ids_list = []
     initial_json = requests.get(
         url=f'https://api.clarivate.com/api/wos/?databaseId=WOS&usrQuery='
-            f'{search_query}&count=0&firstRecord=1',
+            f'{urllib.parse.quote(search_query)}&count=0&firstRecord=1',
         headers={'X-Apikey': apikey},
         timeout=16
     ).json()
@@ -66,13 +67,13 @@ def get_base_records_ids(apikey, search_query):
     print(f'Base document IDs API requests required: {requests_required}.')
     for i in range(max_requests):
         first_record = int(f'{i}01')
-        ids_json = base_record_ids_request(
+        ids_request = base_record_ids_request(
             apikey,
             query_id,
             first_record
         )
-        for record in ids_json:
-            ids_list.append(record)
+        ids_json = ids_request.json()
+        ids_list.extend(ids_json)
         print(f'Base documents API request {i + 1} of {max_requests} '
               f'complete.')
 
@@ -90,7 +91,8 @@ def get_cited_references(apikey, ids):
     for i, document in enumerate(ids):
         print(f'Retrieving cited references for record {document}, '
               f'request {i + 1} out of {len(ids)}')
-        initial_cited_refs_json = cited_references_request(apikey, document)
+        initial_cited_refs_response = cited_references_request(apikey, document)
+        initial_cited_refs_json = initial_cited_refs_response.json()
         for cited_ref in initial_cited_refs_json['Data']:
             cited_refs.append(cited_ref)
         total_results = initial_cited_refs_json['QueryResult']['RecordsFound']
@@ -99,13 +101,13 @@ def get_cited_references(apikey, ids):
         if requests_required > 1:
             for j in range(1, requests_required):
                 first_record = int(f'{j}01')
-                subsequent_cited_refs_json = cited_references_request(
+                subsequent_cited_refs_response = cited_references_request(
                     apikey,
                     document,
                     first_record
                 )
-                for cited_ref in subsequent_cited_refs_json['Data']:
-                    cited_refs.append(cited_ref)
+                subsequent_cited_refs_json = subsequent_cited_refs_response.json()
+                cited_refs.extend(subsequent_cited_refs_json['Data'])
 
     return cited_refs
 
@@ -127,7 +129,8 @@ def enrich_with_wos_metadata(apikey, refs_list):
         print(f'Processing default endpoint API request {i+1} of '
               f'{requests_required}.')
         ut_batch = ' '.join(ut_list[i*100:i*100+100])
-        wos_record_json = fullrecord_request(apikey, ut_batch)
+        wos_record_response = fullrecord_request(apikey, ut_batch)
+        wos_record_json = wos_record_response.json()
         for record in wos_record_json['Data']['Records']['records']['REC']:
             print(record['UID'])
             addtl_fields_list.append(parse_metadata(record))

@@ -17,7 +17,7 @@ plots_list = []
 
 
 @app.route(rule="/", methods=['POST', 'GET'])
-def start_menu():
+def start_menu() -> str:
     """Manage Flask interface actions and rendering.
 
     :return: Flask render_template.
@@ -51,15 +51,16 @@ def start_menu():
                         'index.html',
                         plot=value,
                         index=plots_list.index(value))
+
     return render_template('index.html', search_query='')
 
 
-def search_section(button, search_query):
+def search_section(button: str, search_query: str) -> str:
     """Manage the actions and processes for the page search section.
 
     :param button: str.
     :param search_query: str.
-    :return: render_template object.
+    :return: flask.render_template.
     """
     if search_query != '' and button == 'validate':
         response = validate_search_query(EXPANDED_APIKEY, search_query)
@@ -77,8 +78,7 @@ def search_section(button, search_query):
     if search_query != '' and button == 'run':
         plots_list.clear()
         safe_filename, plots = run_button(EXPANDED_APIKEY, search_query)
-        for plot in plots:
-            plots_list.append(plot)
+        plots_list.extend(plots)
         return render_template(
             'index.html',
             filename=safe_filename,
@@ -88,19 +88,20 @@ def search_section(button, search_query):
     return render_template('index.html', search_query='')
 
 
-def load_file_section(file):
+def load_file_section(file: str) -> str:
     """Manage the actions and processes for the load file search
     section.
 
     :param file: str.
     :return: flask.render_template
     """
+
     plots_list.clear()
     if file == '':
         return render_template('index.html', search_query='')
     plots = visualize_excel(f'downloads/{file}')
-    for plot in plots:
-        plots_list.append(plot)
+    plots_list.extend(plots)
+
     return render_template('index.html', plot=plots_list[0], index=0)
 
 

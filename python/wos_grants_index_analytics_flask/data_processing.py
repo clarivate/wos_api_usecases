@@ -6,11 +6,14 @@ return them as dictionaries.
 
 from datetime import date, datetime, timedelta
 import pandas as pd
-from api_operations import retrieve_rates_via_api, retrieve_wos_metadata_via_api
+from api_operations import (
+    retrieve_rates_via_api,
+    retrieve_wos_metadata_via_api
+)
 from visualizations import visualize_data
 
 
-def run_button(apikey, search_query):
+def run_button(apikey: str, search_query: str) -> tuple[str, tuple]:
     """When the 'Run' button is pressed, manage all the API operations,
     data processing, and visualizations
 
@@ -20,10 +23,7 @@ def run_button(apikey, search_query):
     """
     grants_list = []
     usd_rates = get_usd_rates()
-    initial_json = retrieve_wos_metadata_via_api(
-        apikey,
-        search_query,
-    )
+    initial_json = retrieve_wos_metadata_via_api(apikey, search_query)
 
     for record in initial_json['Data']['Records']['records']['REC']:
         grants_list.append(fetch_data(record, usd_rates))
@@ -54,7 +54,7 @@ def run_button(apikey, search_query):
     return safe_filename, plots
 
 
-def retrieve_rates_from_table():
+def retrieve_rates_from_table() -> dict:
     """Get the exchange rates from the locally cached .csv file in case
     the API endpoint doesn't return data.
 

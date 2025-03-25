@@ -3,6 +3,7 @@ Retrieve data from Web of Science Core Collection with Web of Science
 Expanded API.
 """
 
+import urllib.parse
 import requests
 
 
@@ -15,8 +16,8 @@ def validate_search_query(apikey, query):
     :return: int.
     """
     test_request = requests.get(
-        url=f'https://api.clarivate.com/api/wos/?databaseId=WOS&usrQuery={query}&'
-            f'count=0&firstRecord=1',
+        url=f'https://api.clarivate.com/api/wos/?databaseId=WOS&usrQuery='
+            f'{urllib.parse.quote(query)}&count=0&firstRecord=1',
         headers={'X-ApiKey': apikey},
         timeout=16
     )
@@ -39,14 +40,18 @@ def base_record_ids_request(apikey, query_id, first_record):
         'count': 100,
         'firstRecord': first_record
     }
-    request = requests.get(
+
+    response = requests.get(
         url=f'https://api.clarivate.com/api/wos/recordids/{query_id}',
         params=params,
         headers={'X-ApiKey': apikey},
         timeout=16
     )
 
-    return request.json()
+    if response.status_code == 500:
+        return base_record_ids_request(apikey, query_id, first_record)
+
+    return response
 
 
 def cited_references_request(apikey, ut, first_record=1):
@@ -64,14 +69,19 @@ def cited_references_request(apikey, ut, first_record=1):
         'count': 100,
         'firstRecord': first_record
     }
-    request = requests.get(
+
+    response = requests.get(
         url='https://api.clarivate.com/api/wos/references',
         params=params,
         headers={'X-ApiKey': apikey},
         timeout=16
     )
+    if response.status_code == 500:
+        print(response.status_code)
+        print(response)
+        return cited_references_request(apikey, ut, first_record)
 
-    return request.json()
+    return response
 
 
 def fullrecord_request(apikey, uts):
@@ -89,11 +99,13 @@ def fullrecord_request(apikey, uts):
         'firstRecord': 1,
         'viewField': 'publishers'
     }
-    request = requests.get(
+    response = requests.get(
         url='https://api.clarivate.com/api/wos/',
         params=params,
         headers={'X-ApiKey': apikey},
         timeout=16
     )
+    if response.status_code == 500:
+        return fullrecord_request(apikey, uts)
 
-    return request.json()
+    return response
