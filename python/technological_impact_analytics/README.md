@@ -79,7 +79,7 @@ You can also use the Load a Previously Saved Excel File form to visualise previo
 
 Here is an example of the visualisation:
 
-![Example visualisation - research and innovation trends comparison](screenshots/researh_and_innovation_trend.png)
+![Example visualisation - research and innovation trends comparison](screenshots/research_and_innovation_trend.png)
 
 #### INVENTIONS tab
 
