@@ -64,7 +64,7 @@ def retrieve_wos_metadata(apikey, search_query, first_record=1):
                 url='https://api.clarivate.com/api/wos',
                 params=params,
                 headers={'X-ApiKey': apikey},
-                timeout=32
+                timeout=64
             )
 
             rec_json = request.json()['Data']['Records']['records']['REC']

@@ -22,7 +22,7 @@ plots_list = []
 def start_menu():
     """Manage Flask interface actions and rendering.
 
-    :return: flask.render_template.
+    :return: render_template.
     """
 
     # Validating search query or running the search
@@ -37,22 +37,6 @@ def start_menu():
         file = request.form['filename']
         return load_file_section(file)
 
-    # Switching between visualizations
-    if request.method == 'POST' and 'button' in request.form.keys():
-        visualizations = {
-            'top_journals_treemap': plots_list[0],
-            'top_publishers_treemap': plots_list[1],
-            'top_authors': plots_list[2],
-            'refs_by_year': plots_list[3],
-            'top_cited_docs_by_citations_plot': plots_list[4]
-        }
-        if request.form['button'] in visualizations:
-            for key, value in visualizations.items():
-                if request.method == 'POST' and request.form['button'] == key:
-                    return render_template(
-                        'index.html',
-                        plot=value,
-                        index=plots_list.index(value))
     return render_template('index.html', search_query='')
 
 
@@ -99,8 +83,8 @@ def render_validation_results(search_query, org_name):
     """Get the validation API call results, render them on the webpage
     depending on whether the result was an error or ok.
 
-    :param search_query: int.
-    :param org_name: int.
+    :param search_query: str.
+    :param org_name: str.
     result: render_template.
     """
     response_1 = validate_search_query(EXPANDED_APIKEY, search_query)
@@ -112,7 +96,7 @@ def render_validation_results(search_query, org_name):
             search_query=search_query,
             org_name=org_name
         )
-    if response_1[0] == 200 and not response_2[0] == 200:
+    if response_1[0] == 200 and response_2[0] != 200:
         return render_template(
             'index.html',
             error_message_2=f'Please check the affiliation name: '
@@ -161,8 +145,8 @@ def load_file_section(file):
     """Manage the actions and processes for the load file search
     section.
 
-    :param file:
-    :return: flask.render_template
+    :param file: str.
+    :return: render_template.
     """
     plots_list.clear()
     if file == '':
@@ -174,4 +158,4 @@ def load_file_section(file):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5002)
