@@ -49,8 +49,7 @@ def trends_search() -> str:
 @app.route(rule="/", methods=['POST', 'GET'])
 def start_menu_wos() -> str:
     """Manage Flask interface actions and rendering for Technological
-    Impact tab (Web of Science Core Collection search).
-    """
+    Impact tab (Web of Science Core Collection search)."""
 
     # Validating search query or running the search
     if request.method == 'POST' and 'search_query' in request.form.keys():
@@ -87,8 +86,7 @@ def start_menu_wos() -> str:
 @app.route(rule="/dii", methods=['POST', 'GET'])
 def start_menu_dii() -> str:
     """Manage Flask interface actions and rendering for Inventions tab
-    (Derwent Innovations Index search).
-    """
+    (Derwent Innovations Index search)."""
 
     # Validating search query or running the search
     if request.method == 'POST' and 'search_query' in request.form.keys():
@@ -125,8 +123,7 @@ def start_menu_dii() -> str:
 def start_menu_trends() -> str:
     """Manage Flask interface actions and rendering for Trends tab
     (Same Web of Science Core Collection and Derwent Innovations
-    Topical Index search).
-    """
+    Topical Index search)."""
 
     # Validating search query or running the search
     if request.method == 'POST' and 'search_query' in request.form.keys():
@@ -144,8 +141,7 @@ def start_menu_trends() -> str:
 
 def search_section_wos(button: str, search_query: str) -> str:
     """Manage the actions and processes for the page search section
-    - Technological Impact tab.
-    """
+    - Technological Impact tab."""
 
     if search_query != '' and button == 'validate':
         return render_validation_results(search_query, 'WOS')
@@ -215,8 +211,7 @@ def search_section_trends(button: str, search_query: str) -> str:
 def render_validation_results(search_query: str, db: str) -> str:
     """Get the validation API call results, render them on the webpage
     depending on whether the result was an error or ok - for Scholarly
-    Documents tab.
-    """
+    Documents tab."""
 
     if db == 'BOTH':
         return render_trends_query(search_query)
@@ -229,8 +224,7 @@ def render_validation_results(search_query: str, db: str) -> str:
 
 def render_trends_query(search_query: str) -> str:
     """Interpret the validation API request to both databases, render
-    the webpage and messages accordingly.
-    """
+    the webpage and messages accordingly."""
 
     response_1 = validate_search_query_wos(search_query)
     response_2 = validate_search_query_dii(search_query)
@@ -271,8 +265,8 @@ def render_trends_query(search_query: str) -> str:
 
 def render_wos_query(search_query: str) -> str:
     """Interpret the validation API request to Web of Science Core
-    Collection, render the webpage and messages accordingly.
-    """
+    Collection, render the webpage and messages accordingly."""
+
     response = validate_search_query_wos(search_query)
     if response[0] == 200:
         return render_template(
@@ -290,8 +284,8 @@ def render_wos_query(search_query: str) -> str:
 
 def render_dii_query(search_query: str) -> str:
     """Interpret the validation API request to Derwent Innovations
-    Index, render the webpage and messages accordingly.
-    """
+    Index, render the webpage and messages accordingly."""
+
     response = validate_search_query_dii(search_query)
     if response[0] == 200:
         return render_template(
@@ -309,8 +303,7 @@ def render_dii_query(search_query: str) -> str:
 
 def load_file_section_wos(file: str) -> str:
     """Manage the actions and processes for the load file search
-    section - Scholarly Documents tab.
-    """
+    section - Scholarly Documents tab."""
 
     plots_list.clear()
     if file == '':
@@ -323,8 +316,7 @@ def load_file_section_wos(file: str) -> str:
 
 def load_file_section_dii(file: str) -> str:
     """Manage the actions and processes for the load file search
-    section - Inventions tab.
-    """
+    section - Inventions tab."""
 
     plots_list.clear()
     if file == '':
@@ -337,8 +329,7 @@ def load_file_section_dii(file: str) -> str:
 
 def load_file_section_trends(file: str) -> str:
     """Manage the actions and processes for the load file search
-    section - Trends tab.
-    """
+    section - Trends tab."""
 
     plots_list.clear()
     if file == '':
