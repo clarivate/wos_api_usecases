@@ -73,17 +73,33 @@ def base_records_api_call(search_query: str, first_record=1) -> dict:
         'count': 100,
         'firstRecord': first_record
     }
-    response = requests.get(
-        url='https://api.clarivate.com/api/wos',
-        params=params,
-        headers={'X-ApiKey': EXPANDED_APIKEY},
-        timeout=30
-    )
-    if response.status_code == 200:
-        result = response.json()
-    else:
-        print(f'Oops, error {response.status_code} - resending...')
-        result = base_records_api_call(search_query, first_record)
+    try:
+        response = requests.get(
+            url='https://api.clarivate.com/api/wos',
+            params=params,
+            headers={'X-ApiKey': EXPANDED_APIKEY},
+            timeout=16
+        )
+        if response.status_code == 200:
+            result = response.json()
+        else:
+            print(f'Oops, error {response.status_code} - resending...')
+            result = base_records_api_call(search_query, first_record)
+
+    except(requests.ReadTimeout, requests.ConnectionError, requests.JSONDecodeError):
+        result = {'Data': {'Records': {'records': {'REC': []}}}}
+        params['count'] = 10
+        for i in range(10):
+            first_record += i * 10
+            request = requests.get(
+                url='https://api.clarivate.com/api/wos',
+                params=params,
+                headers={'X-ApiKey': EXPANDED_APIKEY},
+                timeout=32
+            )
+
+            rec_json = request.json()['Data']['Records']['records']['REC']
+            result['Data']['Records']['records']['REC'].extend(rec_json)
 
     return result
 

@@ -8,6 +8,7 @@ from collections import Counter
 import pandas as pd
 import plotly.express as px
 from plotly import offline
+from collections import defaultdict
 
 color_palette = ['#B175E1', '#18A381', '#3595F0', '#ED5564', '#5E33BF',
                  '#003F51', '#A39300', '#EC40DB', '#C8582A', '#1E48DD',
@@ -31,7 +32,7 @@ def visualize_wos_data(df, df2, query: str) -> tuple:
 
     return (
         visualize_metrics(df2, query, 'WOS'),
-        visualize_authors(df[df['times_cited'] > 0], query),
+        visualize_authors(df, query),
         visualize_years(df, query, 'WOS', df2),
         visualize_assignees(df2, query, 'WOS'),
         visualize_inventors(df2, query, 'WOS'),
@@ -67,8 +68,10 @@ def visualize_metrics(df: pd.DataFrame, query: str, db: str) -> str:
     """Create a treemap visualisation for the inventions' metrics."""
 
     number_of_inventions = df.shape[0]
-    inventions_with_granted_patents = (df['granted_patents'][df['granted_patents'] != '']
-                                       .dropna().shape[0])
+    inventions_with_granted_patents = (
+        df['granted_patents'][df['granted_patents'] != ''].dropna().shape[0]
+    )
+
     success_rate = inventions_with_granted_patents / number_of_inventions
     quad_inventions = df[df['is_quadrilateral'] == True].dropna().shape[0]
 
@@ -106,33 +109,70 @@ def visualize_authors(df: pd.DataFrame, query: str) -> str:
     """Create a treemap visualisation for the top researchers from the
     dataset who received most citations from patents."""
 
-    df['authors'] = df['authors'].apply(lambda x: x.split('; '))
-    df['citing_inventions'] = df['citing_inventions'].apply(
-        lambda x: x.split(' ') if isinstance(x, str) else []
+    # Fill NaN values in 'authors' and 'citing_inventions'
+    df['authors'] = df['authors'].fillna('')
+    df['citing_inventions'] = df['citing_inventions'].fillna('')
+
+    # Dictionary to store author-level metrics
+    author_data = defaultdict(
+        lambda: {
+            'documents': 0,
+            'docs_with_patent_citations': 0,
+            'citations_from_patents': set()
+        }
     )
 
-    df = (df[['ut', 'citing_inventions', 'authors']].explode('authors').
-          explode('citing_inventions'))
-    df = (df.groupby('authors')['citing_inventions'].apply(set).reset_index())
-    df['citing_inventions_count'] = df['citing_inventions'].map(len)
-    df.sort_values('citing_inventions_count', ascending=False, inplace=True)
-    display_items_top_authors = min(df.shape[0], 30)
+    for _, row in df.iterrows():
+        if not row['authors']:  # Skip rows with empty authors
+            continue
+        authors = row['authors'].split('; ')
+        citing_inventions = (
+            set(row['citing_inventions'].split()) if row['citing_inventions']
+            else set()
+        )
 
-    fig = px.treemap(
-        data_frame=df[:display_items_top_authors],
-        names='authors',
-        parents=[None for _ in range(display_items_top_authors)],
-        values='citing_inventions_count',
-        color_discrete_sequence=color_palette,
+        for author in authors:
+            author_data[author]['documents'] += 1
+            if row['times_cited'] > 0:
+                author_data[author]['docs_with_patent_citations'] += 1
+            author_data[author]['citations_from_patents'].update(citing_inventions)
+
+    # Convert to a DataFrame
+    authors_df = pd.DataFrame([
+        {
+            'author': author,
+            'Documents': data['documents'],
+            'Citations from patents': len(data['citations_from_patents']),
+            '% documents cited': (data['docs_with_patent_citations'] /
+                                  data['documents']) * 100
+        }
+        for author, data in author_data.items()
+    ])
+
+    authors_df.sort_values('Citations from patents', ascending=False, inplace=True)
+    display_items_top_authors = min(
+        authors_df[authors_df['Citations from patents'] > 0].shape[0], 1000
+    )
+
+    fig = px.scatter(
+        data_frame=authors_df[:display_items_top_authors],
+        x='Documents',
+        y='Citations from patents',
+        size='% documents cited',
         title=word_wrap(
             x=f'Top Authors by technological impact for: {query}',
             width=75
-        )
+        ),
+        hover_name='author',
+        hover_data={
+            'Documents': True,
+            'Citations from patents': True,
+            '% documents cited': ':.2f'
+        },
+        template='plotly_white'
     )
-    fig.update_traces(
-        textfont={'color': '#FFFFFF', 'size': 16},
-        textinfo="label+value"
-    )
+
+    fig.update_traces(marker={'color': color_palette[0]})
 
     return offline.plot(fig, output_type='div')
 
