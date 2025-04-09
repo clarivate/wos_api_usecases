@@ -4,11 +4,10 @@ objects.
 """
 
 import textwrap
-from collections import Counter
+from collections import Counter, defaultdict
 import pandas as pd
 import plotly.express as px
 from plotly import offline
-from collections import defaultdict
 
 color_palette = ['#B175E1', '#18A381', '#3595F0', '#ED5564', '#5E33BF',
                  '#003F51', '#A39300', '#EC40DB', '#C8582A', '#1E48DD',
@@ -72,7 +71,7 @@ def visualize_metrics(df: pd.DataFrame, query: str, db: str) -> str:
         df['granted_patents'][df['granted_patents'] != ''].dropna().shape[0]
     )
 
-    success_rate = inventions_with_granted_patents / number_of_inventions
+    success_rate = count_success_rate(df['patent_numbers'])
     quad_inventions = df[df['is_quadrilateral'] == True].dropna().shape[0]
 
     if db == 'WOS':
@@ -103,6 +102,30 @@ def visualize_metrics(df: pd.DataFrame, query: str, db: str) -> str:
     )
 
     return output
+
+
+def count_success_rate(patent_numbers) -> float:
+    """Calculate the patent applications success rate."""
+
+    application_count = 0
+    granted_count = 0
+    patent_list = []
+
+    for patent_str in patent_numbers:
+        patent_list.extend(patent_str.split(', '))
+
+    for patent in patent_list:
+        parts = patent.split('-')
+        if len(parts) < 2:
+            continue
+        kind_code = parts[1]
+
+        if kind_code.startswith('A') or kind_code in ('W', 'U', 'S'):
+            application_count += 1
+        else:
+            granted_count += 1
+
+    return granted_count / application_count
 
 
 def visualize_authors(df: pd.DataFrame, query: str) -> str:
@@ -161,7 +184,7 @@ def visualize_authors(df: pd.DataFrame, query: str) -> str:
         size='% documents cited',
         title=word_wrap(
             x=f'Top Authors by technological impact for: {query}',
-            width=75
+            width=120
         ),
         hover_name='author',
         hover_data={
@@ -208,7 +231,7 @@ def visualize_assignees(df: pd.DataFrame, query: str, db: str) -> str:
         parents=[None for _ in range(display_items_top_assignees)],
         values='Occurrences',
         color_discrete_sequence=color_palette,
-        title=word_wrap(x=title, width=75)
+        title=word_wrap(x=title, width=120)
     )
     fig.update_traces(
         textfont={'color': '#FFFFFF',
@@ -250,7 +273,7 @@ def visualize_inventors(df: pd.DataFrame, query: str, db: str) -> str:
         parents=[None for _ in range(display_items_top_inventors)],
         values='Occurrences',
         color_discrete_sequence=color_palette,
-        title=word_wrap(x=title, width=75)
+        title=word_wrap(x=title, width=120)
     )
     fig.update_traces(
         textfont={'color': '#FFFFFF',
@@ -284,7 +307,7 @@ def visualize_countries_applied(df: pd.DataFrame, query: str, db: str) -> str:
         color_continuous_scale=['#3595f0', '#B175E1'],
         projection='natural earth',
         labels={'countries_applied_list': 'Country', 'count': 'Occurrences'},
-        title=word_wrap(x=title, width=75)
+        title=word_wrap(x=title, width=120)
     )
 
     return offline.plot(fig, output_type='div')
@@ -317,7 +340,7 @@ def visualize_countries_granted(df: pd.DataFrame, query: str, db: str) -> str:
         color_continuous_scale=['#3595f0', '#B175E1'],
         projection='natural earth',
         labels={'countries_granted': 'Country', 'count': 'Occurrences'},
-        title=word_wrap(x=title, width=75)
+        title=word_wrap(x=title, width=120)
     )
 
     return offline.plot(fig, output_type='div')
@@ -380,7 +403,7 @@ def visualize_years(df: pd.DataFrame, query: str, db: str, df2=None) -> str:
         y=columns,
         barmode='group',
         color_discrete_sequence=color_palette[:df.shape[1]-1],
-        title=title
+        title=word_wrap(x=title, width=120),
     )
 
     # Making cosmetic edits to the plot
@@ -389,6 +412,7 @@ def visualize_years(df: pd.DataFrame, query: str, db: str, df2=None) -> str:
         font_color='#646363',
         font_size=18,
         title_font_color='#646363',
+        title_font_size=18,
         legend_title_text=None,
         legend={
             'yanchor': 'bottom',
