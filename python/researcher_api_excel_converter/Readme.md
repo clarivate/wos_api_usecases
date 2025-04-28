@@ -1,34 +1,38 @@
 # Researcher API to Excel converter
 
-![Example](screenshots/GUI.png)
+![Example](screenshots/example.png)
 
 
-## A program with a simple GUI that extracts the researchers data from an organisational search using Researcher API, and organises it into an Excel table
+## A minimalistic Flask application that extracts the researchers data using Researcher API, and organises it into an Excel table
 
-This is a very simple program that requires a [Researcher API key](https://developer.clarivate.com/apis/wos-researcher), and an Affiliation name. It's running a search on every researcher profile that is affiliated with that organization, returns the researcher metadata, and saves it in an .xlsx file in the project folder
+This is a very simple application that requires a [Researcher API key](https://developer.clarivate.com/apis/wos-researcher) to work. It's running a search using [Researcher API search syntax](https://api.clarivate.com/swagger-ui/?url=https%3A%2F%2Fdeveloper.clarivate.com%2Fapis%2Fwos-researcher%2Fswagger), returns the researcher metadata, and saves it in an .xlsx file in the /downloads subfolder of the project.
 
 
-#### The user needs to launch the main.py file and enter:
-1. Their Researcher API key;
-2. The name of the Affiliaiton for which they would like to retrieve the researchers data
-3. Click the checkbutton if they want the program to query each researcher profile individually and receive full researcher profiles metadata (including research output numbers broken down by publication years, first/last/corresponding author statistics, published names, alternative affiliations, etc.) or if they are ok with receiving basic profiles metadata which is going to be much quicker
+### How to use it
+Download the code, open the project folder where you saved it and create a python file `apikeys.py` right in the project folder. There, you need to create a constant representing your Web of Science Researcher API key and pass its value as a string like in the example below:
 
-![Screenshot](screenshots/GUI2.png)
+```
+RESEARCHER_APIKEY = 'mYw3b0f$c14nc3r3534rch3r4p1k3y1$4$3cr37'
+```
 
-And click the Run button.
+You might also need to install the project dependencies, which are:
+- Flask;
+- Pandas (and openpyxl);
+- Requests.
 
-The program will create an Excel file in the same project folder, where, if the "Retrieve full researcher profiles metadata" tickbox hasn't been ticked, each Researcher record will have their:
-- ResearcherID,
-- full name,
-- their primary affiliation,
-- H-index,
-- Number of documents found,
-- Times cited counts,
-- as well as a link to their researcher profile on Web of Science platform user interface, resolved through the ResearcherID.
+And launch the app.py file. Flask will create a development server on http://127.0.0.1:5000 which you can open locally in any browser. This is what the start page looks like:
+
+![Start page](screenshots/index.png)
+
+Then, enter the search query (important: the Researcher API search syntax is different from that of Web of Science Advanced Search Queries, please refer to the [Researcher API swagger](https://api.clarivate.com/swagger-ui/?url=https%3A%2F%2Fdeveloper.clarivate.com%2Fapis%2Fwos-researcher%2Fswagger) for the correct search syntax). You may use the "Retrieve full profiles" toggle to retrieve:
+- either only the high-level profile metadata for each researcher, such as their IDs, name, and key metrics,
+- or their full profile metadata, also including their published names, past affiliations, author position and Highly Cited Researcher status.
+
+Please note that the first option takes significantly less API calls and, therefore, time, to complete. As there is a daily limit on the number of Researcher API calls that you may use, we encourage you to also use the "Validate" button to check if your search query can be completed in full.
+
+After you hit the "Run" button, the app will query Web of Science Researcher API, extract the researcher profiles and save the metadata into an Excel file in the /downloads subfolder of the project folder
 
 ![Screenshot](screenshots/results.png)
-
-If the "Retrieve full researcher profiles metadata" tickbox has been ticked, then additional data fields, such as Published Names, research output by years, times cited without self-citations, and more, will also be retrieved and stored in the excel file, some of them on separate sheets.
 
 It is also possible to develop a functionality to retrieve the basic document-level and peer reviews data, as the relevant links to the correct endpoints are also returned by a get-request to the default /researchers endpoint, but each of these requests will take additional time. These two additional tickboxes will appear in subsequent releases of this converter tool.
 

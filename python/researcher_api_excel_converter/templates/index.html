@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="{{ url_for('static', filename='favicon.png')}}" />
+        <title>Web of Science Fractional Counting Calculator</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css')}}" />
+    </head>
+    <body>
+        <div class="search-content-wrapper">
+            <header>
+                <h1>Web of Science Researcher API</h1>
+                <h2>Excel Converter</h2>
+            </header>
+
+            <main>
+                <section>
+                    <form class="form" method="POST" id="search">
+                        <div class="form__header">
+                            <h3>Researcher API query builder</h3>
+                            <a href="https://api.clarivate.com/swagger-ui/?url=https%3A%2F%2Fdeveloper.clarivate.com%2Fapis%2Fwos-researcher%2Fswagger" target="_blank_">Query Syntax</a>
+                        </div>
+                        <p>
+                        <div class="switch">
+                            <label class="switch__toggle" id="toggle">
+                            <input type="checkbox" name="check" {% if full_profiles %} checked {% endif %}>
+                            <span class="slider"></span>
+                            </label>
+                            <span class="switch__label">Retrieve full profiles data</span>
+                        </div>
+                    <p>
+                        <p>
+                            <label for="search_query" class="form__label"></label>
+                            <textarea class="form__textarea" name="search_query" id="search_query"
+                                      aria-label="Search Query"
+                                      placeholder='Enter or edit your query here, e.g. OG~"Harvard" AND HCR=true'>{{search_query}}</textarea>
+                            {% if not error_message %} <br> {% else %} <p class="search__error">{{ error_message }}</p> {% endif %}
+                        </p>
+                        <p>
+                            {% if not message %} {% else %} {{ message }} <br> {% endif %}
+                            If you are not sure of how many Researcher Profiles your search query returns, try validating it first.<br>
+                            Maximum number of Web of Science Researcher Profiles returned through the API in a day is 250,000 (profile summaries) or 5,000 (full profiles).<br>
+
+                        </p>
+                        <button class="form__validate" type="submit" name="button" value="validate">Validate</button>
+                        <button class="form__submit" type="submit" name="button" value="run">Run</button>
+                        <p>{% if not filename %} {% else %}
+                            Retrieval complete. For further analysis, check "{{ filename }}" file in the /downloads subfolder of the project.
+                            {% endif %}</p>
+                    </form>
+                </section>
+            </main>
+        </div>
+    </body>
+</html>

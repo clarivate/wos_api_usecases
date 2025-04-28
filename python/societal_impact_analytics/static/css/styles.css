@@ -1,0 +1,290 @@
+*, *::before, *::after {
+    box-sizing: inherit;
+}
+
+html {
+    font-size: 16px;
+}
+
+body {
+    padding: 0;
+    margins: 0;
+    background: linear-gradient(90deg,#EFF0FF 21.07%,#E5F4FF 82.23%);
+    border-top-left-radius: 30px;
+    border-bottom-left-radius: 30px;
+    padding-bottom: 15px;
+}
+
+h1 {
+    font: 700 26px/1.3 Source Sans Pro,sans-serif;
+}
+
+h2 {
+    font: 600 20px/1.3 Source Sans Pro,sans-serif;
+}
+
+h3 {
+    font: 400 18px/1.3 Source Sans Pro,sans-serif;
+    margin-block-start: .75rem;
+    margin-block-end: .75rem;
+}
+
+h1, h2, h3, p {
+    letter-spacing: normal;
+    color: #616161;
+}
+
+a {
+    font-weight: 500;
+    color: #5d33bf;
+    transition: none;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.search-tab-list {
+    display: flex;
+    background-color: #c3c9ff;
+}
+
+.search-tab-list .search-tab-link {
+    flex: 1 0 33%;
+    background-color: #c3c9ff;
+    border-radius: 0;
+    padding-top: 1.1875rem;
+    padding-bottom: 1.1875rem;
+    line-height: 1.375rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #616161;
+    border-top-right-radius: .3125rem;
+    border-top-left-radius: .3125rem
+}
+
+.search-tab-list .search-tab-link:hover {
+    color: #5d33bf!important;
+    text-decoration: underline;
+    background-color: #f1edfa!important
+}
+
+.search-tab-link--active {
+    background-color: #ffffff!important;
+}
+
+main {
+    padding: 1rem;
+}
+
+.form {
+    width: 100%;
+    padding: .5rem 1rem;
+    margin: 0rem auto;
+}
+
+textarea, .input__search {
+    font: inherit;
+    outline: none;
+    padding: 0.5rem 0.75rem;
+    width: 100%;
+    border-style: solid;
+    border-color: #BABCBE;
+    border-radius: 4px;
+    border-width: 1px;
+}
+
+textarea {
+    resize: vertical;
+}
+
+textarea:focus, .input__search:focus {
+    border-color: #5E33BF;
+    border-width: 2px;
+}
+
+textarea::placeholder, input::placeholder {
+    color: #757575;
+}
+
+p {
+    font: 400 14px / 1.3 "Source Sans Pro", sans-serif;
+    text-align: left;
+    margin-block-start: .5rem;
+}
+
+button, .form__button {
+    margin: .325rem;
+    padding: 0.5rem 2rem;
+    background-color: #5E33BF;
+    color: #FFFFFF;
+    border-radius: 4px;
+    border-style: solid;
+    border-color: #5E33BF;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+button:active, .form__button:active {
+    background-color: #9675D7;
+    border-color: #9675D7;
+}
+
+button[value="validate"] {
+    padding: 0.5rem 1rem;
+    background-color: #FFFFFF;
+    color: #5E33BF;
+    border-color: #5E33BF;
+    border-width: 1px;
+}
+
+button[value="validate"]:hover {
+    background-color: #f2f2f2;
+}
+
+button[value="run"] {
+    padding: .5rem 1.75rem;
+}
+
+button[value="run"]:loading {
+    color: #D8D8D8;
+}
+
+.load__form {
+    display: flex;
+    width: 100%;
+    flex-wrap: nowrap;
+}
+
+.form__header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between
+}
+
+.search__header {
+    justify-content: space-between;
+}
+
+.search__error {
+    background-color: #FF000026;
+    padding: 15px;
+    margin-bottom: 15px;
+    margin-top: 0;
+    border-radius: 4px;
+}
+
+.form__input {
+    font: inherit;
+    margin: .325rem;
+    outline: none;
+    width: 48rem;
+    padding: 0.5rem 0.75rem;
+    height: 2.375rem;
+    cursor: pointer;
+    border-style: solid;
+    border-color: #BABCBE;
+    border-radius: 4px;
+    border-width: 1px;
+}
+
+#load__file {
+    padding: .5rem .75rem;
+    width: 6rem;
+}
+
+input[type=file]::file-selector-button {
+    margin-right: 1rem;
+    font: inherit;
+    padding: 0 .5rem;
+    background-color: #FFFFFF;
+    color: #5E33BF;
+    border-color: #5E33BF;
+    border-width: 1px;
+    border-radius: 4px;
+    border-style: solid;
+}
+
+input[type=file]::file-selector-button:hover {
+    background-color: #F2F2F2;
+}
+
+.graph_button {
+    background-color: #FFFFFF;
+    color: #5E33BF;
+    border-width: 1px;
+}
+
+.graph_button:hover {
+    background-color: #F2F2F2;
+}
+
+.graph_button--active {
+    background-color: #5E33BF;
+    border-color: #5E33BF;
+    color: #FFFFFF
+}
+
+.plotly-graph-div {
+    height: 750px !important;
+}
+
+.search-content-wrapper, .plot-wrapper {
+    background-color: #ffffff;
+    margin: 2rem auto 2rem auto;
+    font-family: "Source Sans Pro", Calibri, Arial, Helvetica, sans-serif !important;
+    box-sizing: border-box;
+    text-align: center;
+    box-shadow: 0 .02625rem .125rem #0000004d;
+}
+
+.search-content-wrapper {
+    min-width: 20rem;
+    max-width: 48rem;
+    border-radius: .3125rem;
+}
+
+.plot-wrapper {
+    min-width: 30rem;
+    max-width: 84rem;
+    padding: 1.5625rem 1.875rem 1.875rem;
+    border-radius: 1rem;
+}
+
+.metrics__title {
+    font-size: 1.5rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.metrics__container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.metric__box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    max-width: 12rem;
+}
+
+.metric__value {
+    font-size: 2rem;
+    font-weight: 400;
+    line-height: 40px;
+}
+
+.metric__annotation {
+    font-size: 1rem;
+    font-weight: 400;
+    text-align: center;
+}

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="{{ url_for('static', filename='favicon.png')}}" />
+        <title>Web of Science Citations From Policy Documents Analytics</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css')}}" />
+    </head>
+    <body>
+        <div class="search-content-wrapper">
+            <nav class="search-tab-list">
+                <a class="search-tab-link search-tab-link--active" id="wos-search" href="{{ url_for('wos_search') }}">Societal Impact</a>
+                <a class="search-tab-link" id="trends-search" href="{{ url_for('trends_search') }}">Trends</a>
+            </nav>
+            <header>
+                <h1>Web of Science Expanded API</h1>
+                <h2>Citations From Policy Documents Analytics</h2>
+            </header>
+
+            <main>
+                <section>
+                    <form class="form" method="POST" id="search">
+                        <div class="form__header">
+                            <h3>Advanced search query builder</h3>
+                            <a href="https://webofscience.help.clarivate.com/en-us/Content/advanced-search.html" target="_blank_">Search Help</a>
+                        </div>
+                        <p>
+                            <label for="search_query" class="form__label"></label>
+                            <textarea class="form__textarea" name="search_query" id="search_query"
+                                      aria-label="Search Query"
+                                      placeholder="Search Web of Science documents to analyze patents citing them, e.g. OG=Clarivate and PY=2000-2025">{{search_query}}</textarea>
+                            {% if not error_message_1 %} <br> {% else %} <p class="search__error">{{ error_message_1 }}</p> {% endif %}
+                        </p>
+                        <button class="form__validate" type="submit" name="button" value="validate">Validate</button>
+                        <br>
+                        <p>
+                            {% if not message_1 %} {% else %} {{ message_1 }} <br> {% endif %}
+                            If you are not sure of how many records your search query returns, try validating it first.<br>
+                            Maximum number of Web of Science document records returned through the API in a single search query is 100,000.<br>
+
+                        </p>
+                        <button class="form__submit" type="submit" name="button" value="run">Run</button>
+                        <p>{% if not filename %} {% else %}
+                            Retrieval complete. For further analysis, check "{{ filename }}" file in the /downloads/woscc subfolder of the project.
+                            {% endif %}</p>
+                    </form>
+                </section>
+                <section>
+                    <form class="form" method="POST" id="load">
+                        <h3>Or load a previously saved Excel file</h3>
+                        <p class="load__form">
+                            <input class="form__input" type="file" id="filename" name="filename" accept=".xlsx" />
+                            <input class="form__button" type="submit" value="Load File" id="load__file">
+                        </p>
+                    </form>
+                </section>
+            </main>
+        </div>
+        {% if plot %}
+        <div class="plot-wrapper">
+            <form class="graph" method="POST">
+                <button class="graph_button {{ 'graph_button--active' if index == 0 }}" name="button" value="key_metrics">Key Metrics</button>
+                <button class="graph_button {{ 'graph_button--active' if index == 1 }}" name="button" value="top_authors">Authors by Tech Impact</button>
+                <button class="graph_button {{ 'graph_button--active' if index == 2 }}" name="button" value="years">Trend Graph</button>
+                <button class="graph_button {{ 'graph_button--active' if index == 3 }}" name="button" value="top_assignees_treemap">Top Citing Assignees</button>
+                <button class="graph_button {{ 'graph_button--active' if index == 4 }}" name="button" value="top_inventors_treemap">Top Citing Inventors</button>
+                <button class="graph_button {{ 'graph_button--active' if index == 5 }}" name="button" value="top_countries_applied">Countries by Citing Patent Documents</button>
+                <button class="graph_button {{ 'graph_button--active' if index == 6 }}" name="button" value="top_countries_granted">Countries by Citing Granted Patents</button>
+            </form>
+            {{ plot|safe }}
+        </div>
+        {% endif %}
+        <footer></footer>
+    </body>
+</html>
