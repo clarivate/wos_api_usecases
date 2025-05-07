@@ -138,7 +138,7 @@ def visualize_citation_report(df: pd.DataFrame, df2: pd.DataFrame, query: str) -
         '</li>'
         '<li class="metric__box">'
         '<p class="metric__annotation">Average Policy Citations Per Item:</p>'
-        f'<p class="metric__value">{citing_policy_documents / wos_documents:.2f}</p>'
+        f'<p class="metric__value">{citations_from_policy_docs / wos_documents:.2f}</p>'
         '</li>'
         '</ul>'
         f'{offline.plot(fig, output_type='div')}'
@@ -307,7 +307,7 @@ def visualize_citing_source_countries(df: pd.DataFrame, query: str) -> str:
         occurrences['source_country'].map(mapping).dropna()
     )
 
-    title = (f'Countries by patent documents citing Web of Science '
+    title = (f'Countries by policy documents citing Web of Science '
              f'research papers for: {query}')
 
     fig = px.choropleth(
