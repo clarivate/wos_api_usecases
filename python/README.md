@@ -8,6 +8,7 @@
 * [Self-citation: simple calculator](researcherid-based_h-index_excluding_self-citations/)
 * [Self-citation: scientific calculator](self_citation_explorer/)
 * [Technological Impact Analytics](technological_impact_analytics/)
+* [Societal Impact Analytics](societal_impact_analytics/)
 * [Web of Science Grants Index Analytics on Flask](wos_grants_index_analytics_flask/)
 * [Web of Science to VOSviewer exporter on Flask](wos_to_vosviewer_exporter_flask/)
 
