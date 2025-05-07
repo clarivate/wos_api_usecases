@@ -12,7 +12,7 @@ search_query <- "TS=(('artificial intelligence' or ai) and 'scientific writing')
 # Define if you require cited references metadata (gives you more options for 
 # analysis on Bibliometrix/Biblioshiny but significantly increases the time
 # required to retrieve all the metadata)
-retrieve_cited_references_flag = FALSE
+retrieve_cited_references_flag = TRUE
 
 # Process JSON data into a string
 json_to_str <- function(x) {
@@ -252,7 +252,7 @@ fetch_doctypes <- function(x) {
 # Retrieve keywords - both Author Keywords and Keywords Plus
 fetch_keywords <- function(x) {
   if(is.null(x[[1]])) {
-    return(NA)
+    return("")
   } else {
     return(paste(x[[1]], collapse = "; "))
   }
@@ -456,7 +456,7 @@ fetch_cited_references <- function(x) {
         if(!is.na(x[i, ]$DOI)) {
           cited_reference <- append(
             cited_reference,
-            paste("DOI", x[i, ]$DOI, sep = " ")
+            paste("DOI", fetch_cited_doi(x[i, ]$DOI), sep = " ")
           )
         }
       }
@@ -478,6 +478,11 @@ fetch_cited_authors <- function(x) {
     initials <- paste(initials, substr(non_last_name[i], 1, 1), sep = "")
   }
   return(paste(x_vectorized[[1]][1], initials, sep=" "))
+}
+
+# Retrieve cited DOI metadata
+fetch_cited_doi <- function(x) {
+  return(paste(x[[1]], collapse = ", "))
 }
 
 # Retrieve Times Cited counts
@@ -573,4 +578,4 @@ M <- convert2df(output)
 View(M)
 
 # Or simply launch biblioshiny and explore the data there
-# biblioshiny()
+biblioshiny()

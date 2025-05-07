@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="{{ url_for('static', filename='favicon.png')}}" />
+        <title>Web of Science Policy Documents Analytics</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css')}}" />
+    </head>
+    <body>
+        <div class="search-content-wrapper">
+            <nav class="search-tab-list">
+                <a class="search-tab-link" id="wos-search" href="{{ url_for('wos_search') }}">Societal Impact</a>
+                <a class="search-tab-link search-tab-link--active" id="trends-search" href="{{ url_for('trends_search') }}">Trends</a>
+            </nav>
+            <header>
+                <h1>Web of Science Expanded API</h1>
+                <h2>Trends in Research and Policy Comparison</h2>
+            </header>
+
+            <main>
+                <section>
+                    <form class="form" method="POST" id="search">
+                        <div class="form__header">
+                            <h3>Topic Search</h3>
+                        </div>
+                        <p>
+                             <input class="input__search" name="search_query" id="search_query"
+                                   placeholder="Example: Kyoto protocol*" value="{{search_query}}">
+                            {% if not error_message_1 %} <br> {% else %} <p class="search__error">{{ error_message_1 }}</p> {% endif %}
+                            {% if not error_message_2 %} <br> {% else %} <p class="search__error">{{ error_message_2 }}</p> {% endif %}
+                        </p>
+                        <button class="form__validate" type="submit" name="button" value="validate">Validate</button>
+                        <br>
+                        <p>
+                            {% if not message_1 %} {% else %} {{ message_1 }} <br> {% endif %}
+                            {% if not message_2 %} {% else %} {{ message_2 }} <br> {% endif %}
+                            If you are not sure of how many records your search query returns, try validating it first.<br>
+                            Maximum number of Web of Science document records returned through the API in a single search query is 100,000.<br>
+
+                        </p>
+                        <button class="form__submit" type="submit" name="button" value="run">Run</button>
+                        <p>{% if not filename %} {% else %}
+                            Retrieval complete. For further analysis, check "{{ filename }}" file in the /downloads/dii subfolder of the project.
+                            {% endif %}</p>
+                    </form>
+                </section>
+                <section>
+                    <form class="form" method="POST" id="load">
+                        <h3>Or load a previously saved Excel file</h3>
+                        <p class="load__form">
+                            <input class="form__input" type="file" id="filename" name="filename" accept=".xlsx" />
+                            <input class="form__button" type="submit" value="Load File" id="load__file">
+                        </p>
+                    </form>
+                </section>
+            </main>
+        </div>
+        {% if plot %}
+        <div class="plot-wrapper">
+            {{ plot|safe }}
+        </div>
+        {% endif %}
+        <footer></footer>
+    </body>
+</html>

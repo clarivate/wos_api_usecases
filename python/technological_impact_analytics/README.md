@@ -1,4 +1,4 @@
-# Citation Impact Analytics via Web of Science Expanded API
+# Technological Impact Analytics via Web of Science Expanded API
 
 ![Example visualisation](screenshots/example.png)
 
