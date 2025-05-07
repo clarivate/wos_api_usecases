@@ -195,7 +195,7 @@ def visualize_authors(df: pd.DataFrame, query: str) -> str:
         template='plotly_white'
     )
 
-    fig.update_traces(marker={'color': color_palette[0]})
+    fig.update_traces(marker={'color': color_palette[0], 'sizemin': 3})
 
     return offline.plot(fig, output_type='div')
 

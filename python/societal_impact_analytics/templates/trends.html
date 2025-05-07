@@ -4,7 +4,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="{{ url_for('static', filename='favicon.png')}}" />
-        <title>Web of Science Patents Analytics</title>
+        <title>Web of Science Policy Documents Analytics</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css')}}" />
     </head>
     <body>
@@ -26,7 +26,7 @@
                         </div>
                         <p>
                              <input class="input__search" name="search_query" id="search_query"
-                                   placeholder="Example: multi party computation*" value="{{search_query}}">
+                                   placeholder="Example: Kyoto protocol*" value="{{search_query}}">
                             {% if not error_message_1 %} <br> {% else %} <p class="search__error">{{ error_message_1 }}</p> {% endif %}
                             {% if not error_message_2 %} <br> {% else %} <p class="search__error">{{ error_message_2 }}</p> {% endif %}
                         </p>
