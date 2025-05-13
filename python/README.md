@@ -14,7 +14,7 @@
 
 
 ## Researcher API:
-* [Researcher API to Excel Converter](researcher-api-excel-converter/)
+* [Researcher API to Excel Converter](researcher_api_excel_converter/)
 
 
 ## Starter API:

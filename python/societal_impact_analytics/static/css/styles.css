@@ -258,6 +258,7 @@ input[type=file]::file-selector-button:hover {
     font-size: 1.5rem;
     font-weight: 500;
     text-align: center;
+    margin-top: 2rem;
 }
 
 .metrics__container {

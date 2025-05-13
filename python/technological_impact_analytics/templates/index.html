@@ -61,13 +61,12 @@
         {% if plot %}
         <div class="plot-wrapper">
             <form class="graph" method="POST">
-                <button class="graph_button {{ 'graph_button--active' if index == 0 }}" name="button" value="key_metrics">Key Metrics</button>
+                <button class="graph_button {{ 'graph_button--active' if index == 0 }}" name="button" value="citation_report">Citation Report</button>
                 <button class="graph_button {{ 'graph_button--active' if index == 1 }}" name="button" value="top_authors">Authors by Tech Impact</button>
-                <button class="graph_button {{ 'graph_button--active' if index == 2 }}" name="button" value="years">Trend Graph</button>
-                <button class="graph_button {{ 'graph_button--active' if index == 3 }}" name="button" value="top_assignees_treemap">Top Citing Assignees</button>
-                <button class="graph_button {{ 'graph_button--active' if index == 4 }}" name="button" value="top_inventors_treemap">Top Citing Inventors</button>
-                <button class="graph_button {{ 'graph_button--active' if index == 5 }}" name="button" value="top_countries_applied">Countries by Citing Patent Documents</button>
-                <button class="graph_button {{ 'graph_button--active' if index == 6 }}" name="button" value="top_countries_granted">Countries by Citing Granted Patents</button>
+                <button class="graph_button {{ 'graph_button--active' if index == 2 }}" name="button" value="top_assignees_treemap">Top Citing Assignees</button>
+                <button class="graph_button {{ 'graph_button--active' if index == 3 }}" name="button" value="top_inventors_treemap">Top Citing Inventors</button>
+                <button class="graph_button {{ 'graph_button--active' if index == 4 }}" name="button" value="top_countries_applied">Countries by Citing Patent Documents</button>
+                <button class="graph_button {{ 'graph_button--active' if index == 5 }}" name="button" value="top_countries_granted">Countries by Citing Granted Patents</button>
             </form>
             {{ plot|safe }}
         </div>

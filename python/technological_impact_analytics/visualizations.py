@@ -6,6 +6,8 @@ objects.
 import textwrap
 from collections import Counter, defaultdict
 import pandas as pd
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import plotly.express as px
 from plotly import offline
 
@@ -30,9 +32,8 @@ def visualize_wos_data(df, df2, query: str) -> tuple:
     with Plotly."""
 
     return (
-        visualize_metrics(df2, query, 'WOS'),
+        visualize_metrics(df2, query, 'WOS', df),
         visualize_authors(df, query),
-        visualize_years(df, query, 'WOS', df2),
         visualize_assignees(df2, query, 'WOS'),
         visualize_inventors(df2, query, 'WOS'),
         visualize_countries_applied(df2, query, 'WOS'),
@@ -46,7 +47,6 @@ def visualize_dii_data(df, query: str) -> tuple:
 
     return (
         visualize_metrics(df, query, 'DIIDW'),
-        visualize_years(df, query, 'DIIDW'),
         visualize_assignees(df, query, 'DIIDW'),
         visualize_inventors(df, query, 'DIIDW'),
         visualize_countries_applied(df, query, 'DIIDW'),
@@ -56,28 +56,72 @@ def visualize_dii_data(df, query: str) -> tuple:
 
 def visualize_trends_data(df, query: str) -> tuple[str]:
     """Create an html div object with a bar chart data visualizations
-    with Plotly."""
+    with research and innovation trend."""
 
-    return (
-        visualize_years(df, query, 'BOTH'),
+    mapping = {
+        'year': 'Year',
+        'wos': 'Web of Science Documents',
+        'dii_prtyyear': 'Patent Documents (Earliest Priority Year)',
+        'dii_pubyear': 'Patent Documents (Publication Year)'
+    }
+    df.rename(columns=mapping, inplace=True)
+
+    columns = [
+        'Web of Science Documents',
+        'Patent Documents (Earliest Priority Year)',
+        'Patent Documents (Publication Year)'
+    ]
+
+    title = f'Research and Innovations Trend for topic: {query}'
+
+    fig = px.bar(
+        data_frame=df,
+        x=df['Year'],
+        y=columns,
+        barmode='group',
+        color_discrete_sequence=color_palette[:df.shape[1] - 1],
+        title=word_wrap(x=title, width=120),
     )
 
+    # Making cosmetic edits to the plot
+    fig.update_layout(
+        {'plot_bgcolor': '#FFFFFF', 'paper_bgcolor': '#FFFFFF'},
+        font_color='#646363',
+        font_size=18,
+        title_font_color='#646363',
+        title_font_size=18,
+        legend_title_text=None,
+        legend={
+            'yanchor': 'bottom',
+            'y': -0.4,
+            'xanchor': 'center',
+            'x': 0.5
+        }
+    )
+    fig.update_yaxes(title_text=None, showgrid=True, gridcolor='#9D9D9C')
+    fig.update_xaxes(title_text=None, linecolor='#9D9D9C')
 
-def visualize_metrics(df: pd.DataFrame, query: str, db: str) -> str:
+    return (offline.plot(fig, output_type='div'),)
+
+
+def visualize_metrics(df2: pd.DataFrame, query: str, db: str, df=None) -> str:
     """Create a treemap visualisation for the inventions' metrics."""
 
-    number_of_inventions = df.shape[0]
+    number_of_inventions = df2.shape[0]
     inventions_with_granted_patents = (
-        df['granted_patents'][df['granted_patents'] != ''].dropna().shape[0]
+        df2['granted_patents'][df2['granted_patents'] != ''].dropna().shape[0]
     )
 
-    success_rate = count_success_rate(df['patent_numbers'])
-    quad_inventions = df[df['is_quadrilateral'] == True].dropna().shape[0]
+    success_rate = count_success_rate(df2['patent_numbers'])
+    quad_inventions = df2[df2['is_quadrilateral'] == True].dropna().shape[0]
 
     if db == 'WOS':
-        title = f'Key metrics for inventions citing {query}'
+        title = f'Patent Citation Report for: {query}'
+        fig = build_citation_report_plot(df, df2)
+
     else:
         title = f'Key metrics for: {query}'
+        fig = build_patent_docs_over_time_plot(df2)
 
     output = (
         f'<p class="metrics__title">{title}:</p>'
@@ -99,9 +143,145 @@ def visualize_metrics(df: pd.DataFrame, query: str, db: str) -> str:
         f'<p class="metric__value">{quad_inventions}</p>'
         '</li>'
         '</ul>'
+        f'{offline.plot(fig, output_type='div')}'
     )
 
     return output
+
+
+def build_citation_report_plot(df: pd.DataFrame, df2: pd.DataFrame) -> go.Figure:
+    """Build a Publications and Patent Citations over time plot."""
+
+    wos_pub_years = pd.Series(df['pub_year'].value_counts())
+    dii_pub_years = pd.Series(df2['publication_year'].value_counts())
+    dii_priority_years = pd.Series(df2['earliest_priority'].value_counts())
+    df = pd.DataFrame({
+        'Web of Science Documents': wos_pub_years,
+        'Citing Patent Documents (Earliest Priority Year)': dii_pub_years,
+        'Citing Patent Documents (Publication Year)': dii_priority_years
+    }).fillna(0).astype('int64').reset_index().rename(columns={'index': 'Year'})
+
+    plot_title = 'Publications and Patent Citations Over Time'
+    fig = make_subplots(specs=[[{'secondary_y': True}]])
+
+    fig.add_trace(
+        go.Bar(
+            x=df['Year'],
+            y=df['Web of Science Documents'],
+            name='Web of Science Documents',
+            marker={'color': color_palette[0]}
+        ),
+        secondary_y=False
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=df['Year'],
+            y=df['Citing Patent Documents (Earliest Priority Year)'],
+            name='Citing Patent Documents (Earliest Priority Year)',
+            line={
+                'color': color_palette[1],
+                'width': 5
+            }
+        ),
+        secondary_y=True
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=df['Year'],
+            y=df['Citing Patent Documents (Publication Year)'],
+            name='Citing Patent Documents (Publication Year)',
+            line={
+                'color': color_palette[2],
+                'width': 5
+            }
+        ),
+        secondary_y=True
+    )
+
+    # Making cosmetic edits to the plot
+    fig.update_layout(
+        {'plot_bgcolor': '#FFFFFF', 'paper_bgcolor': '#FFFFFF'},
+        font_color='#646363',
+        font_size=16,
+        title=plot_title,
+        title_font_color='#646363',
+        title_font_size=18,
+        legend_title_text=None,
+        legend={
+            'yanchor': 'bottom',
+            'y': -0.4,
+            'xanchor': 'center',
+            'x': 0.5
+        }
+    )
+    fig.update_yaxes(
+        title_text='Web of Science Documents',
+        title_font={'size': 12},
+        showgrid=True,
+        gridcolor='#9D9D9C',
+        secondary_y=False
+    )
+    fig.update_yaxes(
+        title_text='Patent Citations',
+        title_font={'size': 12},
+        range=[0, max(
+            df['Citing Patent Documents (Earliest Priority Year)'].max(),
+            df['Citing Patent Documents (Publication Year)'].max()
+        )],
+        showgrid=False,
+        secondary_y=True
+    )
+    fig.update_xaxes(title_text=None, linecolor='#9D9D9C')
+
+    return fig
+
+
+def build_patent_docs_over_time_plot(df: pd.DataFrame) -> go.Figure:
+    """Build a Patent Documents over time plot."""
+
+    dii_pubyear_counts = pd.Series(df['publication_year'].value_counts())
+    dii_priority_counts = pd.Series(df['earliest_priority'].value_counts())
+
+    df = pd.DataFrame({
+        'Patent Documents (Earliest Priority Year)': dii_priority_counts,
+        'Patent Documents (Publication Year)': dii_pubyear_counts
+    }).fillna(0).reset_index().rename(columns={'index': 'Year'}).astype('int64')
+    columns = [
+        'Patent Documents (Earliest Priority Year)',
+        'Patent Documents (Publication Year)'
+    ]
+    plot_title = 'Patents Documents Over Time'
+
+    fig = px.bar(
+        data_frame=df,
+        x=df.columns[0],
+        y=columns,
+        barmode='group',
+        color_discrete_sequence=color_palette[:df.shape[1] - 1],
+        title=word_wrap(x=plot_title, width=120),
+    )
+
+    # Making cosmetic edits to the plot
+    fig.update_layout(
+        {'plot_bgcolor': '#FFFFFF', 'paper_bgcolor': '#FFFFFF'},
+        font_color='#646363',
+        font_size=18,
+        title_font_color='#646363',
+        title_font_size=18,
+        legend_title_text=None,
+        legend={
+            'yanchor': 'bottom',
+            'y': -0.4,
+            'xanchor': 'center',
+            'x': 0.5
+        }
+    )
+    fig.update_yaxes(title_text=None, showgrid=True, gridcolor='#9D9D9C')
+    fig.update_xaxes(title_text=None, linecolor='#9D9D9C')
+
+    return fig
 
 
 def count_success_rate(patent_numbers) -> float:
@@ -125,7 +305,7 @@ def count_success_rate(patent_numbers) -> float:
         else:
             granted_count += 1
 
-    return granted_count / application_count
+    return (granted_count / application_count) if application_count > 0 else 0.0
 
 
 def visualize_authors(df: pd.DataFrame, query: str) -> str:
@@ -342,87 +522,6 @@ def visualize_countries_granted(df: pd.DataFrame, query: str, db: str) -> str:
         labels={'countries_granted': 'Country', 'count': 'Occurrences'},
         title=word_wrap(x=title, width=120)
     )
-
-    return offline.plot(fig, output_type='div')
-
-
-def visualize_years(df: pd.DataFrame, query: str, db: str, df2=None) -> str:
-    """Visualize trends in research and innovation."""
-
-    if db == 'BOTH':
-        mapping = {
-            'year': 'Year',
-            'wos': 'Web of Science Documents',
-            'dii_prtyyear': 'Patent Documents (Earliest Priority Year)',
-            'dii_pubyear': 'Patent Documents (Publication Year)'
-        }
-        df.rename(columns=mapping, inplace=True)
-
-        columns = [
-            'Web of Science Documents',
-            'Patent Documents (Earliest Priority Year)',
-            'Patent Documents (Publication Year)'
-        ]
-
-        title = f'Research and Innovations Trend for topic: {query}'
-
-    elif db == 'WOS':
-        wos_pub_years = pd.Series(df['pub_year'].value_counts())
-        dii_pub_years = pd.Series(df2['publication_year'].value_counts())
-        dii_priority_years = pd.Series(df2['earliest_priority'].value_counts())
-        df = pd.DataFrame({
-            'Web of Science Documents': wos_pub_years,
-            'Citing Patent Documents (Earliest Priority Year)': dii_pub_years,
-            'Citing Patent Documents (Publication Year)': dii_priority_years
-        }).fillna(0).astype('int64').reset_index().rename(columns={'index': 'Year'})
-        columns = [
-            'Web of Science Documents',
-            'Citing Patent Documents (Earliest Priority Year)',
-            'Citing Patent Documents (Publication Year)'
-        ]
-
-        title = f'Research output and Citing Patents Trend for: {query}'
-
-    else:
-        dii_pubyear_counts = pd.Series(df['publication_year'].value_counts())
-        dii_priority_counts = pd.Series(df['earliest_priority'].value_counts())
-
-        df = pd.DataFrame({
-            'Patent Documents (Earliest Priority Year)': dii_priority_counts,
-            'Patent Documents (Publication Year)': dii_pubyear_counts
-        }).fillna(0).reset_index().rename(columns={'index': 'Year'}).astype('int64')
-        columns = [
-            'Patent Documents (Earliest Priority Year)',
-            'Patent Documents (Publication Year)'
-        ]
-        title = f'Patents by years for: {query}'
-
-    fig = px.bar(
-        data_frame=df,
-        x=df.columns[0],
-        y=columns,
-        barmode='group',
-        color_discrete_sequence=color_palette[:df.shape[1]-1],
-        title=word_wrap(x=title, width=120),
-    )
-
-    # Making cosmetic edits to the plot
-    fig.update_layout(
-        {'plot_bgcolor': '#FFFFFF', 'paper_bgcolor': '#FFFFFF'},
-        font_color='#646363',
-        font_size=18,
-        title_font_color='#646363',
-        title_font_size=18,
-        legend_title_text=None,
-        legend={
-            'yanchor': 'bottom',
-            'y': -0.4,
-            'xanchor': 'center',
-            'x': 0.5
-        }
-    )
-    fig.update_yaxes(title_text=None, showgrid=True, gridcolor='#9D9D9C')
-    fig.update_xaxes(title_text=None, linecolor='#9D9D9C')
 
     return offline.plot(fig, output_type='div')
 
