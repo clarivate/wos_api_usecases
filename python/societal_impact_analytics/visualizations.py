@@ -63,7 +63,7 @@ def visualize_citation_report(df: pd.DataFrame, df2: pd.DataFrame, query: str) -
         'Citing Policy Documents': pci_pub_years
     }).fillna(0).astype('int64').reset_index().rename(columns={'index': 'Year'})
 
-    plot_title = f'Policy Citations and Publications Over Time'
+    plot_title = 'Policy Citations and Publications Over Time'
 
     fig = make_subplots(specs=[[{'secondary_y': True}]])
 
