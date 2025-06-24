@@ -6,9 +6,8 @@ Main app file: manage Flask interface actions and rendering.
 """
 
 from flask import Flask, render_template, request
-from data_processing import run_button
+from data_processing import main
 from api_operations import validate_search_query
-from apikeys import RESEARCHER_APIKEY
 
 
 app = Flask(__name__)
@@ -31,46 +30,74 @@ def start_menu() -> str:
 def search_section(button: str, search_query: str) -> str:
     """Manage the actions and processes for the page search section."""
 
-    full_profiles = 'check' in request.form.keys()
+    options = {
+        'full_profiles': 'full_profiles' in request.form.keys(),
+        'documents': 'documents' in request.form.keys(),
+        'peer_reviews': 'peer_reviews' in request.form.keys()
+    }
 
     if search_query != '' and button == 'validate':
-        return render_validation_results(search_query, full_profiles)
+        return render_validation_results(search_query, options)
 
     if search_query != '' and button == 'run':
-        safe_filename = run_button(RESEARCHER_APIKEY, search_query, full_profiles)
+        safe_filename = main(search_query, options)
 
         return render_template(
             'index.html',
             filename=safe_filename,
             search_query=search_query,
-            full_profiles=full_profiles
+            full_profiles=options['full_profiles'],
+            documents=options['documents'],
+            peer_reviews=options['peer_reviews']
         )
 
     return render_template(
         'index.html',
         search_query='',
-        full_profiles=full_profiles
+        full_profiles=options['full_profiles'],
+        documents=options['documents'],
+        peer_reviews=options['peer_reviews']
     )
 
 
-def render_validation_results(search_query: str, full_profiles: bool) -> str:
+def render_validation_results(search_query: str, options: dict) -> str:
     """Get the validation API call results, render them on the webpage
     depending on whether the result was an error or ok."""
 
-    response = validate_search_query(RESEARCHER_APIKEY, search_query)
+    response = validate_search_query(search_query)
     if response[0] == 200:
+
+        # Calculating the number of API calls estimation
+        search_api_calls = (response[1] - 1) // 50 + 1
+        full_profiles_api_calls = int(options['full_profiles']) * response[1]
+        documents_api_calls = int(options['documents']) * response[1]
+        peer_reviews_api_calls = int(options['peer_reviews']) * response[1]
+        estimation = (
+                search_api_calls + full_profiles_api_calls +
+                documents_api_calls + peer_reviews_api_calls
+        )
+
         return render_template(
             'index.html',
-            message=f'Researcher Profiles found: {response[1]}',
+            message=f'Researcher Profiles found: <strong>{response[1]}'
+                    f'</strong>.<br>'
+                    f'Your request is going to take <strong> at least '
+                    f'{estimation}</strong> API calls.<br>'
+                    f'You\'ve got <strong>{response[2]}</strong> API calls '
+                    f'left until the end of today.<br>',
             search_query=search_query,
-            full_profiles=full_profiles
+            full_profiles=options['full_profiles'],
+            documents=options['documents'],
+            peer_reviews=options['peer_reviews']
         )
 
     return render_template(
         'index.html',
         error_message=f'Request status: {response[0]}, message: {response[1]}',
         search_query=search_query,
-        full_profiles=full_profiles
+        full_profiles=options['full_profiles'],
+        documents=options['documents'],
+        peer_reviews=options['peer_reviews']
     )
 
 

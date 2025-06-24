@@ -157,8 +157,8 @@ def build_citation_report_plot(df: pd.DataFrame, df2: pd.DataFrame) -> go.Figure
     dii_priority_years = pd.Series(df2['earliest_priority'].value_counts())
     df = pd.DataFrame({
         'Web of Science Documents': wos_pub_years,
-        'Citing Patent Documents (Earliest Priority Year)': dii_pub_years,
-        'Citing Patent Documents (Publication Year)': dii_priority_years
+        'Citing Patent Documents (Earliest Priority Year)': dii_priority_years,
+        'Citing Patent Documents (Publication Year)': dii_pub_years
     }).fillna(0).astype('int64').reset_index().rename(columns={'index': 'Year'})
 
     plot_title = 'Publications and Patent Citations Over Time'
@@ -169,7 +169,8 @@ def build_citation_report_plot(df: pd.DataFrame, df2: pd.DataFrame) -> go.Figure
             x=df['Year'],
             y=df['Web of Science Documents'],
             name='Web of Science Documents',
-            marker={'color': color_palette[0]}
+            marker={'color': color_palette[0]},
+            width=.5
         ),
         secondary_y=False
     )
@@ -309,7 +310,7 @@ def count_success_rate(patent_numbers) -> float:
 
 
 def visualize_authors(df: pd.DataFrame, query: str) -> str:
-    """Create a treemap visualisation for the top researchers from the
+    """Create a visualisation for the top researchers from the
     dataset who received most citations from patents."""
 
     # Fill NaN values in 'authors' and 'citing_inventions'
@@ -343,33 +344,33 @@ def visualize_authors(df: pd.DataFrame, query: str) -> str:
     # Convert to a DataFrame
     authors_df = pd.DataFrame([
         {
-            'author': author,
-            'Documents': data['documents'],
-            'Citations from patents': len(data['citations_from_patents']),
+            'Author': author,
+            'Web of Science Documents': data['documents'],
+            'Citations From Patents': len(data['citations_from_patents']),
             '% documents cited': (data['docs_with_patent_citations'] /
                                   data['documents']) * 100
         }
         for author, data in author_data.items()
     ])
 
-    authors_df.sort_values('Citations from patents', ascending=False, inplace=True)
+    authors_df.sort_values('Citations From Patents', ascending=False, inplace=True)
     display_items_top_authors = min(
-        authors_df[authors_df['Citations from patents'] > 0].shape[0], 1000
+        authors_df[authors_df['Citations From Patents'] > 0].shape[0], 1000
     )
 
     fig = px.scatter(
         data_frame=authors_df[:display_items_top_authors],
-        x='Documents',
-        y='Citations from patents',
+        x='Web of Science Documents',
+        y='Citations From Patents',
         size='% documents cited',
         title=word_wrap(
             x=f'Top Authors by technological impact for: {query}',
             width=120
         ),
-        hover_name='author',
+        hover_name='Author',
         hover_data={
-            'Documents': True,
-            'Citations from patents': True,
+            'Web of Science Documents': True,
+            'Citations From Patents': True,
             '% documents cited': ':.2f'
         },
         template='plotly_white'

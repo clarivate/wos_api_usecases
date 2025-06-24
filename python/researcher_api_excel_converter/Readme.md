@@ -34,6 +34,4 @@ After you hit the "Run" button, the app will query Web of Science Researcher API
 
 ![Screenshot](screenshots/results.png)
 
-It is also possible to develop a functionality to retrieve the basic document-level and peer reviews data, as the relevant links to the correct endpoints are also returned by a get-request to the default /researchers endpoint, but each of these requests will take additional time. These two additional tickboxes will appear in subsequent releases of this converter tool.
-
 As always, we welcome user feedback on this code.

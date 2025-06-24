@@ -7,69 +7,94 @@ from datetime import date
 import pandas as pd
 from api_operations import (
     researcher_api_request,
-    researcher_api_profile_request
+    researcher_api_profile_request,
+    researcher_api_doc_request,
+    peer_review_api_request
 )
 
 
-def run_button(apikey: str, query: str, full_profiles: bool) -> str:
+def main(query: str, options: dict) -> str:
     """When the 'Run' button is pressed, manage all the API operations
     and data processing."""
 
-    if full_profiles:
-        profiles = retrieve_full_profiles_metadata(apikey, query)
+    profiles = (
+        retrieve_full_profiles_metadata(query)
+        if options['full_profiles']
+        else retrieve_profiles_metadata(query)
+    )
+
+    safe_search_query = (
+        query.replace("*", "")
+        .replace("?", "")
+        .replace('"', '')
+        .replace("/", '')
+    )
+
+    df2 = df3 = df4 = df5 = df6 = None
+
+    if options['full_profiles']:
+        df, df2, df3, df4 = manage_full_profiles(profiles)
     else:
-        profiles = retrieve_profiles_metadata(apikey, query)
+        df = pd.DataFrame(profiles)
 
-    df = pd.DataFrame(profiles)
+    if options['documents']:
+        df5 = retrieve_documents_metadata(profiles)
 
-    safe_search_query = (query.replace("*", "").replace("?", "")
-                         .replace('"', '').replace("/", ''))
-    if full_profiles:
-        safe_filename = f'{safe_search_query} - full profiles - {date.today()}.xlsx'
+    if options['peer_reviews']:
+        df6 = retrieve_peer_reviews_metadata(profiles)
 
-        pub_years_df = pd.json_normalize(df['published_years'])
-        pub_years_df = pub_years_df[sorted(pub_years_df.columns)]
-        df2 = pd.concat([df[['primary_rid', 'fullname']], pub_years_df], axis=1)
-
-        df_exploded = df.explode('other_affiliations').reset_index(drop=True)
-        affiliations_df = pd.json_normalize(df_exploded['other_affiliations'])
-        df3 = pd.concat([df_exploded[['primary_rid', 'fullname']], affiliations_df], axis=1)
-
-        awards_df = pd.json_normalize(df['awards'])
-        awards_df = awards_df[sorted(awards_df.columns)]
-        df4 = pd.concat([df[['primary_rid', 'fullname']], awards_df], axis=1)
-
-        df = df.drop(['published_years', 'other_affiliations', 'awards'], axis=1)
-
-        with pd.ExcelWriter(f'downloads/{safe_filename}') as writer:
-            df.to_excel(writer, sheet_name='Researchers', index=False)
+    safe_filename = f'{safe_search_query} - {date.today()}.xlsx'
+    with pd.ExcelWriter(f'downloads/{safe_filename}') as writer:
+        df.to_excel(writer, sheet_name='Researchers', index=False)
+        if options['full_profiles']:
             df2.to_excel(writer, sheet_name='Publication Years', index=False)
             df3.to_excel(writer, sheet_name='Other Affiliations', index=False)
             df4.to_excel(writer, sheet_name='Awards', index=False)
-
-    else:
-        safe_filename = f'{safe_search_query} - {date.today()}.xlsx'
-        with pd.ExcelWriter(f'downloads/{safe_filename}') as writer:
-            df.to_excel(writer, sheet_name='Researchers', index=False)
+        if options['documents']:
+            df5.to_excel(writer, sheet_name='Documents', index=False)
+        if options['peer_reviews']:
+            df6.to_excel(writer, sheet_name='Peer Reviews', index=False)
 
     return safe_filename
 
 
-def retrieve_profiles_metadata(apikey: str, query: str) -> list[dict]:
+def manage_full_profiles(profiles: list[dict]) -> tuple:
+    """Manage all functions related to extracting the full profiles
+    metadata."""
+
+    df = pd.DataFrame(profiles)
+    pub_years_df = pd.json_normalize(df['published_years'])
+    pub_years_df = pub_years_df[sorted(pub_years_df.columns)]
+    df2 = pd.concat([df[['primary_rid', 'fullname']], pub_years_df], axis=1)
+
+    df_exploded = df.explode('other_affiliations').reset_index(drop=True)
+    affiliations_df = pd.json_normalize(df_exploded['other_affiliations'])
+    df3 = pd.concat([df_exploded[['primary_rid', 'fullname']], affiliations_df], axis=1)
+
+    awards_df = pd.json_normalize(df['awards'])
+    awards_df = awards_df[sorted(awards_df.columns)]
+    df4 = pd.concat([df[['primary_rid', 'fullname']], awards_df], axis=1)
+
+    df = df.drop(['published_years', 'other_affiliations', 'awards'], axis=1)
+
+    return df, df2, df3, df4
+
+
+def retrieve_profiles_metadata(query: str) -> list[dict]:
     """Manage API calls and parsing Researcher Profiles metadata from a
     search query."""
 
     profiles = []
-    initial_json = researcher_api_request(apikey, query)
+    initial_json = researcher_api_request(query)
     for profile in initial_json['hits']:
         profiles.append(fetch_researchers_data(profile))
     total_profiles = initial_json['metadata']['total']
     requests_required = (total_profiles - 1) // 50 + 1
     max_requests = min(requests_required, 1000)
-    print(f'Researcher API requests required: {requests_required}.')
+    print(f'Researcher API search requests required: {requests_required}.')
 
     for i in range(1, max_requests):
-        subsequent_json = researcher_api_request(apikey, query, i+1)
+        subsequent_json = researcher_api_request(query, i+1)
         for profile in subsequent_json['hits']:
             profiles.append(fetch_researchers_data(profile))
         print(f'Request {i + 1} of {max_requests} complete.')
@@ -77,14 +102,15 @@ def retrieve_profiles_metadata(apikey: str, query: str) -> list[dict]:
     return profiles
 
 
-def retrieve_full_profiles_metadata(apikey: str, query: str) -> list[dict]:
-    """Manage API calls and parsing full Researcher Profiles metadata."""
+def retrieve_full_profiles_metadata(query: str) -> list[dict]:
+    """Manage API calls and parsing full Researcher Profiles
+    metadata."""
 
     profiles = []
     rids = []
 
     # Getting the list of ResearcherIDs
-    initial_rid_json = researcher_api_request(apikey, query)
+    initial_rid_json = researcher_api_request(query)
     for profile in initial_rid_json['hits']:
         rids.append(profile['rid'][0])
     total_profiles = initial_rid_json['metadata']['total']
@@ -94,7 +120,7 @@ def retrieve_full_profiles_metadata(apikey: str, query: str) -> list[dict]:
           f'{requests_required}.')
 
     for i in range(1, max_requests):
-        subsequent_rid_json = researcher_api_request(apikey, query, i+1)
+        subsequent_rid_json = researcher_api_request(query, i+1)
         for profile in subsequent_rid_json['hits']:
             rids.append(profile['rid'][0])
         print(f'Request {i + 1} of {max_requests} complete.')
@@ -103,12 +129,97 @@ def retrieve_full_profiles_metadata(apikey: str, query: str) -> list[dict]:
     print(f'Step 2. Retrieving full profile metadata, requests required: '
           f'{len(rids)}.')
     for i, rid in enumerate(rids):
-        full_profile_json = researcher_api_profile_request(apikey, rid)
+        full_profile_json = researcher_api_profile_request(rid)
         profiles.append(fetch_full_researchers_data(full_profile_json))
 
         print(f'Request {i + 1} of {len(rids)} complete.')
 
     return profiles
+
+
+def retrieve_documents_metadata(profiles: list[dict]) -> pd.DataFrame:
+    """Break down the list into individual researchers, and launch
+    the function to get their individual documents lists."""
+
+    documents = []
+
+    for i, profile in enumerate(profiles):
+        print(f'Retrieving documents metadata for researcher #{i+1} of '
+              f'{len(profiles)}')
+        documents.extend(get_individual_researchers_docs_list(profile))
+
+    return pd.DataFrame(documents)
+
+
+def get_individual_researchers_docs_list(profile: dict) -> list[dict]:
+    """Manage API calls and parsing documents metadata."""
+
+    docs = []
+
+    initial_doc_json = researcher_api_doc_request(profile['primary_rid'])
+    for doc in initial_doc_json['hits']:
+        docs.append(fetch_documents_metadata(profile['primary_rid'], doc))
+    total_docs = initial_doc_json['metadata']['total']
+    requests_required = (total_docs - 1) // 50 + 1
+    max_requests = min(requests_required, 1000)
+
+    for i in range(1, max_requests):
+        subsequent_doc_json = researcher_api_doc_request(
+            profile['primary_rid'],
+            i + 1
+        )
+
+        for doc in subsequent_doc_json['hits']:
+            docs.append(fetch_documents_metadata(profile['primary_rid'], doc))
+
+    return docs
+
+
+def retrieve_peer_reviews_metadata(profiles: list[dict]) -> pd.DataFrame:
+    """Break down the list into individual researchers, and launch
+    the function to get their individual documents lists."""
+
+    peer_reviews = []
+
+    for i, profile in enumerate(profiles):
+        print(f'Retrieving peer review metadata for researcher #{i + 1} of '
+              f'{len(profiles)}')
+        peer_reviews.extend(get_individual_peer_reviews_list(profile))
+
+    return pd.DataFrame(peer_reviews)
+
+
+def get_individual_peer_reviews_list(profile: dict) -> list[dict]:
+    """Manage API calls and parsing peer reviews metadata."""
+
+    peer_reviews = []
+    initial_peer_review_json = peer_review_api_request(profile['primary_rid'])
+    for peer_review in initial_peer_review_json['hits']:
+        peer_reviews.append(
+            fetch_peer_review_metadata(
+                profile['primary_rid'],
+                peer_review
+            )
+        )
+
+    total_peer_reviews = initial_peer_review_json['metadata']['total']
+    requests_required = (total_peer_reviews - 1) // 50 + 1
+    max_requests = min(requests_required, 1000)
+
+    for i in range(1, max_requests):
+        subsequent_peer_review_json = peer_review_api_request(
+            profile['primary_rid'],
+            i + 1
+        )
+        for peer_review in subsequent_peer_review_json['hits']:
+            peer_reviews.append(
+                fetch_peer_review_metadata(
+                    profile['primary_rid'],
+                    peer_review
+                )
+            )
+
+    return peer_reviews
 
 
 def fetch_researchers_data(rec: dict) -> dict:
@@ -153,9 +264,22 @@ def fetch_full_researchers_data(json: dict) -> dict:
         for year in metrics['documents']['publishedYears']
     }
 
-    prim_affil = json['organization']['primaryAffiliation']
-    primary_affiliation = '; '.join(set(a['organizationEnhancedName'] for a in prim_affil))
-    primary_aff_countries = '; '.join(set(a['country'] for a in prim_affil))
+    primary_affiliations_section = json['organization']['primaryAffiliation']
+    primary_affiliation = '; '.join(
+        set(
+            a['organizationEnhancedName']
+            for a in primary_affiliations_section
+        )
+    )
+
+    primary_aff_countries = '; '.join(
+        set(
+            a['country']
+            for a
+            in primary_affiliations_section
+        )
+    )
+
     departments = '; '.join(d for d in json['organization']['departments'])
 
     affiliations = [
@@ -204,4 +328,35 @@ def fetch_full_researchers_data(json: dict) -> dict:
         'author_position_corr': pos['corresponding']['numberOfDocuments'],
         'subject_categories': subject_categories,
         'awards': awards
+    }
+
+
+def fetch_documents_metadata(rid: str, doc: dict) -> dict:
+    """Fetch individual metadata fields from the document metadata."""
+
+    return {
+        'rid': rid,
+        'ut': doc['uid'],
+        'document_title': doc['title'],
+        'doc_type': '; '.join(doc['types']),
+        'source_title': doc['source']['sourceTitle'],
+        'publication_year': doc['source']['publishYear'],
+        'publication_date': doc['source']['sortDate'],
+        'volume': doc['source']['volume'] if 'volume' in doc['source'] else '',
+        'issue': doc['source']['issue'] if 'issue' in doc['source'] else '',
+        'times_cited': doc['citations'][0]['count'],
+        'doi': doc['identifiers']['doi'] if 'doi' in doc['identifiers'] else ''
+    }
+
+
+def fetch_peer_review_metadata(rid: str, pr: dict) -> dict:
+    """Fetch individual metadata fields from the peer reviews
+    metadata."""
+
+    return {
+        'rid': rid,
+        'journal': pr['journal'],
+        'publisher': pr['publisher'] if 'publisher' in pr else '',
+        'review_year': pr['dateOfReview'],
+        'verified': pr['verified'],
     }
