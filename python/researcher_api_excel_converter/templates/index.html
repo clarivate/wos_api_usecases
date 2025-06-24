@@ -23,11 +23,25 @@
                         </div>
                         <p>
                         <div class="switch">
-                            <label class="switch__toggle" id="toggle">
-                            <input type="checkbox" name="check" {% if full_profiles %} checked {% endif %}>
+                            <label class="switch__toggle" id="profiles_toggle">
+                            <input type="checkbox" name="full_profiles" {% if full_profiles %} checked {% endif %}>
                             <span class="slider"></span>
                             </label>
                             <span class="switch__label">Retrieve full profiles data</span>
+                        </div>
+                        <div class="switch">
+                            <label class="switch__toggle" id="documents_toggle">
+                            <input type="checkbox" name="documents" {% if documents %} checked {% endif %}>
+                            <span class="slider"></span>
+                            </label>
+                            <span class="switch__label">Retrieve document-level data</span>
+                        </div>
+                        <div class="switch">
+                            <label class="switch__toggle" id="peer_reviews_toggle">
+                            <input type="checkbox" name="peer_reviews" {% if peer_reviews %} checked {% endif %}>
+                            <span class="slider"></span>
+                            </label>
+                            <span class="switch__label">Retrieve peer reviews data</span>
                         </div>
                     <p>
                         <p>
@@ -38,9 +52,9 @@
                             {% if not error_message %} <br> {% else %} <p class="search__error">{{ error_message }}</p> {% endif %}
                         </p>
                         <p>
-                            {% if not message %} {% else %} {{ message }} <br> {% endif %}
-                            If you are not sure of how many Researcher Profiles your search query returns, try validating it first.<br>
-                            Maximum number of Web of Science Researcher Profiles returned through the API in a day is 250,000 (profile summaries) or 5,000 (full profiles).<br>
+                            If you are not sure of how many Researcher Profiles your search query returns, try to Validate it first.<br>
+                            Maximum number of Web of Science Researcher API calls in a day is 5,000.<br>
+                            {% if not message %} {% else %} <br>{{ message|safe }} <br> {% endif %}
 
                         </p>
                         <button class="form__validate" type="submit" name="button" value="validate">Validate</button>

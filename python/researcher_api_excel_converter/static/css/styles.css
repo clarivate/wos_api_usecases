@@ -211,8 +211,6 @@ input[type=file]::file-selector-button:hover {
 .switch {
     display: flex;
     flex-direction: row;
-    margin-top: .625rem;
-    margin-bottom: .625rem;
     cursor: pointer;
 }
 
@@ -279,7 +277,7 @@ input:checked + .slider:before {
 }
 
 .switch__label {
-    padding: 0rem 1.75rem 1rem;
+    padding: 0rem 1.75rem 0.25rem;
     font: 400 14px / 1.3 "Source Sans Pro", sans-serif;
     letter-spacing: normal;
     color: #000000;

@@ -65,13 +65,12 @@ def start_menu_wos() -> str:
     # Switching between visualizations
     if request.method == 'POST' and 'button' in request.form.keys():
         visualizations = {
-            'key_metrics': plots_list[0],
+            'citation_report': plots_list[0],
             'top_authors': plots_list[1],
-            'years': plots_list[2],
-            'top_assignees_treemap': plots_list[3],
-            'top_inventors_treemap': plots_list[4],
-            'top_countries_applied': plots_list[5],
-            'top_countries_granted': plots_list[6]
+            'top_assignees_treemap': plots_list[2],
+            'top_inventors_treemap': plots_list[3],
+            'top_countries_applied': plots_list[4],
+            'top_countries_granted': plots_list[5]
         }
         if request.form['button'] in visualizations:
             for key, value in visualizations.items():
@@ -103,11 +102,10 @@ def start_menu_dii() -> str:
     if request.method == 'POST' and 'button' in request.form.keys():
         visualizations = {
             'key_metrics': plots_list[0],
-            'years': plots_list[1],
-            'top_assignees_treemap': plots_list[2],
-            'top_inventors_treemap': plots_list[3],
-            'top_countries_applied': plots_list[4],
-            'top_countries_granted': plots_list[5]
+            'top_assignees_treemap': plots_list[1],
+            'top_inventors_treemap': plots_list[2],
+            'top_countries_applied': plots_list[3],
+            'top_countries_granted': plots_list[4]
         }
         if request.form['button'] in visualizations:
             for key, value in visualizations.items():
