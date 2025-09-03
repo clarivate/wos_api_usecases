@@ -300,7 +300,8 @@ def visualize_citing_source_countries(df: pd.DataFrame, query: str) -> str:
     """Visualise country data with Plotly choropleth."""
 
     country_codes_df = pd.read_excel('country_codes.xlsx')
-    df['source_country'] = df['source_country'].apply(lambda x: x.split(', '))
+    df['source_country'] = df['source_country'].apply(
+        lambda x: x.split(', ') if isinstance(x, str) else x)
     occurrences = df['source_country'].explode().value_counts().reset_index()
     mapping = dict(zip(country_codes_df['Country'], country_codes_df['A3']))
     occurrences['source_country'] = (

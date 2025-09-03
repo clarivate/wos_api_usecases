@@ -71,9 +71,17 @@ def manage_full_profiles(profiles: list[dict]) -> tuple:
     affiliations_df = pd.json_normalize(df_exploded['other_affiliations'])
     df3 = pd.concat([df_exploded[['primary_rid', 'fullname']], affiliations_df], axis=1)
 
-    awards_df = pd.json_normalize(df['awards'])
-    awards_df = awards_df[sorted(awards_df.columns)]
-    df4 = pd.concat([df[['primary_rid', 'fullname']], awards_df], axis=1)
+    non_empty_awards_df = df[df['awards'].apply(
+        lambda x: isinstance(x, dict) and bool(x)
+    )].copy()
+
+    awards_only_df = pd.json_normalize(non_empty_awards_df['awards'])
+
+    awards_only_df = awards_only_df[sorted(awards_only_df.columns)]
+    df4 = pd.concat([non_empty_awards_df[
+                         ['primary_rid', 'fullname']
+                     ].reset_index(drop=True),
+                     awards_only_df.reset_index(drop=True)], axis=1)
 
     df = df.drop(['published_years', 'other_affiliations', 'awards'], axis=1)
 
@@ -355,7 +363,7 @@ def fetch_peer_review_metadata(rid: str, pr: dict) -> dict:
 
     return {
         'rid': rid,
-        'journal': pr['journal'],
+        'journal': pr['journal'] if 'journal' in pr else '',
         'publisher': pr['publisher'] if 'publisher' in pr else '',
         'review_year': pr['dateOfReview'],
         'verified': pr['verified'],

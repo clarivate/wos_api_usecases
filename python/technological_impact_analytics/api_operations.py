@@ -86,7 +86,7 @@ def base_records_api_call(search_query: str, first_record=1) -> dict:
             print(f'Oops, error {response.status_code} - resending...')
             result = base_records_api_call(search_query, first_record)
 
-    except(requests.ReadTimeout, requests.ConnectionError, requests.JSONDecodeError):
+    except (requests.ReadTimeout, requests.ConnectionError, requests.JSONDecodeError):
         result = {'Data': {'Records': {'records': {'REC': []}}}}
         params['count'] = 10
         for i in range(10):
@@ -153,7 +153,7 @@ def citing_patents_ids_api_call(query_id: str, first_record=1) -> dict:
     return result
 
 
-def patents_api_call_by_ids(patents_ids_batch: list) -> dict:
+def patents_api_call_by_ids(patents_ids_batch: list, first_record=1) -> dict:
     """Send API calls for patent IDs in batches of 100 via Web of
     Science Expanded API to get the patent metadata.
     """
@@ -164,14 +164,35 @@ def patents_api_call_by_ids(patents_ids_batch: list) -> dict:
         'count': 100,
         'firstRecord': 1,
     }
-    result = requests.get(
-        url='https://api.clarivate.com/api/wos',
-        params=params,
-        headers={'X-ApiKey': EXPANDED_APIKEY},
-        timeout=30
-    )
+    try:
+        response = requests.get(
+            url='https://api.clarivate.com/api/wos',
+            params=params,
+            headers={'X-ApiKey': EXPANDED_APIKEY},
+            timeout=20
+        )
+        if response.status_code == 200:
+            result = response.json()
+        else:
+            print(f'Oops, error {response.status_code} - resending...')
+            result = patents_api_call_by_ids(patents_ids_batch)
 
-    return result.json()
+    except (requests.ReadTimeout, requests.ConnectionError, requests.JSONDecodeError):
+        result = {'Data': {'Records': {'records': {'REC': []}}}}
+        params['count'] = 10
+        for i in range(10):
+            first_record += i * 10
+            request = requests.get(
+                url='https://api.clarivate.com/api/wos',
+                params=params,
+                headers={'X-ApiKey': EXPANDED_APIKEY},
+                timeout=32
+            )
+
+            rec_json = request.json()['Data']['Records']['records']['REC']
+            result['Data']['Records']['records']['REC'].extend(rec_json)
+
+    return result
 
 
 def patents_api_call_by_query(search_query: str, first_record=1) -> dict:
