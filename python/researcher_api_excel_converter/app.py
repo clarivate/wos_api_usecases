@@ -5,7 +5,8 @@ Web of Science Researcher Profiles using Web of Science Researcher API.
 Main app file: manage Flask interface actions and rendering.
 """
 
-from flask import Flask, render_template, request
+from flask import Flask, Response, render_template, request
+import time, state, json
 from data_processing import main
 from api_operations import validate_search_query
 
@@ -13,6 +14,24 @@ from api_operations import validate_search_query
 app = Flask(__name__)
 
 plots_list = []
+
+
+@app.route("/stream")
+def stream():
+    def generate():
+        last_progress = -1
+        last_task = ""
+        while True:
+            if (state.progress != last_progress) or (state.current_task != last_task):
+                data = {
+                    "task": state.current_task,
+                    "progress": state.progress
+                }
+                yield f"data: {json.dumps(data)}\n\n"
+                last_progress = state.progress
+                last_task = state.current_task
+            time.sleep(0.2)
+    return Response(generate(), mimetype="text/event-stream")
 
 
 @app.route(rule="/", methods=['POST', 'GET'])
@@ -77,12 +96,14 @@ def render_validation_results(search_query: str, options: dict) -> str:
                 documents_api_calls + peer_reviews_api_calls
         )
 
+        documents_warning = ' (but probably more)' if options['documents'] else ''
+
         return render_template(
             'index.html',
             message=f'Researcher Profiles found: <strong>{response[1]}'
                     f'</strong>.<br>'
                     f'Your request is going to take <strong> at least '
-                    f'{estimation}</strong> API calls.<br>'
+                    f'{estimation}</strong> API calls{documents_warning}.<br>'
                     f'You\'ve got <strong>{response[2]}</strong> API calls '
                     f'left until the end of today.<br>',
             search_query=search_query,

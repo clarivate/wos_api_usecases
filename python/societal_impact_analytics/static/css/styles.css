@@ -75,6 +75,20 @@ a:hover {
     background-color: #ffffff!important;
 }
 
+/* visual + interaction disable for tabs */
+.search-tab-link.tab--disabled {
+    pointer-events: none;        /* prevents mouse clicks */
+    opacity: 0.6;
+    cursor: not-allowed;
+    color: #888888;             /* adjust to indicate disabled state */
+    text-decoration: none;
+}
+
+/* optional: for keyboard users, ensure they see it's disabled */
+.search-tab-link[aria-disabled="true"] {
+    outline: none;
+}
+
 main {
     padding: 1rem;
 }
@@ -110,13 +124,13 @@ textarea::placeholder, input::placeholder {
 }
 
 p {
+    margin: .5rem 0 .5rem 0;
     font: 400 14px / 1.3 "Source Sans Pro", sans-serif;
     text-align: left;
-    margin-block-start: .5rem;
 }
 
 button, .form__button {
-    margin: .325rem;
+    margin: .5rem .175rem .5rem .175rem;
     padding: 0.5rem 2rem;
     background-color: #5E33BF;
     color: #FFFFFF;
@@ -140,7 +154,7 @@ button[value="validate"] {
     border-width: 1px;
 }
 
-button[value="validate"]:hover {
+button[value="validate"]:hover:not(:disabled) {
     background-color: #f2f2f2;
 }
 
@@ -148,8 +162,16 @@ button[value="run"] {
     padding: .5rem 1.75rem;
 }
 
-button[value="run"]:loading {
+button[value="run"]:disabled {
+    background-color: #D8D8D8;
+    border-color: #D8D8D8;
+    cursor: not-allowed;
+}
+
+button[value="validate"]:disabled {
     color: #D8D8D8;
+    border-color: #D8D8D8;
+    cursor: not-allowed;
 }
 
 .load__form {
@@ -210,6 +232,41 @@ input[type=file]::file-selector-button {
 
 input[type=file]::file-selector-button:hover {
     background-color: #F2F2F2;
+}
+
+.progress-container {
+    margin: .5rem 0 .5rem 0;
+}
+
+.progress-bar-background {
+    width: 100%;
+    height: 24px;
+    background-color: #eee;
+    border-radius: 4px;
+    position: relative; /* required for absolute positioning of label */
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background-color: #93ff9e;
+    transition: width 0.3s ease;
+}
+
+.progress-label {
+    position: absolute;   /* sit on top of the bar */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;  /* vertical center */
+    justify-content: center; /* horizontal center */
+    font-weight: 600;
+    color: #616161;
+    font-size: 0.95em;
+    pointer-events: none; /* click-through, optional */
 }
 
 .graph_button {

@@ -54,11 +54,19 @@
                         <p>
                             If you are not sure of how many Researcher Profiles your search query returns, try to Validate it first.<br>
                             Maximum number of Web of Science Researcher API calls in a day is 5,000.<br>
-                            {% if not message %} {% else %} <br>{{ message|safe }} <br> {% endif %}
+                            {% if not message %} {% else %} {{ message|safe }} {% endif %}
 
                         </p>
                         <button class="form__validate" type="submit" name="button" value="validate">Validate</button>
                         <button class="form__submit" type="submit" name="button" value="run">Run</button>
+
+                        <div id="progress-container" class="progress-container">
+                            <div class="progress-bar-background">
+                                <div id="progress-bar" class="progress-bar-fill"></div>
+                                <div id="progress-label" class="progress-label"></div>
+                            </div>
+                        </div>
+
                         <p>{% if not filename %} {% else %}
                             Retrieval complete. For further analysis, check "{{ filename }}" file in the /downloads subfolder of the project.
                             {% endif %}</p>
@@ -66,5 +74,6 @@
                 </section>
             </main>
         </div>
+        <script src="{{ url_for('static', filename='index.js') }}" charset="UTF-8"></script>
     </body>
 </html>

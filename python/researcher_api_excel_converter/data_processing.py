@@ -4,6 +4,7 @@ mostly data processing.
 """
 
 from datetime import date
+import state
 import pandas as pd
 from api_operations import (
     researcher_api_request,
@@ -92,6 +93,8 @@ def retrieve_profiles_metadata(query: str) -> list[dict]:
     """Manage API calls and parsing Researcher Profiles metadata from a
     search query."""
 
+    state.progress = 0
+    state.current_task = 'Searching profiles'
     profiles = []
     initial_json = researcher_api_request(query)
     for profile in initial_json['hits']:
@@ -105,7 +108,7 @@ def retrieve_profiles_metadata(query: str) -> list[dict]:
         subsequent_json = researcher_api_request(query, i+1)
         for profile in subsequent_json['hits']:
             profiles.append(fetch_researchers_data(profile))
-        print(f'Request {i + 1} of {max_requests} complete.')
+        state.progress = (i + 1) / max_requests * 100
 
     return profiles
 
@@ -113,6 +116,9 @@ def retrieve_profiles_metadata(query: str) -> list[dict]:
 def retrieve_full_profiles_metadata(query: str) -> list[dict]:
     """Manage API calls and parsing full Researcher Profiles
     metadata."""
+
+    state.progress = 0
+    state.current_task = 'Searching profiles'
 
     profiles = []
     rids = []
@@ -131,16 +137,16 @@ def retrieve_full_profiles_metadata(query: str) -> list[dict]:
         subsequent_rid_json = researcher_api_request(query, i+1)
         for profile in subsequent_rid_json['hits']:
             rids.append(profile['rid'][0])
-        print(f'Request {i + 1} of {max_requests} complete.')
+        state.progress = (i + 1) / max_requests * 100
 
     # Getting their full profile metadata
-    print(f'Step 2. Retrieving full profile metadata, requests required: '
-          f'{len(rids)}.')
+    state.progress = 0
+    state.current_task = 'Retrieving profiles'
     for i, rid in enumerate(rids):
         full_profile_json = researcher_api_profile_request(rid)
         profiles.append(fetch_full_researchers_data(full_profile_json))
 
-        print(f'Request {i + 1} of {len(rids)} complete.')
+        state.progress = (i + 1) / len(rids) * 100
 
     return profiles
 
@@ -149,12 +155,13 @@ def retrieve_documents_metadata(profiles: list[dict]) -> pd.DataFrame:
     """Break down the list into individual researchers, and launch
     the function to get their individual documents lists."""
 
+    state.progress = 0
+    state.current_task = 'Retrieving documents metadata'
     documents = []
 
     for i, profile in enumerate(profiles):
-        print(f'Retrieving documents metadata for researcher #{i+1} of '
-              f'{len(profiles)}')
         documents.extend(get_individual_researchers_docs_list(profile))
+        state.progress = (i + 1) / len(profiles) * 100
 
     return pd.DataFrame(documents)
 
@@ -187,12 +194,13 @@ def retrieve_peer_reviews_metadata(profiles: list[dict]) -> pd.DataFrame:
     """Break down the list into individual researchers, and launch
     the function to get their individual documents lists."""
 
+    state.progress = 0
+    state.current_task = 'Retrieving peer reviews metadata'
     peer_reviews = []
 
     for i, profile in enumerate(profiles):
-        print(f'Retrieving peer review metadata for researcher #{i + 1} of '
-              f'{len(profiles)}')
         peer_reviews.extend(get_individual_peer_reviews_list(profile))
+        state.progress = (i + 1) / len(profiles) * 100
 
     return pd.DataFrame(peer_reviews)
 

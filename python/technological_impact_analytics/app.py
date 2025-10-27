@@ -7,18 +7,22 @@ Science Expanded API.
 Main app file: manage Flask interface actions and rendering.
 """
 
-from flask import Flask, render_template, request
+import json
+import state
+import time
+
+from flask import Flask, render_template, request, Response
+
+from api_operations import (
+    validate_search_query_wos,
+    validate_search_query_dii
+)
 from data_processing import (
     run_button_wos,
     run_button_dii,
     run_button_trends
 )
-from api_operations import (
-    validate_search_query_wos,
-    validate_search_query_dii
-)
 from visualizations import visualize_excel
-
 
 app = Flask(__name__)
 
@@ -44,6 +48,24 @@ def trends_search() -> str:
     """Render trends search page."""
 
     return render_template('trends.html')
+
+
+@app.route("/stream")
+def stream():
+    def generate():
+        last_progress = -1
+        last_task = ""
+        while True:
+            if (state.progress != last_progress) or (state.current_task != last_task):
+                data = {
+                    "task": state.current_task,
+                    "progress": state.progress
+                }
+                yield f"data: {json.dumps(data)}\n\n"
+                last_progress = state.progress
+                last_task = state.current_task
+            time.sleep(0.2)
+    return Response(generate(), mimetype="text/event-stream")
 
 
 @app.route(rule="/", methods=['POST', 'GET'])
@@ -262,7 +284,7 @@ def render_trends_query(search_query: str) -> str:
 
 
 def render_wos_query(search_query: str) -> str:
-    """Interpret the validation API request to Web of Science Core
+    """Interpret the search API request to Web of Science Core
     Collection, render the webpage and messages accordingly."""
 
     response = validate_search_query_wos(search_query)
@@ -339,4 +361,4 @@ def load_file_section_trends(file: str) -> str:
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5002)

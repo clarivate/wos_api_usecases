@@ -80,6 +80,7 @@ def visualize_top_sources(df, query):
                   'size': 16},
         textinfo="label+value"
     )
+    fig.update_layout(hoverlabel={'font_color': 'white'})
 
     return offline.plot(fig, output_type='div')
 
@@ -125,6 +126,7 @@ def visualize_top_publishers(df, query):
                   'size': 16},
         textinfo="label+value"
     )
+    fig.update_layout(hoverlabel={'font_color': 'white'})
 
     return offline.plot(fig, output_type='div')
 
@@ -158,6 +160,7 @@ def visualize_top_authors(df, query):
         title_font_color='#646363',
         title_font_size=16,
         legend_title_text=None,
+        hoverlabel={'font_color': 'white'},
         legend={'yanchor': "bottom", 'y': -0.4, 'xanchor': "center", 'x': 0.5}
     )
     fig.update_yaxes(title_text=None, showgrid=True, gridcolor='#9D9D9C')
@@ -197,6 +200,7 @@ def visualize_refs_by_years(df, query):
         title_font_color='#646363',
         legend_title_text=None,
         title_font_size=16,
+        hoverlabel={'font_color': 'white'},
         legend={'yanchor': "bottom", 'y': -0.4, 'xanchor': "center", 'x': 0.5}
     )
     fig.update_yaxes(title_text=None, showgrid=True, gridcolor='#9D9D9C')
@@ -249,6 +253,11 @@ def visualize_top_refs_by_citations(df, query):
         secondary_y=True
     )
 
+    title = (
+        f'Most cited documents globally in Web of Science Core Collection and'
+        f' locally for the dataset defined by search query: {query}'
+    )
+
     fig.update_xaxes(title_text='', linecolor='#9D9D9C')
     fig.update_layout(
         {'plot_bgcolor': '#FFFFFF', 'paper_bgcolor': '#FFFFFF'},
@@ -257,13 +266,9 @@ def visualize_top_refs_by_citations(df, query):
         font_color='#646363',
         font_size=16,
         title_font_color='#646363',
-        title=word_wrap(
-            f'Most cited documents globally in Web of Science '
-            f'Core Collection and locally for the dataset defined '
-            f'by search query: {query}',
-            width=75
-        ),
+        title=word_wrap(title, width=75),
         title_font_size=16,
+        hoverlabel={'font_color': 'white'},
         legend_title_text=None,
     )
     fig.update_yaxes(
@@ -281,13 +286,15 @@ def visualize_top_refs_by_citations(df, query):
     return offline.plot(fig, output_type='div')
 
 
-def visualize_excel(file):
+def visualize_excel(file: str) -> tuple:
     """Return graphs objects from previously saved Excel file.
 
     :param file:
     :return: tuple[str].
     """
-    df = pd.read_excel(file, sheet_name='Cited References', index_col=0)
-    query = pd.read_excel(file, sheet_name='Search Query')['Search Query'][0]
+    with open(file, 'r', encoding='utf-8') as f:
+        top = pd.read_csv(file, nrows=1, header=None)
+        query = str(top.iloc[0, 1]).strip()
+        df = pd.read_csv(file, skiprows=2)
 
     return visualize_data(df, query)

@@ -5,6 +5,7 @@ self-citations, and convert them into Pandas dataframes for
 visualizing.
 """
 
+import state
 from datetime import date
 import pandas as pd
 from api_operations import base_records_api_call, citing_records_api_call
@@ -48,6 +49,9 @@ def run_button(apikey, search_query):
     # Visualise the data
     plots = visualize_data(df2, search_query)
 
+    state.progress = 0
+    state.current_task = ""
+
     return f'{safe_filename} - {date.today()}.xlsx', plots
 
 
@@ -60,6 +64,9 @@ def get_cited_records(apikey, query):
     :return: list.
     """
 
+    state.progress = 0
+    state.current_task = "Retrieving Web of Science documents"
+
     result = []
     initial_json = base_records_api_call(apikey, query)
 
@@ -68,7 +75,6 @@ def get_cited_records(apikey, query):
     total_results = initial_json['QueryResult']['RecordsFound']
     requests_required = ((total_results - 1) // 100) + 1
     max_requests = min(requests_required, 1000)
-    print(f'Total Web of Science API requests required: {requests_required}.')
 
     for i in range(1, max_requests):
         first_record = int(f'{i}01')
@@ -77,10 +83,9 @@ def get_cited_records(apikey, query):
             query,
             first_record
         )
-
         for record in subsequent_json['Data']['Records']['records']['REC']:
             result.append(fetch_cited_metadata(record))
-        print(f'Base Documents: Request {i + 1} of {max_requests} complete.')
+        state.progress = (i + 1) / max_requests * 100
 
     return result
 
@@ -93,13 +98,12 @@ def get_citation_links(apikey, cited_records):
     :return: list.
     """
 
+    state.progress = 0
+    state.current_task = "Retrieving citing records"
+
     result = []
     for j, cited_record in enumerate(cited_records):
         if cited_record['times_cited'] > 0:
-            print(
-                f'Citing Documents: retrieving {j + 1} of '
-                f'{len(cited_records)}.'
-            )
 
             initial_json = citing_records_api_call(
                 apikey,
@@ -126,6 +130,7 @@ def get_citation_links(apikey, cited_records):
                         result.append(
                             fetch_citing_metadata(cited_record, citing_record)
                         )
+        state.progress = (j + 1) / len(cited_records) * 100
 
     return result
 

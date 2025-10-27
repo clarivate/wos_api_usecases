@@ -5,6 +5,7 @@ return them as dictionaries.
 """
 
 from datetime import date, datetime, timedelta
+import state
 import pandas as pd
 from api_operations import (
     retrieve_rates_via_api,
@@ -23,6 +24,10 @@ def run_button(apikey: str, search_query: str) -> tuple[str, tuple]:
     """
     grants_list = []
     usd_rates = get_usd_rates()
+
+    state.progress = 0
+    state.current_task = "Retrieving Grants Records"
+
     initial_json = retrieve_wos_metadata_via_api(apikey, search_query)
 
     for record in initial_json['Data']['Records']['records']['REC']:
@@ -30,7 +35,6 @@ def run_button(apikey: str, search_query: str) -> tuple[str, tuple]:
     total_results = initial_json['QueryResult']['RecordsFound']
     requests_required = ((total_results - 1) // 100) + 1
     max_requests = min(requests_required, 1000)
-    print(f'Total Web of Science API requests required: {requests_required}.')
     for i in range(1, max_requests):
         first_record = int(f'{i}01')
         subsequent_json = retrieve_wos_metadata_via_api(
@@ -40,7 +44,7 @@ def run_button(apikey: str, search_query: str) -> tuple[str, tuple]:
         )
         for record in subsequent_json['Data']['Records']['records']['REC']:
             grants_list.append(fetch_data(record, usd_rates))
-        print(f'Request {i + 1} of {max_requests} complete.')
+        state.progress = (i + 1) / max_requests * 100
 
     df = pd.DataFrame(grants_list)
     safe_query = search_query.replace('*', '').replace('"', '')
@@ -51,6 +55,10 @@ def run_button(apikey: str, search_query: str) -> tuple[str, tuple]:
         df2.to_excel(writer, sheet_name='Search Query', index=False)
 
     plots = visualize_data(df, search_query)
+
+    state.progress = 0
+    state.current_task = ""
+
     return safe_filename, plots
 
 
