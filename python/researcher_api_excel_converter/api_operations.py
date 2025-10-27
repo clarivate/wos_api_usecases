@@ -37,52 +37,44 @@ def validate_search_query(query: str) -> tuple:
 def researcher_api_request(query: str, page=1) -> dict:
     """Send an API call to the default Researcher API endpoint."""
 
-    result = requests.get(
+    return requests.get(
         url=f'https://api.clarivate.com/apis/wos-researcher/researchers?q='
             f'{urllib.parse.quote(query)}&page={page}&limit=50',
         headers={'X-APIKey': RESEARCHER_APIKEY},
         timeout=16
     ).json()
 
-    return result
-
 
 def researcher_api_profile_request(rid: str) -> dict:
     """Send an API call to the /researchers endpoint of Researcher
     API."""
 
-    result = requests.get(
+    return requests.get(
         url=f'https://api.clarivate.com/apis/wos-researcher/researchers/{rid}',
         headers={'X-APIKey': RESEARCHER_APIKEY},
         timeout=16
     ).json()
-
-    return result
 
 
 def researcher_api_doc_request(rid: str, page=1) -> dict:
     """Send an API call to the /documents endpoint of Researcher
     API."""
 
-    result = requests.get(
+    return requests.get(
         url=f'https://api.clarivate.com/apis/wos-researcher/researchers/{rid}'
             f'/documents?limit=50&page={page}',
         headers={'X-APIKey': RESEARCHER_APIKEY},
         timeout=16
     ).json()
 
-    return result
-
 
 def peer_review_api_request(rid: str, page=1) -> dict:
     """Send an API call to the /peer_reviews endpoint of Researcher
     API."""
 
-    result = requests.get(
+    return requests.get(
         url=f'https://api.clarivate.com/apis/wos-researcher/researchers/{rid}'
             f'/peer-reviews?page={page}',
         headers={'X-APIKey': RESEARCHER_APIKEY},
         timeout=16
     ).json()
-
-    return result

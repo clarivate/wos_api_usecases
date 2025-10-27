@@ -5,6 +5,7 @@ Expanded API.
 
 import urllib.parse
 import requests
+import time
 
 
 def validate_search_query(apikey, query):
@@ -76,10 +77,9 @@ def cited_references_request(apikey, ut, first_record=1):
         headers={'X-ApiKey': apikey},
         timeout=16
     )
-    if response.status_code == 500:
-        print(response.status_code)
-        print(response)
-        return cited_references_request(apikey, ut, first_record)
+
+    if response.headers['x-req-reqpersec-remaining'] == 0:
+        time.sleep(.2)
 
     return response
 

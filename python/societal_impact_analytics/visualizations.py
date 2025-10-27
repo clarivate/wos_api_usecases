@@ -98,6 +98,7 @@ def visualize_citation_report(df: pd.DataFrame, df2: pd.DataFrame, query: str) -
         title_font_color='#646363',
         title_font_size=18,
         legend_title_text=None,
+        hoverlabel={'font_color': 'white'},
         legend={
             'yanchor': 'bottom',
             'y': -0.4,
@@ -221,6 +222,7 @@ def visualize_cited_authors(df: pd.DataFrame, query: str) -> str:
     )
 
     fig.update_traces(marker={'color': color_palette[0], 'sizemin': 3})
+    fig.update_layout(hoverlabel={'font_color': 'white'})
 
     return offline.plot(fig, output_type='div')
 
@@ -259,6 +261,7 @@ def visualize_citing_authors(df: pd.DataFrame, query: str) -> str:
                   'size': 16},
         textinfo="label+value"
     )
+    fig.update_layout(hoverlabel={'font_color': 'white'})
 
     return offline.plot(fig, output_type='div')
 
@@ -292,6 +295,7 @@ def visualize_citing_sources(df: pd.DataFrame, query: str) -> str:
                   'size': 16},
         textinfo="label+value"
     )
+    fig.update_layout(hoverlabel={'font_color': 'white'})
 
     return offline.plot(fig, output_type='div')
 
@@ -320,6 +324,7 @@ def visualize_citing_source_countries(df: pd.DataFrame, query: str) -> str:
         labels={'countries_applied_list': 'Country', 'count': 'Occurrences'},
         title=word_wrap(x=title, width=120)
     )
+    fig.update_layout(hoverlabel={'font_color': 'white'})
 
     return offline.plot(fig, output_type='div')
 
@@ -370,6 +375,7 @@ def visualize_trends_years(df: pd.DataFrame, query: str) -> str:
         title_font_color='#646363',
         title_font_size=18,
         legend_title_text=None,
+        hoverlabel={'font_color': 'white'},
         legend={
             'yanchor': 'bottom',
             'y': -0.4,

@@ -4,6 +4,7 @@ Expanded API.
 """
 
 import requests
+import time
 
 
 def validate_search_query(apikey, query):
@@ -49,6 +50,9 @@ def base_records_api_call(apikey, query, first_record=1):
         timeout=16
     )
 
+    if request.headers['x-req-reqpersec-remaining'] == 0:
+        time.sleep(.2)
+
     return request.json()
 
 
@@ -73,5 +77,8 @@ def citing_records_api_call(apikey, ut, first_record=1):
         headers={'X-ApiKey': apikey},
         timeout=16
     )
+
+    if int(request.headers['x-req-reqpersec-remaining']) == 0:
+        time.sleep(.2)
 
     return request.json()

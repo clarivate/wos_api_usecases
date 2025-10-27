@@ -7,6 +7,7 @@ and parsing the required metadata fields.
 from datetime import date
 from collections import Counter
 import pandas as pd
+import state
 from api_operations import (
     base_records_api_call,
     citing_patents_empty_query,
@@ -31,13 +32,12 @@ def run_button_wos(search_query: str) -> tuple[str, tuple]:
     base_records = retrieve_base_records(search_query)
 
     # Retrieve citing patent ids
+    state.progress = 0
+    state.current_task = 'Retrieving citing patent IDs'
     for i, record in enumerate(base_records):
         if record['times_cited'] != 0:
-            print(
-                f'Retrieving citing patent IDs for the record '
-                f'{record['ut']}: {i+1} of {len(base_records)}'
-            )
             record['citing_inventions'] = retrieve_citing_patent_ids(record)
+            state.progress = (i + 1) / len(base_records) * 100
 
     # Retrieve patent metadata
     complete_patent_id_list = []
@@ -67,6 +67,9 @@ def run_button_wos(search_query: str) -> tuple[str, tuple]:
     # Create the plot
     plots = visualize_wos_data(df, df2, search_query)
 
+    state.progress = 0
+    state.current_task = ''
+
     return safe_filename, plots
 
 
@@ -90,6 +93,9 @@ def run_button_dii(search_query: str) -> tuple[str, tuple]:
 
     # Create the plot
     plots = visualize_dii_data(df, search_query)
+
+    state.progress = 0
+    state.current_task = ''
 
     return safe_filename, plots
 
@@ -121,6 +127,9 @@ def run_button_trends(search_query: str) -> tuple[str, tuple]:
     # Create the plot
     plots = visualize_trends_data(df, search_query)
 
+    state.progress = 0
+    state.current_task = ''
+
     return safe_filename, plots
 
 
@@ -128,19 +137,20 @@ def retrieve_base_records(search_query: str) -> list:
     """Receive a search query, return the list of Web of Science Core
     Collection documents in it."""
 
+    state.progress = 0
+    state.current_task = 'Retrieving Web of Science documents'
     records = []
     initial_json = base_records_api_call(search_query)
     records.extend(fetch_base_record_metadata(initial_json))
     total_results = initial_json['QueryResult']['RecordsFound']
     requests_required = ((total_results - 1) // 100) + 1
     max_requests = min(requests_required, 1000)
-    print(f'Web of Science API requests required: {requests_required}.')
 
     # Send actual API calls to get the base documents metadata
     for i in range(1, max_requests):
         subsequent_json = base_records_api_call(search_query, 100*i+1)
         records.extend(fetch_base_record_metadata(subsequent_json))
-        print(f'Request {i + 1} of {max_requests} complete.')
+        state.progress = (i + 1) / max_requests * 100
 
     return records
 
@@ -149,14 +159,15 @@ def retrieve_patents_metadata_from_ids(patents_ids: list) -> list:
     """Manage API calls and parsing patent metadata from a list of
     their IDs."""
 
+    state.progress = 0
+    state.current_task = 'Retrieving citing patent metadata'
     patents_metadata = []
     requests_required = ((len(patents_ids) - 1) // 100) + 1
     for i in range(requests_required):
         patents_json = patents_api_call_by_ids(patents_ids[i*100:(i+1)*100])
         for patent_rec in patents_json['Data']['Records']['records']['REC']:
             patents_metadata.append(fetch_patents_metadata(patent_rec))
-        print(f'Finally, retrieving full patent metadata: request {i+1} of '
-              f'{requests_required}')
+        state.progress = (i + 1) / requests_required * 100
 
     return patents_metadata
 
@@ -165,6 +176,8 @@ def retrieve_patents_metadata_from_search(search_query: str) -> list:
     """Manage API calls and parsing patent metadata from a search
     query."""
 
+    state.progress = 0
+    state.current_task = 'Retrieving patent metadata'
     patent_records = []
     initial_json = patents_api_call_by_query(search_query)
     for record in initial_json['Data']['Records']['records']['REC']:
@@ -172,14 +185,13 @@ def retrieve_patents_metadata_from_search(search_query: str) -> list:
     total_results = initial_json['QueryResult']['RecordsFound']
     requests_required = ((total_results - 1) // 100) + 1
     max_requests = min(requests_required, 1000)
-    print(f'Web of Science API requests required: {requests_required}.')
 
     # Send actual API calls to get the base documents metadata
     for i in range(1, max_requests):
         subsequent_json = patents_api_call_by_query(search_query, 100*i+1)
         for record in subsequent_json['Data']['Records']['records']['REC']:
             patent_records.append(fetch_patents_metadata(record))
-        print(f'Request {i + 1} of {max_requests} complete.')
+        state.progress = (i + 1) / max_requests * 100
 
     return patent_records
 
@@ -200,6 +212,8 @@ def retrieve_wos_trend(search_query: str) -> list:
     """Retrieve the number of Web of Science documents by publication
     years."""
 
+    state.progress = 0
+    state.current_task = 'Retrieving research trend data'
     pub_years = []
     initial_wos_json = wos_pubyear_call(search_query)
     if initial_wos_json['Data']['Records']['records']:
@@ -211,8 +225,6 @@ def retrieve_wos_trend(search_query: str) -> list:
         total_results = initial_wos_json['QueryResult']['RecordsFound']
         requests_required = ((total_results - 1) // 100) + 1
         max_requests = min(requests_required, 1000)
-        print(f'Web of Science Core Collection API requests required: '
-              f'{requests_required}.')
 
         for i in range(1, max_requests):
             subsequent_wos_json = wos_pubyear_call(search_query, i * 100 + 1)
@@ -221,7 +233,7 @@ def retrieve_wos_trend(search_query: str) -> list:
                 for record
                 in subsequent_wos_json['Data']['Records']['records']['REC']
             )
-            print(f'WoS Core request {i + 1} of {max_requests} complete.')
+            state.progress = (i + 1) / max_requests * 100
 
     return [{'year': k, 'wos': v} for k, v in Counter(pub_years).items()]
 
@@ -230,20 +242,19 @@ def retrieve_dii_trend(search_query: str) -> tuple[list, list]:
     """Retrieve the number of patent documents by their earliest priority
     and publication years."""
 
+    state.progress = 0
+    state.current_task = 'Retrieving innovation trend data'
     pub_years = []
     prty_years = []
     initial_dii_json = dii_pubyear_call(search_query)
     if initial_dii_json['Data']['Records']['records']:
         for record in initial_dii_json['Data']['Records']['records']['REC']:
-            print(record['UID'])
             patent_typ_section = record['static_data']['item']['PatentTyp1']
             pub_years.extend(fetch_patent_pub_year(patent_typ_section))
             prty_years.extend(fetch_earliest_priority_year(patent_typ_section))
         total_results = initial_dii_json['QueryResult']['RecordsFound']
         requests_required = ((total_results - 1) // 100) + 1
         max_requests = min(requests_required, 1000)
-        print(f'Derwent Innovations Index API requests required: '
-              f'{requests_required}.')
 
         for i in range(1, max_requests):
             subsequent_dii_json = dii_pubyear_call(search_query, i * 100 + 1)
@@ -251,7 +262,7 @@ def retrieve_dii_trend(search_query: str) -> tuple[list, list]:
                 patent_typ_section = record['static_data']['item']['PatentTyp1']
                 pub_years.extend(fetch_patent_pub_year(patent_typ_section))
                 prty_years.extend(fetch_earliest_priority_year(patent_typ_section))
-            print(f'DII request {i + 1} of {max_requests} complete.')
+            state.progress = (i + 1) / max_requests * 100
 
     return (
         [{'year': k, 'dii_pubyear': v} for k, v in Counter(pub_years).items()],
@@ -303,7 +314,7 @@ def fetch_author_names(names_json) -> str:
                       == 'author'])
 
 
-def retrieve_citing_patent_ids(rec: str) -> list[str]:
+def retrieve_citing_patent_ids(rec: dict) -> list[str]:
     """Retrieve the CITING document IDs for each of the CITED documents
     that have at least 1 citation, save the ID of each of them that
     belongs to Derwent Innovations Index database."""

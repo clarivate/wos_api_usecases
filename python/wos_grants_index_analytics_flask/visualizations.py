@@ -18,24 +18,18 @@ color_palette = ['#B175E1', '#18A381', '#3595F0', '#ED5564', '#5E33BF',
                  '#B67325', '#AB47BC', '#2E7D32', '#1B809F', '#C13800']
 
 
-def word_wrap(x):
-    """Wrap words for nicer formatting of longer titles on graphs.
+def word_wrap(x: str, width: int) -> str:
+    """Wrap words for nicer formatting of longer titles on graphs."""
 
-    :param x: str or int.
-    :return: str.
-    """
-    return '<br>'.join(textwrap.wrap(str(x), 40))
+    return '<br>'.join(textwrap.wrap(str(x), width=width))
 
 
-def visualize_data(df, query):
+def visualize_data(df: pd.DataFrame, query: str) -> tuple:
     """Create a number of html div object with various grant data
     visualizations with Plotly.
 
-    :param df: pandas dataframe.
-    :param query: str.
-    :return: tuple[str].
     """
-    # Visualizing Grants by Years.
+
     df['Grant Amount, USD'] = df['Grant Amount, USD'].replace(
         to_replace='',
         value=0
@@ -45,10 +39,33 @@ def visualize_data(df, query):
         df.groupby('Publication Year')['Grant Amount, USD'].sum()
     )
 
+    average_grant_volume_by_year = pd.merge(
+        grants_by_years,
+        df.groupby('Publication Year')['UT'].count(), on='Publication Year'
+    )
+
+    return (
+        visualize_grants_by_years(grants_by_years, query),
+        visualize_top_pis(df, query),
+        visualize_top_pi_orgs(df, query),
+        visualize_top_funders(df, query),
+        visualize_average_grant_volume_by_years(
+            average_grant_volume_by_year,
+            query
+        ),
+        visualize_top_grants_by_associated_records(df, query)
+    )
+
+
+def visualize_grants_by_years(gby: pd.DataFrame, query: str) -> str:
+    """Create a bar plot for grant funding volumes over years."""
+
+    title = f'Grant Funding by Year, USD, for: {query}'
+
     fig = px.bar(
-        data_frame=grants_by_years,
+        data_frame=gby,
         y='Grant Amount, USD',
-        title=f'Grant Funding by Year, USD, for: {query}',
+        title=word_wrap(x=title, width=120),
         hover_data={'Grant Amount, USD': ':,.2f'}
     )
     fig.update_traces(marker_color=color_palette[0])
@@ -57,16 +74,23 @@ def visualize_data(df, query):
         font_color='#646363',
         font_size=18,
         title_font_color='#646363',
+        title_font_size=18,
         legend_title_text=None,
+        hoverlabel={'font_color': 'white'},
         legend={'yanchor': "bottom", 'y': -0.4, 'xanchor': "center", 'x': 0.5}
     )
     fig.update_yaxes(title_text=None, showgrid=True, gridcolor='#9D9D9C')
     fig.update_xaxes(title_text=None, linecolor='#9D9D9C')
-    grants_by_years_plot = offline.plot(fig, output_type='div')
 
-    # Visualizing top principal investigators by grant volumes
+    return offline.plot(fig, output_type='div')
+
+
+def visualize_top_pis(df: pd.DataFrame, query: str) -> str:
+    """Create a treemap visualization for top Principal Investigators
+    by funding volumes received."""
+
     grants_by_pi = (
-        df.groupby('Principal Investigator')['Grant Amount, USD'].sum('')
+        df.groupby('Principal Investigator')['Grant Amount, USD'].sum()
         .to_frame().reset_index()
     )
 
@@ -74,6 +98,10 @@ def visualize_data(df, query):
         'Grant Amount, USD',
         ascending=False,
         inplace=True
+    )
+
+    title = (
+        f'Top Principal Investigators by funding volumes, USD, for: {query}'
     )
 
     display_items_gbpi = min(grants_by_pi.shape[0], 20)
@@ -84,17 +112,22 @@ def visualize_data(df, query):
         color_discrete_sequence=color_palette,
         values='Grant Amount, USD',
         hover_data={'Grant Amount, USD': ':,.2f'},
-        title=f'Top Principal Investigators by funding volumes, USD, for: '
-              f'{query}'
+        title=word_wrap(x=title, width=120)
     )
     fig.update_traces(
         textfont={'color': '#FFFFFF',
                   'size': 16},
         textinfo="label+value"
     )
-    grants_by_pi_plot = offline.plot(fig, output_type='div')
+    fig.update_layout(hoverlabel={'font_color': 'white'})
 
-    # Visualizing top organizations receiving grant funding.
+    return offline.plot(fig, output_type='div')
+
+
+def visualize_top_pi_orgs(df: pd.DataFrame, query: str) -> str:
+    """Create a treemap visualization for top Principal Investigators
+    Institutions by funding volumes received."""
+
     df['Principal Investigator Institution'] = (
         df['Principal Investigator Institution'].replace(
             to_replace='',
@@ -103,7 +136,7 @@ def visualize_data(df, query):
     )
     grants_by_organizations = (
         df.groupby('Principal Investigator Institution')['Grant Amount, USD'].
-        sum('').to_frame().reset_index()
+        sum().to_frame().reset_index()
     )
     grants_by_organizations.sort_values(
         'Grant Amount, USD',
@@ -113,8 +146,11 @@ def visualize_data(df, query):
 
     grants_by_organizations['Principal Investigator Institution'] = (
         grants_by_organizations['Principal Investigator Institution']
-        .apply(word_wrap)
+        .apply(word_wrap, width=40)
     )
+
+    title = (f'Top Principal Investigator Institutions by funding volumes, '
+             f'USD, for: {query}')
 
     display_items_gbo = min(grants_by_organizations.shape[0], 15)
     fig = px.treemap(
@@ -124,17 +160,22 @@ def visualize_data(df, query):
         color_discrete_sequence=color_palette,
         values='Grant Amount, USD',
         hover_data={'Grant Amount, USD': ':,.2f'},
-        title=f'Top Principal Investigator Institutions by funding volumes, '
-              f'USD, for: {query}'
+        title=word_wrap(x=title, width=120)
     )
     fig.update_traces(
         textfont={'color': '#FFFFFF',
                   'size': 16},
         textinfo="label+value"
     )
-    grants_by_organizations_plot = offline.plot(fig, output_type='div')
+    fig.update_layout(hoverlabel={'font_color': 'white'})
 
-    # Visualizing top funding agencies by funding volume.
+    return offline.plot(fig, output_type='div')
+
+
+def visualize_top_funders(df: pd.DataFrame, query: str) -> str:
+    """Create a treemap visualization for top Funding Agencies by
+    funding volumes provided."""
+
     df['Funding Agency'] = (df['Funding Agency'].replace(
         to_replace='',
         value='(name unavailable)'
@@ -147,7 +188,9 @@ def visualize_data(df, query):
         'Grant Amount, USD', ascending=False, inplace=True
     )
     grants_by_funder['Funding Agency'] = (grants_by_funder['Funding Agency']
-                                          .apply(word_wrap))
+                                          .apply(word_wrap, width=40))
+
+    title = f'Top Grant Agencies by funding volumes, USD, for: {query}'
 
     fig = px.treemap(
         data_frame=grants_by_funder,
@@ -155,30 +198,37 @@ def visualize_data(df, query):
         values='Grant Amount, USD',
         color_discrete_sequence=color_palette,
         hover_data={'Grant Amount, USD': ':,.2f'},
-        title=f'Top Grant Agencies by funding volumes, USD, for: {query}'
+        title=word_wrap(x=title, width=120)
     )
     fig.update_traces(
         textfont={'color': '#FFFFFF',
                   'size': 16},
         textinfo="label+value"
     )
-    grants_by_funder_plot = offline.plot(fig, output_type='div')
+    fig.update_layout(hoverlabel={'font_color': 'white'})
 
-    # Visualizing Average Grant Size by Years
-    average_grant_volume_by_year = pd.merge(
-        grants_by_years,
-        df.groupby('Publication Year')['UT'].count(), on='Publication Year'
+    return offline.plot(fig, output_type='div')
+
+
+def visualize_average_grant_volume_by_years(
+        agvby: pd.DataFrame,
+        query: str
+) -> str:
+    """Create a bar plot for average grant funding volumes over years.
+    """
+
+    agvby['Average Grant Volume'] = (
+            agvby['Grant Amount, USD'] /
+            agvby['UT']
     )
-    average_grant_volume_by_year['Average Grant Volume'] = (
-            average_grant_volume_by_year['Grant Amount, USD'] /
-            average_grant_volume_by_year['UT']
-    )
-    average_grant_volume_by_year = average_grant_volume_by_year.rename(
+    average_grant_volume_by_year = agvby.rename(
         columns={
             'UT': 'Number of Grants',
             'Grant Amount, USD': 'Total Funding Volume'
         }
     )
+
+    title = f'Average Grant Volume by Year, USD, for: {query}'
 
     fig = px.bar(
         data_frame=average_grant_volume_by_year,
@@ -186,7 +236,7 @@ def visualize_data(df, query):
         hover_data={'Average Grant Volume': ':,.2f',
                     'Number of Grants': True,
                     'Total Funding Volume': ':,.2f'},
-        title=f'Average Grant Volume by Year, USD, for: {query}'
+        title=word_wrap(x=title, width=120)
     )
 
     fig.update_traces(marker_color=color_palette[0])
@@ -196,22 +246,33 @@ def visualize_data(df, query):
         font_size=18,
         title_font_color='#646363',
         legend_title_text=None,
+        hoverlabel={'font_color': 'white'},
         legend={'yanchor': "bottom", 'y': -0.4, 'xanchor': "center", 'x': 0.5}
     )
     fig.update_yaxes(title_text=None, showgrid=True, gridcolor='#9D9D9C')
     fig.update_xaxes(title_text=None, linecolor='#9D9D9C')
-    average_grants_volume_by_years_plot = offline.plot(fig, output_type='div')
 
-    # Visualizing Top Grants by Associated Web of Science Records
+    return offline.plot(fig, output_type='div')
+
+
+def visualize_top_grants_by_associated_records(
+        df: pd.DataFrame, query: str
+) -> str:
+    """Create a bar plot for top grants by associated Web of Science
+    Core Collection document records."""
+
     df.sort_values('Related WoS Records Count', ascending=False, inplace=True)
-    df['Document Title'] = (df['Document Title'].dropna().apply(word_wrap))
+    df['Document Title'] = (
+        df['Document Title'].dropna().apply(word_wrap, width=40
+    ))
+    title = f'Top Grants by Associated Web of Science Records, for: {query}'
 
     fig = px.bar(
         data_frame=df[:50],
         x='UT',
         y='Related WoS Records Count',
         hover_name='Document Title',
-        title=f'Top Grants by Associated Web of Science Records, for: {query}'
+        title=word_wrap(x=title, width=120)
 
     )
 
@@ -222,21 +283,13 @@ def visualize_data(df, query):
         font_size=18,
         title_font_color='#646363',
         legend_title_text=None,
+        hoverlabel={'font_color': 'white'},
         legend={'yanchor': "bottom", 'y': -0.4, 'xanchor': "center", 'x': 0.5}
     )
     fig.update_yaxes(title_text=None, showgrid=True, gridcolor='#9D9D9C')
     fig.update_xaxes(title_text=None, linecolor='#9D9D9C')
-    top_grants_by_associated_wos_records_plot = offline.plot(
-        fig,
-        output_type='div'
-    )
 
-    return (grants_by_years_plot,
-            grants_by_pi_plot,
-            grants_by_organizations_plot,
-            grants_by_funder_plot,
-            average_grants_volume_by_years_plot,
-            top_grants_by_associated_wos_records_plot)
+    return offline.plot(fig, output_type='div')
 
 
 def visualize_excel(file):

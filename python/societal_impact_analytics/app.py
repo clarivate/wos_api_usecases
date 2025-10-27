@@ -7,7 +7,12 @@ using Web of Science Expanded API.
 Main app file: manage Flask interface actions and rendering.
 """
 
-from flask import Flask, render_template, request
+import json
+import state
+import time
+
+from flask import Flask, render_template, request, Response
+
 from data_processing import run_button_wos, run_button_trends
 from api_operations import (
     validate_search_query_wos,
@@ -33,6 +38,24 @@ def trends_search() -> str:
     """Render trends search page."""
 
     return render_template('trends.html')
+
+
+@app.route("/stream")
+def stream():
+    def generate():
+        last_progress = -1
+        last_task = ""
+        while True:
+            if (state.progress != last_progress) or (state.current_task != last_task):
+                data = {
+                    "task": state.current_task,
+                    "progress": state.progress
+                }
+                yield f"data: {json.dumps(data)}\n\n"
+                last_progress = state.progress
+                last_task = state.current_task
+            time.sleep(0.2)
+    return Response(generate(), mimetype="text/event-stream")
 
 
 @app.route(rule="/", methods=['POST', 'GET'])

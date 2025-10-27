@@ -41,6 +41,14 @@
 
                         </p>
                         <button class="form__submit" type="submit" name="button" value="run">Run</button>
+
+                        <div id="progress-container" class="progress-container">
+                            <div class="progress-bar-background">
+                                <div id="progress-bar" class="progress-bar-fill"></div>
+                                <div id="progress-label" class="progress-label"></div>
+                            </div>
+                        </div>
+
                         <p>{% if not filename %} {% else %}
                             Retrieval complete. For further analysis, check "{{ filename }}" file in the /downloads/woscc subfolder of the project.
                             {% endif %}</p>
@@ -70,5 +78,6 @@
         </div>
         {% endif %}
         <footer></footer>
+        <script src="{{ url_for('static', filename='index.js')}}", charset="UTF-8"></script>
     </body>
 </html>

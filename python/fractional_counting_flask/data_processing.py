@@ -5,6 +5,7 @@ and parsing the required metadata fields.
 """
 
 from datetime import date
+import state
 import pandas as pd
 from api_operations import retrieve_wos_metadata
 from visualizations import visualize_data
@@ -22,20 +23,22 @@ def run_button(apikey, search_query, org_name):
 
     records = []
 
+    state.progress = 0
+    state.current_task = "Retrieving Web of Science Documents"
+
     # Send initial API call to get the number of requests to paginate
     initial_json = retrieve_wos_metadata(apikey, search_query)
     records.extend(initial_json['Data']['Records']['records']['REC'])
     total_results = initial_json['QueryResult']['RecordsFound']
     requests_required = ((total_results - 1) // 100) + 1
     max_requests = min(requests_required, 1000)
-    print(f'Web of Science API requests required: {requests_required}.')
 
     # Send actual API calls
     for i in range(1, max_requests):
         subsequent_json = retrieve_wos_metadata(apikey, search_query, 100*i+1)
 
         records.extend(subsequent_json['Data']['Records']['records']['REC'])
-        print(f'Request {i+1} of {max_requests} complete.')
+        state.progress = (i + 1) / max_requests * 100
 
     # Calculate fractions
     frac_counts = count_fractions(records, org_name)
@@ -45,6 +48,9 @@ def run_button(apikey, search_query, org_name):
 
     # Create the plot
     plots = visualize_data(df2, search_query, org_name)
+
+    state.progress = 0
+    state.current_task = ""
 
     return f'{safe_filename}.xlsx', plots
 

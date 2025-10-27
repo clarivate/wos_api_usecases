@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/html">
+<html lang="en">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -34,14 +34,22 @@
                             {% if not error_message_1 %} <br> {% else %} <p class="search__error">{{ error_message_1 }}</p> {% endif %}
                         </p>
                         <button class="form__validate" type="submit" name="button" value="validate">Validate</button>
-                        <br>
+
                         <p>
                             {% if not message_1 %} {% else %} {{ message_1 }} <br> {% endif %}
                             If you are not sure of how many records your search query returns, try validating it first.<br>
-                            Maximum number of Web of Science document records returned through the API in a single search query is 100,000.<br>
+                            Maximum number of Web of Science document records returned through the API in a single search query is 100,000.
 
                         </p>
                         <button class="form__submit" type="submit" name="button" value="run">Run</button>
+
+                        <div id="progress-container" class="progress-container">
+                            <div class="progress-bar-background">
+                                <div id="progress-bar" class="progress-bar-fill"></div>
+                                <div id="progress-label" class="progress-label"></div>
+                            </div>
+                        </div>
+
                         <p>{% if not filename %} {% else %}
                             Retrieval complete. For further analysis, check "{{ filename }}" file in the /downloads/woscc subfolder of the project.
                             {% endif %}</p>
@@ -72,5 +80,6 @@
         </div>
         {% endif %}
         <footer></footer>
+    <script src="{{ url_for('static', filename='index.js') }}" charset="UTF-8"></script>
     </body>
 </html>

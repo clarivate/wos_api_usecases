@@ -91,6 +91,7 @@ def visualize_trends_data(df, query: str) -> tuple[str]:
         title_font_color='#646363',
         title_font_size=18,
         legend_title_text=None,
+        hoverlabel={'font_color': 'white'},
         legend={
             'yanchor': 'bottom',
             'y': -0.4,
@@ -105,15 +106,20 @@ def visualize_trends_data(df, query: str) -> tuple[str]:
 
 
 def visualize_metrics(df2: pd.DataFrame, query: str, db: str, df=None) -> str:
-    """Create a treemap visualisation for the inventions' metrics."""
+    """Create a combined visualisation for the inventions' metrics."""
+
+    inventions_with_granted_patents = 0
+    success_rate = 0
+    quad_inventions = 0
 
     number_of_inventions = df2.shape[0]
-    inventions_with_granted_patents = (
-        df2['granted_patents'][df2['granted_patents'] != ''].dropna().shape[0]
-    )
 
-    success_rate = count_success_rate(df2['patent_numbers'])
-    quad_inventions = df2[df2['is_quadrilateral'] == True].dropna().shape[0]
+    if number_of_inventions > 0:
+        inventions_with_granted_patents = (
+            df2['granted_patents'][df2['granted_patents'] != ''].dropna().shape[0]
+        )
+        success_rate = count_success_rate(df2['patent_numbers'])
+        quad_inventions = df2[df2['is_quadrilateral'] == True].dropna().shape[0]
 
     if db == 'WOS':
         title = f'Patent Citation Report for: {query}'
@@ -152,9 +158,14 @@ def visualize_metrics(df2: pd.DataFrame, query: str, db: str, df=None) -> str:
 def build_citation_report_plot(df: pd.DataFrame, df2: pd.DataFrame) -> go.Figure:
     """Build a Publications and Patent Citations over time plot."""
 
+    dii_pub_years = pd.Series(dtype=int)
+    dii_priority_years = pd.Series(dtype=int)
+
     wos_pub_years = pd.Series(df['pub_year'].value_counts())
-    dii_pub_years = pd.Series(df2['publication_year'].value_counts())
-    dii_priority_years = pd.Series(df2['earliest_priority'].value_counts())
+
+    if df2.shape[0] > 0:
+        dii_pub_years = pd.Series(df2['publication_year'].value_counts())
+        dii_priority_years = pd.Series(df2['earliest_priority'].value_counts())
     df = pd.DataFrame({
         'Web of Science Documents': wos_pub_years,
         'Citing Patent Documents (Earliest Priority Year)': dii_priority_years,
@@ -272,6 +283,7 @@ def build_patent_docs_over_time_plot(df: pd.DataFrame) -> go.Figure:
         title_font_color='#646363',
         title_font_size=18,
         legend_title_text=None,
+        hoverlabel={'font_color': 'white'},
         legend={
             'yanchor': 'bottom',
             'y': -0.4,
@@ -315,7 +327,10 @@ def visualize_authors(df: pd.DataFrame, query: str) -> str:
 
     # Fill NaN values in 'authors' and 'citing_inventions'
     df['authors'] = df['authors'].fillna('')
-    df['citing_inventions'] = df['citing_inventions'].fillna('')
+    if 'citing_inventions' in df.columns:
+        df['citing_inventions'] = df['citing_inventions'].fillna('')
+    else:
+        df['citing_inventions'] = ''
 
     # Dictionary to store author-level metrics
     author_data = defaultdict(
@@ -377,6 +392,7 @@ def visualize_authors(df: pd.DataFrame, query: str) -> str:
     )
 
     fig.update_traces(marker={'color': color_palette[0], 'sizemin': 3})
+    fig.update_layout(hoverlabel={'font_color': 'white'})
 
     return offline.plot(fig, output_type='div')
 
@@ -386,11 +402,13 @@ def visualize_assignees(df: pd.DataFrame, query: str, db: str) -> str:
     occurrences.
     """
 
-    all_assignees = [
-        name.strip()
-        for names in df['assignee_names'].dropna()
-        for name in names.split(',')
-    ]
+    all_assignees = []
+    if "assignee_names" in df.columns:
+        all_assignees = [
+            name.strip()
+            for names in df["assignee_names"].dropna()
+            for name in names.split(",")
+        ]
 
     assignee_counts = Counter(all_assignees)
     top_assignees = pd.DataFrame(
@@ -419,6 +437,7 @@ def visualize_assignees(df: pd.DataFrame, query: str, db: str) -> str:
                   'size': 16},
         textinfo="label+value"
     )
+    fig.update_layout(hoverlabel={'font_color': 'white'})
 
     return offline.plot(fig, output_type='div')
 
@@ -428,11 +447,13 @@ def visualize_inventors(df: pd.DataFrame, query: str, db: str) -> str:
     occurrences.
     """
 
-    all_inventors = [
-        name.strip()
-        for names in df['inventor_names'].dropna()
-        for name in names.split(',')
-    ]
+    all_inventors = []
+    if 'inventor_names' in df:
+        all_inventors = [
+            name.strip()
+            for names in df['inventor_names'].dropna()
+            for name in names.split(',')
+        ]
 
     inventor_counts = Counter(all_inventors)
     top_inventors = pd.DataFrame(
@@ -461,6 +482,7 @@ def visualize_inventors(df: pd.DataFrame, query: str, db: str) -> str:
                   'size': 16},
         textinfo="label+value"
     )
+    fig.update_layout(hoverlabel={'font_color': 'white'})
 
     return offline.plot(fig, output_type='div')
 
@@ -469,11 +491,6 @@ def visualize_countries_applied(df: pd.DataFrame, query: str, db: str) -> str:
     """Visualise country data with Plotly choropleth."""
 
     country_codes_df = pd.read_excel('country_codes.xlsx')
-    df['countries_applied'] = df['countries_applied'].apply(lambda x: x.split(', '))
-    occurrences = df['countries_applied'].explode().value_counts().reset_index()
-    mapping = dict(zip(country_codes_df['A2'], country_codes_df['A3']))
-    occurrences['countries_applied'] = (occurrences['countries_applied']
-                                        .map(mapping).dropna())
 
     if db == 'WOS':
         title = (f'Countries by patent documents citing Web of Science '
@@ -481,15 +498,29 @@ def visualize_countries_applied(df: pd.DataFrame, query: str, db: str) -> str:
     else:
         title = f'Countries by number of patent documents for: {query}'
 
-    fig = px.choropleth(
-        occurrences,
-        locations='countries_applied',
-        color='count',
-        color_continuous_scale=['#3595f0', '#B175E1'],
-        projection='natural earth',
-        labels={'countries_applied_list': 'Country', 'count': 'Occurrences'},
-        title=word_wrap(x=title, width=120)
-    )
+    if 'countries_applied' in df.columns:
+        df['countries_applied'] = df['countries_applied'].apply(lambda x: x.split(', '))
+        occurrences = df['countries_applied'].explode().value_counts().reset_index()
+        mapping = dict(zip(country_codes_df['A2'], country_codes_df['A3']))
+        occurrences['countries_applied'] = (occurrences['countries_applied']
+                                            .map(mapping).dropna())
+        fig = px.choropleth(
+            occurrences,
+            locations='countries_applied',
+            color='count',
+            color_continuous_scale=['#3595f0', '#B175E1'],
+            projection='natural earth',
+            labels={'countries_applied_list': 'Country', 'count': 'Occurrences'},
+            title=word_wrap(x=title, width=120)
+        )
+        fig.update_layout(hoverlabel={'font_color': 'white'})
+
+    else:
+        fig = px.choropleth()
+        fig.update_layout(
+            title="No data available",
+            geo=dict(showframe=False, showcoastlines=False)
+        )
 
     return offline.plot(fig, output_type='div')
 
@@ -500,13 +531,6 @@ def visualize_countries_granted(df: pd.DataFrame, query: str, db: str) -> str:
     """
 
     country_codes_df = pd.read_excel('country_codes.xlsx')
-    df['countries_granted'] = (df['countries_granted'].dropna()
-                               .apply(lambda x: x.split(', ')))
-    occurrences = (df['countries_granted'].explode().value_counts()
-                   .reset_index())
-    mapping = dict(zip(country_codes_df['A2'], country_codes_df['A3']))
-    occurrences['countries_granted'] = (occurrences['countries_granted']
-                                        .map(mapping).dropna())
 
     if db == 'WOS':
         title = (f'Countries by granted patents citing Web of Science '
@@ -514,15 +538,31 @@ def visualize_countries_granted(df: pd.DataFrame, query: str, db: str) -> str:
     else:
         title = f'Countries by granted patents for: {query}'
 
-    fig = px.choropleth(
-        occurrences,
-        locations='countries_granted',
-        color='count',
-        color_continuous_scale=['#3595f0', '#B175E1'],
-        projection='natural earth',
-        labels={'countries_granted': 'Country', 'count': 'Occurrences'},
-        title=word_wrap(x=title, width=120)
-    )
+    if 'countries_granted' in df.columns:
+        df['countries_granted'] = (df['countries_granted'].dropna()
+                                   .apply(lambda x: x.split(', ')))
+        occurrences = (df['countries_granted'].explode().value_counts()
+                       .reset_index())
+        mapping = dict(zip(country_codes_df['A2'], country_codes_df['A3']))
+        occurrences['countries_granted'] = (occurrences['countries_granted']
+                                            .map(mapping).dropna())
+        fig = px.choropleth(
+            occurrences,
+            locations='countries_granted',
+            color='count',
+            color_continuous_scale=['#3595f0', '#B175E1'],
+            projection='natural earth',
+            labels={'countries_granted': 'Country', 'count': 'Occurrences'},
+            title=word_wrap(x=title, width=120)
+        )
+        fig.update_layout(hoverlabel={'font_color': 'white'})
+
+    else:
+        fig = px.choropleth()
+        fig.update_layout(
+            title="No data available",
+            geo=dict(showframe=False, showcoastlines=False)
+        )
 
     return offline.plot(fig, output_type='div')
 

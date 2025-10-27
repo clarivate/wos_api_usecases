@@ -6,14 +6,35 @@ Main app file: manage Flask interface actions and rendering, manage the
 main function that is launched on clicking the "Run" button.
 """
 
+import json
+import state
+import time
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, Response
 from data_processing import run_button
 from visualizations import visualize_excel
 from api_operations import validate_search_query
 from apikeys import EXPANDED_APIKEY
 
 app = Flask(__name__)
+
+
+@app.route("/stream")
+def stream():
+    def generate():
+        last_progress = -1
+        last_task = ""
+        while True:
+            if (state.progress != last_progress) or (state.current_task != last_task):
+                data = {
+                    "task": state.current_task,
+                    "progress": state.progress
+                }
+                yield f"data: {json.dumps(data)}\n\n"
+                last_progress = state.progress
+                last_task = state.current_task
+            time.sleep(0.2)
+    return Response(generate(), mimetype="text/event-stream")
 
 
 @app.route(rule="/", methods=['POST', 'GET'])
@@ -88,4 +109,4 @@ def load_file_section(file):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5003)

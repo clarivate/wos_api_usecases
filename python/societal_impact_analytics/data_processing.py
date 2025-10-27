@@ -5,6 +5,7 @@ and parsing the required metadata fields.
 """
 
 from datetime import date
+import state
 from collections import Counter
 import pandas as pd
 from api_operations import (
@@ -29,11 +30,12 @@ def run_button_wos(search_query: str) -> tuple[str, tuple]:
     base_records = retrieve_base_records(search_query)
 
     # Retrieve citing policy document ids
+    state.progress = 0
+    state.current_task = 'Retrieving citing policy doc IDs'
     for i, record in enumerate(base_records):
         if record['times_cited'] != 0:
-            print(f'Retrieving citing policy document IDs for the record '
-                  f'{record['ut']}: {i+1} of {len(base_records)}')
             record['citing_policy_documents'] = retrieve_citing_policy_docs_ids(record)
+            state.progress = (i + 1) / len(base_records) * 100
 
     # Retrieve policy documents metadata
     complete_policy_docs_list = []
@@ -63,6 +65,9 @@ def run_button_wos(search_query: str) -> tuple[str, tuple]:
     # Create the plot
     plots = visualize_wos_data(df, df2, search_query)
 
+    state.progress = 0
+    state.current_task = ''
+
     return safe_filename, plots
 
 
@@ -91,6 +96,9 @@ def run_button_trends(search_query: str) -> tuple[str, tuple]:
     # Create the plot
     plots = visualize_trends_data(df, search_query)
 
+    state.progress = 0
+    state.current_task = ''
+
     return safe_filename, plots
 
 
@@ -98,19 +106,20 @@ def retrieve_base_records(search_query: str) -> list:
     """Receive a search query, return the list of Web of Science Core
     Collection documents in it."""
 
+    state.progress = 0
+    state.current_task = 'Retrieving Web of Science documents'
     records = []
     initial_json = base_records_api_call(search_query)
     records.extend(fetch_base_record_metadata(initial_json))
     total_results = initial_json['QueryResult']['RecordsFound']
     requests_required = ((total_results - 1) // 100) + 1
     max_requests = min(requests_required, 1000)
-    print(f'Web of Science API requests required: {requests_required}.')
 
     # Send actual API calls to get the base documents metadata
     for i in range(1, max_requests):
         subsequent_json = base_records_api_call(search_query, 100*i+1)
         records.extend(fetch_base_record_metadata(subsequent_json))
-        print(f'Request {i + 1} of {max_requests} complete.')
+        state.progress = (i + 1) / max_requests * 100
 
     return records
 
@@ -119,15 +128,15 @@ def retrieve_policy_docs_from_ids(doc_ids: list) -> list:
     """Manage API calls and parsing policy documents metadata from a
     list of their IDs."""
 
+    state.progress = 0
+    state.current_task = 'Retrieving citing policy doc metadata'
     policy_docs_metadata = []
     requests_required = ((len(doc_ids) - 1) // 100) + 1
     for i in range(requests_required):
         policy_json = policy_docs_api_call_by_ids(doc_ids[i*100:(i+1)*100])
         for policy_doc in policy_json['Data']['Records']['records']['REC']:
-            print(policy_doc['UID'])
             policy_docs_metadata.append(fetch_policy_docs_metadata(policy_doc))
-        print(f'Finally, retrieving full policy documents metadata: request '
-              f'{i+1} of {requests_required}')
+        state.progress = (i + 1) / requests_required * 100
 
     return policy_docs_metadata
 
@@ -148,6 +157,8 @@ def retrieve_wos_trend(search_query: str) -> list:
     """Retrieve the number of Web of Science documents by publication
     years."""
 
+    state.progress = 0
+    state.current_task = 'Retrieving research trend data'
     pub_years = []
     initial_wos_json = wos_pubyear_call(search_query)
     if initial_wos_json['Data']['Records']['records']:
@@ -159,8 +170,6 @@ def retrieve_wos_trend(search_query: str) -> list:
         total_results = initial_wos_json['QueryResult']['RecordsFound']
         requests_required = ((total_results - 1) // 100) + 1
         max_requests = min(requests_required, 1000)
-        print(f'Web of Science Core Collection API requests required: '
-              f'{requests_required}.')
 
         for i in range(1, max_requests):
             subsequent_wos_json = wos_pubyear_call(search_query, i * 100 + 1)
@@ -169,7 +178,7 @@ def retrieve_wos_trend(search_query: str) -> list:
                 for record
                 in subsequent_wos_json['Data']['Records']['records']['REC']
             )
-            print(f'WoS Core request {i + 1} of {max_requests} complete.')
+            state.progress = (i + 1) / max_requests * 100
 
     return [{'year': k, 'wos': v} for k, v in Counter(pub_years).items()]
 
@@ -178,6 +187,8 @@ def retrieve_pci_trend(search_query: str) -> list:
     """Retrieve the number of policy documents by their publication
     years."""
 
+    state.progress = 0
+    state.current_task = 'Retrieving policy trend data'
     pub_years = []
     initial_pci_json = pci_pubyear_call(search_query)
     if initial_pci_json['Data']['Records']['records']:
@@ -186,14 +197,12 @@ def retrieve_pci_trend(search_query: str) -> list:
         total_results = initial_pci_json['QueryResult']['RecordsFound']
         requests_required = ((total_results - 1) // 100) + 1
         max_requests = min(requests_required, 1000)
-        print(f'Policy Citation Index API requests required: '
-              f'{requests_required}.')
 
         for i in range(1, max_requests):
             subsequent_dii_json = pci_pubyear_call(search_query, i * 100 + 1)
             for record in subsequent_dii_json['Data']['Records']['records']['REC']:
                 pub_years.append(record['static_data']['summary']['pub_info']['pubyear'])
-            print(f'PCI request {i + 1} of {max_requests} complete.')
+            state.progress = (i + 1) / max_requests * 100
 
     return [{'year': k, 'pci': v} for k, v in Counter(pub_years).items()]
 

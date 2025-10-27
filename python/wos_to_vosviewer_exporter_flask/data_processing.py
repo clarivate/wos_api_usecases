@@ -2,6 +2,7 @@
 Fetch necessary metadata fields from Web of Science records.
 """
 
+import state
 from datetime import date
 from api_operations import retrieve_wos_metadata_via_api, retrieve_cited_refs_via_api
 
@@ -17,6 +18,10 @@ def run_button(apikey, search_query, cited_refs):
     """
 
     documents_list = []
+
+    state.progress = 0
+    state.current_task = "Retrieving Web of Science documents"
+
     initial_json = retrieve_wos_metadata_via_api(
         apikey,
         search_query,
@@ -27,7 +32,6 @@ def run_button(apikey, search_query, cited_refs):
     total_results = initial_json['QueryResult']['RecordsFound']
     requests_required = ((total_results - 1) // 100) + 1
     max_requests = min(requests_required, 1000)
-    print(f'Web of Science API requests required: {requests_required}.')
     for i in range(1, max_requests):
         subsequent_json = retrieve_wos_metadata_via_api(
             apikey,
@@ -36,7 +40,7 @@ def run_button(apikey, search_query, cited_refs):
         )
         for record in subsequent_json['Data']['Records']['records']['REC']:
             documents_list.append(fetch_expanded_metadata(record))
-        print(f'Request {i + 1} of {max_requests} complete.')
+        state.progress = (i + 1) / max_requests * 100
 
     safe_search = search_query.replace('*', '').replace('"', '')
 
@@ -52,6 +56,9 @@ def run_button(apikey, search_query, cited_refs):
         writer.write('\n')
         for doc in documents_list:
             writer.write(f"{'\t'.join([str(v) for v in doc.values()])}\n")
+
+    state.progress = 0
+    state.current_task = ""
 
     return f'{safe_filename}'
 
@@ -218,14 +225,15 @@ def enrich_with_cited_references(apikey, records):
     :param records: list.
     :return: list.
     """
-    print(f'Now retrieving cited references for each of the {len(records)} '
-          f'records.')
+
+    state.progress = 0
+    state.current_task = "Retrieving Cited References metadata"
+
     for i, record in enumerate(records):
         cited_ref_data = retrieve_cited_refs_via_api(apikey, record['UT'])
         record['CR'] = '; '.join(fetch_cited_refs_metadata(cited_ref) for
                                  cited_ref in cited_ref_data['Data'])
-        print(f'Cited references for the record {i+1} of {len(records)} '
-              f'retrieved.')
+        state.progress = (i + 1) / len(records) * 100
 
     return records
 
